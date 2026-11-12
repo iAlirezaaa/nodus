@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "project": "iAlirezaaa/nodus",
+  "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
+  "owner_run_id": null,
+  "acquired_at": null,
+  "heartbeat_at": null,
+  "expires_at": null,
+  "current_task_id": null,
+  "feature_branch": null,
+  "checkpoint": {
+    "github_main": "f0958145973a130a0041604cb08f36925fe19e26",
+    "site_source": "04db17cd56bf56f157c4371eaa05dd91a1c7e61a",
+    "tree": "4a00c185218e8a627dfccf9c60ae32cc1b10b54b",
+    "phase": "roadmap_setup",
+    "next_task": "ND-001"
+  },
+  "last_completed_run": null,
+  "updated_at": "2026-11-12 16:12:26 UTC"
+}
