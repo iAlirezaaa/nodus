@@ -32,3 +32,15 @@ Roadmap/help/architecture updates:
 Limitations or blockers:
 Next concrete action:
 ```
+
+## 2026-11-12 — ND-001: honest search result counts and project paths (in progress)
+
+**Run:** `nodus-auto-20261112-run01-nd001`; work branch `fix/nd-001-search-clarity`; base GitHub `26fafac05c320ed5db30a0ee908dd816714acdd9`, tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`. Site checkpoint source `eb8a9ad1f470447bf15634efbaa47531924901c5` (saved version 11+documentation deployment); live tree has not been freshly fetched in this run because Sites actions are not exposed here.
+
+**Problem:** Search silently truncates to 70 while the meta reads `matches.length`, misrepresenting total hits, and shows only the immediate board name rather than nested project ancestry. The first 70 matching nodes are reachable but later hits cannot be opened from search.
+
+**Intended slice:** Count all matching nodes with a bounded initial page of 70, provide an explicit next-results action, and display a complete root-to-board location per result. Preserve existing title/text/asset-name matching, search selection, keyboard handling, FA/EN labels, and graph persistence. No user document writes or schema changes.
+
+**Acceptance:** 0/70/71/151+ matches report correct visible and total counts; further matches can be opened; deep nested and duplicate-titled boards display full location; Persian and English search behave as before; defensive malformed containment cannot loop. Run targeted logic tests, TypeScript, production build and real desktop/mobile app inspection before marking Verified or merging/publishing. A missing test or UI preview is a Blocked verification gate, not a pass.
+
+**Checkpoint:** Implement in a pure helper plus search dialog integration; add regression tests. UI browser, full repository typecheck/build and Site release require a supported checkout and Site runtime and may remain blocked in this execution. Keep change on this branch until gates pass.
