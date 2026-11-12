@@ -71,6 +71,9 @@ function mount() { appRoot = createRoot(host!); appRoot.render(<NodusApp />); up
 function resetFixture() {
   epoch += 1; appRoot.unmount();
   for (const key of [`nodus:workspace:draft:${LIVING_FIXTURE_USER}`, `nodus:workspace:recovery:${LIVING_FIXTURE_USER}`]) localStorage.removeItem(key);
+  const viewScope = encodeURIComponent(`${LIVING_FIXTURE_USER}:personal:`);
+  for (const key of Object.keys(localStorage)) if (key.startsWith(`nodus:magnetic-view:v1:${viewScope}`) || key.startsWith(`nodus:canvas-design:v1:${viewScope}`)) localStorage.removeItem(key);
+  for (const board of server.document.boards) localStorage.removeItem(`nodus:view:${board.id}`);
   const annotationPrefix = `nodus:annotation-draft:v1:${encodeURIComponent(`${LIVING_FIXTURE_USER}:personal`)}:`;
   for (const key of Object.keys(sessionStorage)) if (key.startsWith(annotationPrefix)) sessionStorage.removeItem(key);
   server = seed(); persist(server);

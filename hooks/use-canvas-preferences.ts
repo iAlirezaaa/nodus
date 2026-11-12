@@ -1,10 +1,11 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_CANVAS_DESIGN, DEFAULT_LAYOUT_OPTIONS, type CanvasDesign, type LayoutOptions } from '@/lib/layouts';
+import { DEFAULT_MAGNETIC_SETTINGS, normalizeMagneticSettings, type MagneticSettings } from '@/lib/magnetic-layout';
 import type { Language } from '@/lib/types';
 
-interface Preferences { key: string; design: CanvasDesign; layout: LayoutOptions; applied: boolean; }
-function defaults(key: string): Preferences { return { key, design: { ...DEFAULT_CANVAS_DESIGN }, layout: { ...DEFAULT_LAYOUT_OPTIONS }, applied: false }; }
+interface Preferences { key: string; design: CanvasDesign; layout: LayoutOptions; magnetic: MagneticSettings; applied: boolean; }
+function defaults(key: string): Preferences { return { key, design: { ...DEFAULT_CANVAS_DESIGN }, layout: { ...DEFAULT_LAYOUT_OPTIONS }, magnetic: { ...DEFAULT_MAGNETIC_SETTINGS }, applied: false }; }
 function read(key: string): Preferences {
   const result = defaults(key);
   if (!key) return result;
@@ -21,6 +22,8 @@ function read(key: string): Preferences {
     if (['created','title','kind','color','status'].includes(l.sort)) result.layout.sort = l.sort;
     if (['asc','desc'].includes(l.direction)) result.layout.direction = l.direction;
     if (typeof l.spacing === 'number' && Number.isFinite(l.spacing)) result.layout.spacing = Math.max(24, Math.min(240, l.spacing));
+    // The optional field keeps existing version 1 preferences compatible.
+    result.magnetic = normalizeMagneticSettings(saved.magnetic);
     result.applied = saved.applied === true;
   } catch { /* The current view remains usable without saved preferences. */ }
   return result;
@@ -35,11 +38,12 @@ export function useCanvasPreferences(scope: string, language: Language) {
   const write = useCallback((change: Partial<Preferences>) => {
     const previous = latest.current.key === key ? latest.current : read(key);
     const next = { ...previous, ...change, key }; latest.current = next; setState(next);
-    if (key) try { localStorage.setItem(key, JSON.stringify({ version: 1, design: next.design, layout: next.layout, applied: next.applied })); setPersistenceError(false); }
+    if (key) try { localStorage.setItem(key, JSON.stringify({ version: 1, design: next.design, layout: next.layout, magnetic: next.magnetic, applied: next.applied })); setPersistenceError(false); }
     catch { setPersistenceError(true); }
   }, [key]);
   const setDesign = useCallback((design: CanvasDesign) => write({ design }), [write]);
   const setLayout = useCallback((layout: LayoutOptions) => write({ layout, applied: true }), [write]);
+  const setMagnetic = useCallback((magnetic: MagneticSettings) => write({ magnetic: normalizeMagneticSettings(magnetic) }), [write]);
   const layout = useMemo(() => ({ ...current.layout, language }), [current.layout, language]);
-  return { design: current.design, layout, hasLayout: current.applied, persistenceError, setDesign, setLayout };
+  return { design: current.design, layout, magnetic: current.magnetic, hasLayout: current.applied, persistenceError, setDesign, setLayout, setMagnetic };
 }

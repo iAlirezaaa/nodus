@@ -9,6 +9,7 @@ The application has a React interface, a server API, a persistent SQL database a
 - Hover over a node for a readable content preview. Click it to open its full content and attachments in a popup; **Shift+Enter** opens the notes editor directly.
 - Write titles directly beside neurons or on cards. **Enter** commits a thought and starts its next sibling; **Tab** commits it and starts a connected child. Focus follows the new thought without a modal or a fit-to-canvas jump.
 - Drag a node to move it. Drag the background to pan, and use the zoom controls, wheel or touch pinch to change scale.
+- Open **Magnetic mode** to let linked thoughts pull together, adjust the forces, and pin nodes. **Apply layout** commits the resulting arrangement as one undoable change.
 - Connect existing nodes, or create multiple connected branches from a list of titles.
 - Open a node's internal project to work on its own board; the breadcrumb trail leads back out.
 - Drop files onto the canvas or use the upload action. Images, supported video/audio formats and PDFs have previews; other formats retain their original download.
@@ -74,9 +75,21 @@ Suggestions use the actual board's links, task hierarchy, content kinds and date
 
 Layouts apply to the current board as one undoable change. They use the same growth-expanded card bounds as keyboard placement to avoid collisions, retain content, containment and relationships, and reset manually bent paths on that board. The layout description and lane orientation are saved with the board so collaborators see the same arrangement and language changes do not swap lane meanings. Applying a layout is an explicit action: after changing task states, dates or adding ideas, apply it again to regroup them. Growth does not automatically move existing nodes. Dragging a node does not change its task state or date.
 
-Neural physics runs for a bounded number of iterations when applied, then stops. Boards above 250 nodes use connected clusters instead of the all-pairs simulation. Decorative motion continues while node positions and writing targets stay fixed; it does not stream physics updates to the server.
+The one-time **Neural network** layout runs for a bounded number of iterations, then stops. Boards above 250 nodes use connected clusters instead of its all-pairs calculation. The separate **Magnetic mode** provides interactive force-driven movement. Decorative light remains independent of both arrangements.
 
 Personal appearance includes neuron/card presentation, dots/grid/plain background, three density settings, six accent colors and optional connection labels. These settings are scoped to account, room and board on the current device; each collaborator can choose their own presentation while sharing the same graph and positions. Reduced motion remains respected.
+
+### Magnetic mode
+
+Use the magnet button on the canvas to open **Thought magnets**. Linked nodes attract each other, nearby nodes repel each other, and a center force keeps the network together. The **Gentle**, **Balanced** and **Organic** presets provide starting points; four sliders control link attraction, node repulsion, center gravity and preferred link distance.
+
+**Start / Pause** controls movement, **Rebalance** wakes a settled network, and the node context menu can **Pin / Unpin** a thought. A pinned node remains a force anchor while its neighbors can move; dragging still lets you place it deliberately. Closing the settings panel leaves the selected mode active. Movement pauses automatically while reading a hover preview, writing inline, using a content popup or context menu, or editing a connection. Hidden pages and reduced-motion preferences also stop the simulation.
+
+Force-driven positions and pins belong to the personal view. They are cached locally for the current account, personal/shared context and board, and restored only when their saved base coordinates still match the current graph. **Pause** keeps that view. **Restore** discards its displacement and pins and returns to the current document positions. An ordinary manual drag remains a document edit.
+
+Choose **Apply layout** to save the visible magnetic positions to the board. The application checks the expected base coordinates before accepting the whole arrangement, preserves node content and relationships, clears the previous structured-layout guides, and records one undo step. A conflicting moved or deleted node rejects the application instead of replacing a newer position. Read-only rooms cannot apply positions. Once applied, use ordinary Undo to reverse the document change.
+
+The simulation cools and sleeps when settled or after a bounded burst. Larger boards use a lower update cadence, and repulsion/collision work uses bounded spatial traversal. Typing does not restart the force graph. No simulation frame creates a graph save; keyboard placement and directional navigation use the displayed positions so Enter and Tab continue from the visible thought.
 
 ### Working together
 
@@ -100,7 +113,9 @@ Inline typing stays local to its input rather than serializing the entire worksp
 
 If a title cannot be committed, its text remains editable. The `beforeunload` guard requests the browser's departure confirmation so a failed title commit is not silently treated as saved.
 
-The content popup keeps keyboard focus inside it and returns focus to its node when dismissed. URL and position drafts are validated and committed before closing or leaving for another action; a rejected edit keeps the popup and draft open. Escape can cancel a dirty field before closing the popup. Annotation drafts retain their explicit Save action and scoped recovery when the popup closes. Native text editing and input-method composition keep their own key handling.
+The content popup opens from its source node with a brief shell expansion, staged content reveal and rim light, then returns toward the captured origin when dismissed. An unavailable or offscreen source uses a centered transition; reduced-motion preferences remove the movement. Keyboard focus stays inside throughout opening and closing, and returns to the node after dismissal. URL and position drafts are validated and committed before closing begins or before leaving for another action; a rejected edit keeps the popup and draft open. Content cannot be edited during its short closing transition. Escape can cancel a dirty field before closing the popup. Annotation drafts retain their explicit Save action and scoped recovery when the popup closes. Native text editing and input-method composition keep their own key handling.
+
+Magnetic settings, pins and unapplied positions are local view preferences, not a server backup or a shared revision. Losing browser storage loses that personal view; the canonical graph is unchanged until an ordinary graph edit or **Apply layout** is accepted. Cache restoration discards entries whose node, board or base position no longer matches.
 
 Personal writes include the document revision. When another tab has saved newer personal content, the server rejects a stale write instead of overwriting it. Shared rooms send guarded field operations and merge compatible edits against the current revision. Retry receipts prevent a lost save acknowledgement from applying a shared edit twice. Recovery can preserve the local graph as separate root boards. Keep the page open if saving fails and the browser reports that its recovery storage is unavailable.
 
@@ -195,7 +210,7 @@ Run the graph, layouts, keyboard-flow, collaboration, recovery and backend suite
 node --import ./tests/server-loader.mjs --test tests/*.test.ts tests/*.test.mjs
 ```
 
-The living-node release regression snapshot passed **130/130 automated tests**. The suite covers graph and task hierarchy, branch growth, growth-aware layout and keyboard placement, annotation anchors, connection geometry, recovery, collaboration and persistence. The backend tests use an in-memory SQLite database initialized from the checked-in migrations. They exercise actual conditional save statements and transactions, independent identities, field conflicts, receipt retries, revocation during commit, rollback, attachment access, graph validation and media byte ranges. Client tests cover pause/resume races, lost acknowledgements, guarded own undo, room/account scoping and presence lifecycle.
+The current magnetic-release regression snapshot passed **157/157 automated tests**, and TypeScript checking passed. The previous living-node release recorded 130/130 tests. The suite covers graph and task hierarchy, branch growth, growth-aware layout and keyboard placement, magnetic simulation and guarded layout application, annotation anchors, connection geometry, recovery, collaboration and persistence. The backend tests use an in-memory SQLite database initialized from the checked-in migrations. They exercise actual conditional save statements and transactions, independent identities, field conflicts, receipt retries, revocation during commit, rollback, attachment access, graph validation and media byte ranges. Client tests cover pause/resume races, lost acknowledgements, guarded own undo, room/account scoping and presence lifecycle.
 
 ### Browser verification
 
@@ -222,7 +237,7 @@ Earlier completed fixture checks established:
 | Delete and context menus | Node and edge Delete and Ctrl+Delete remove the intended item; undo restores it. Native text Delete edits only the text. Pointer right-click and Shift+F10 expose context actions. |
 | Connection editing | Route, stroke, color, width, label and direction changes are rendered. Duplicate endpoints are rejected. Dragging the middle handle and arrow-key nudges reshape the path; Delete on the handle resets it. |
 | Persisted feature metadata | Task states, task hierarchy, node appearance, annotations and edge styling survive a fixture reload. |
-| Mobile feature panels | At 390 × 844, task conversion and annotation creation worked in the previous Details presentation; the connection editor stayed within the viewport. The new full popup is covered in the current pass below. |
+| Mobile feature panels | At 390 × 844, task conversion and annotation creation worked in the previous Details presentation; the connection editor stayed within the viewport. The full popup is covered in the living-node pass below. |
 | Neural keyboard editing | Enter and Tab create connected thoughts in the minimal view; the second session receives their titles and relationships. |
 | Shared edits and reconnection | Different fields edited by two synthetic accounts converge. After one session goes offline and rejoins, both local and peer edits remain. Own undo preserves the peer's text. |
 | Shared presence | The other session shows the cursor, name and selected node at its own zoom level. Pan/zoom changes remain local. |
@@ -231,7 +246,7 @@ Earlier completed fixture checks established:
 | Member access | Removing the editor in the room panel makes the other session report lost access; adding the email back permits a fresh authorized session. |
 | Mobile design and sharing | Both app frames run at 390 × 844. Design and collaboration dialogs stay within the viewport with scrollable contents and no horizontal overflow. |
 
-The current living-node browser pass confirmed:
+The previous living-node release browser pass confirmed:
 
 | Interaction | Observed result |
 | --- | --- |
@@ -251,7 +266,27 @@ The current living-node browser pass confirmed:
 | Mobile popup | At 390 × 844, the popup is 362 px wide with no horizontal overflow; its title is 25 px and text is 16 px. Ctrl+End reaches character 1,515, keyboard focus reaches the lower actions/colors/date, and the header close control remains visible and dismisses successfully. |
 | Per-edge motion | Disabling one edge's animation through its context controls reduces flow paths and particles from three to two while all six card frames remain animated. Re-enabling restores both counts to three. |
 
-Reduced-motion behavior is implemented but was not verified at runtime. The hidden-page check was inconclusive: switching Chrome tabs through desktop automation left the inspected canvas at `data-motion="on"`, so that check did not establish whether hidden-page pausing works. These are browser checks against synthetic persistence, not a deployed authenticated UI test or a test with two real signed-in users. Physical touch devices, native IME sessions and production signed-in behavior were not verified in this pass.
+The current magnetic-release pass used the real app in the same isolated living fixture:
+
+| Interaction | Observed result |
+| --- | --- |
+| Magnetic controls and settling | Start/Pause and all four force sliders worked. Keyboard adjustment changed distance from 180 to 170 in the RTL interface, and the simulation reached the settled status. |
+| Pinning and personal recovery | The pinned 20-branch node kept the same center while other nodes moved. Pause followed by reload restored all 28 projected positions byte-for-byte and retained the pin. |
+| Save boundary and undo | Movement produced zero workspace writes before Apply layout. Apply produced one write and cleared the pending-layout state; Undo produced the second write and restored the previous layout. |
+| Context menu and pinned dragging | Right-click pinning worked. A native pointer drag moved the pinned center from (706, −114) to (891.94, −312.20), preserving its pin. |
+| Hover preview | A native hover check exposed and led to a placement fix. The preview now appears beside its source without covering the source node. |
+| Keyboard flow | Tab → child title → Enter → sibling title → Escape created two actual linked nodes. Editing paused magnetic movement, and movement resumed afterward. |
+| Popup motion and validation | The dialog used the source-node origin with a 380 ms entrance. X = 20,000,000 kept it open and marked the field invalid; Escape canceled that field draft, and closing returned focus to the source node. |
+| Mobile popup and magnetic panel | At 390 × 844, the popup measured 362 × 828 px at (14, 8), with equal client and scroll widths of 360 px. The panel measured 316 × 626 px at (12, 134), its footer stayed inside, and client and scroll widths both measured 314 px. |
+| Light appearance | The magnetic panel's accent was darkened for the light theme; the checked layout had no horizontal overflow. |
+| Magnetic card layout | The six-node card board settled with zero bounding-rectangle overlaps and no extra workspace writes. |
+| Restore | Restore cleared the personal positions, pins and pending-layout state, and paused the mode without saving the workspace. |
+
+Reduced-motion behavior was reviewed in code but was not verified at runtime. The earlier hidden-page check was inconclusive: switching Chrome tabs through desktop automation left the inspected canvas at `data-motion="on"`, so that check did not establish whether hidden-page pausing works; it is not counted as a pass for this release. These are browser checks against synthetic persistence, not a deployed authenticated UI test or a test with two real signed-in users. Physical touch devices, native IME sessions and production signed-in behavior were not verified in these passes.
+
+![Magnetic network and personal layout controls in the isolated browser verification workspace](docs/screenshots/nodus-magnetic-network.jpg)
+
+![Source-node popup in the isolated browser verification workspace](docs/screenshots/nodus-magnetic-popup.jpg)
 
 ![Inline title editing in the synthetic browser verification workspace](docs/screenshots/keyboard-flow.jpg)
 

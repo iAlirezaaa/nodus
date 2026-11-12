@@ -72,3 +72,27 @@ export function connectionGeometry(source: EdgeRectangle, target: EdgeRectangle,
     },
   };
 }
+
+/** Cheap broad-phase culling before allocating a path. False means safely offscreen. */
+export function connectionMayIntersectViewport(
+  source: EdgeRectangle,
+  target: EdgeRectangle,
+  options: EdgeGeometryOptions,
+  viewport: { minX: number; minY: number; maxX: number; maxY: number },
+): boolean {
+  // A user-controlled bend can bring a path back into view from any distance.
+  // Leave its precise control-point bounds to connectionGeometry.
+  if (options.bend) return true;
+  const padding = 80 + Math.max(Math.abs(source.width), Math.abs(source.height), Math.abs(target.width), Math.abs(target.height));
+  const minX = Math.min(source.x, source.x + source.width, target.x, target.x + target.width) - padding;
+  const minY = Math.min(source.y, source.y + source.height, target.y, target.y + target.height) - padding;
+  const maxX = Math.max(source.x, source.x + source.width, target.x, target.x + target.width) + padding;
+  const maxY = Math.max(source.y, source.y + source.height, target.y, target.y + target.height) + padding;
+  // Invalid geometry should never accidentally disappear through this optimization.
+  if (!Number.isFinite(minX + minY + maxX + maxY + viewport.minX + viewport.minY + viewport.maxX + viewport.maxY)
+    || viewport.minX > viewport.maxX || viewport.minY > viewport.maxY) return true;
+  // The ordinary cubic stays inside the endpoint union except at nearby or
+  // overlapping ports. Its minimum 70/60-unit tangent and half-port separation
+  // fit inside this padding, including differently sized grown nodes.
+  return !(maxX < viewport.minX || minX > viewport.maxX || maxY < viewport.minY || minY > viewport.maxY);
+}

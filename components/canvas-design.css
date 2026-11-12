@@ -108,6 +108,17 @@
 .canvas[data-motion='on'] .thought-node.is-node-dragging { transition: border-color .18s ease, box-shadow .18s ease; }
 .canvas[data-motion='on'] .thought-node.is-node-dragging .neuron-core, .canvas[data-motion='on'] .thought-node.is-node-dragging .neuron-aura, .canvas[data-motion='on'] .thought-node.is-node-dragging .neuron-orbit, .canvas[data-motion='on'] .thought-node.is-node-dragging .neuron-label, .canvas[data-motion='on'] .thought-node.is-node-dragging .node-port, .canvas[data-motion='on'] .thought-node.is-node-dragging .node-growth-badge, .canvas[data-motion='on'] .thought-node.is-node-dragging .neuron-annotation, .canvas[data-motion='on'] .thought-node.is-node-dragging .neuron-task-toggle, .canvas[data-motion='on'] .thought-node.is-node-dragging .inline-title-editor, .canvas[data-motion='on'] .thought-node.is-node-dragging .node-presence-badge { transition: none; }
 .canvas[data-motion='off'] .thought-node { transition: none; }
+.canvas[data-magnetic='running'] .thought-node { transition: border-color .18s ease, box-shadow .18s ease; }
+.node-magnetic-pin { position: absolute; inset-inline-end: 10px; top: -11px; display: grid; place-items: center; width: 23px; height: 23px; border: 1px solid color-mix(in srgb, var(--node-accent) 45%, var(--border)); border-radius: 50%; color: var(--node-accent); background: var(--surface); z-index: 3; pointer-events: none; }
+.node-neuron .node-magnetic-pin { inset-inline-end: auto; left: calc(50% + var(--neuron-size) / 2 + 5px); top: calc(50% - var(--neuron-size) / 2 - 9px); width: 18px; height: 18px; transform: scale(var(--neuron-label-scale)); transform-origin: bottom left; }
+.magnetic-ui { display: contents; --accent: var(--magnetic-accent, #b5ccaf); }
+[data-theme='light'] .magnetic-ui { --accent: color-mix(in srgb, var(--magnetic-accent, #b5ccaf) 45%, #172d20); }
+.magnet-launch { position: absolute; z-index: 9; top: 33px; inset-inline-end: 79px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 11px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); background: var(--surface); font-size: 11px; }
+.magnet-launch.is-enabled { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 38%, var(--border)); background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+.magnet-launch i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .4; }
+.magnet-launch i[data-status='running'] { opacity: 1; box-shadow: 0 0 8px currentColor; }
+.magnet-launch:hover, .magnet-launch:focus-visible { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 650px) { .magnet-launch { top: 26px; inset-inline-end: 66px; width: 39px; height: 39px; padding: 6px; } .magnet-launch > span, .magnet-launch > i { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   .canvas .thought-node, .canvas .thought-node * { transition: none !important; }
   .canvas .neuron-aura, .canvas .neuron-orbit, .canvas .node-living-frame, .canvas .node-life i, .canvas .node-life b, .canvas .neuron-core i, .canvas .connection-flow { animation: none !important; }

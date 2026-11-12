@@ -62,7 +62,8 @@ export function useThoughtFlow(options: FlowOptions) {
     const source = sourceId ? document.nodes.find(node => node.id === sourceId) : null;
     const boardId = source?.boardId ?? config.boardId;
     if (!document.boards.some(board => board.id === boardId)) return;
-    const planned = prepareThought(document, boardId, sourceId, relation, {
+    const positioned = config.canvas.current?.positionDocument(document) ?? document;
+    const planned = prepareThought(positioned, boardId, sourceId, relation, {
       anchor: anchor ?? config.canvas.current?.getCenter(), language: config.language, asTask,
     });
     replace({ ...planned, originId: sourceId, existing: false, initialValue,

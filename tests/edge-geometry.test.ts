@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { connectionGeometry, type EdgeGeometryOptions, type EdgeRectangle } from '../lib/edge-geometry.ts';
+import { connectionGeometry, connectionMayIntersectViewport, type EdgeGeometryOptions, type EdgeRectangle } from '../lib/edge-geometry.ts';
 
 const source: EdgeRectangle = { x: 0, y: 0, width: 100, height: 80 };
 const target: EdgeRectangle = { x: 400, y: 160, width: 120, height: 100 };
@@ -74,4 +74,65 @@ test('invalid optional bends fall back to the automatic path without mutating in
   assert.deepEqual(connectionGeometry(source, target, options), connectionGeometry(source, target));
   assert.deepEqual(source, { x: 0, y: 0, width: 100, height: 80 });
   assert.ok(Number.isNaN(options.bend!.x));
+});
+
+test('broad-phase culling retains a connection crossing the viewport with both nodes outside', () => {
+  const a = { x: -1200, y: 10, width: 80, height: 80 }, b = { x: 1200, y: 10, width: 80, height: 80 };
+  const viewport = { minX: 0, minY: 0, maxX: 100, maxY: 100 };
+  for (const route of ['curve', 'straight', 'elbow'] as const) {
+    assert.equal(connectionMayIntersectViewport(a, b, { route }, viewport), true);
+    assert.equal(connectionMayIntersectViewport(b, a, { route }, viewport), true);
+  }
+  assert.equal(connectionMayIntersectViewport({ ...a, x: 10, y: -1200 }, { ...b, x: 10, y: 1200 }, {}, viewport), true);
+});
+
+test('broad-phase culling delegates explicit bends even when both endpoints are far away', () => {
+  const a = { ...source, x: 5000, y: 5000 }, b = { ...target, x: 5500, y: 5500 };
+  const viewport = { minX: -100, minY: -100, maxX: 100, maxY: 100 };
+  for (const route of ['curve', 'straight', 'elbow'] as const) {
+    assert.equal(connectionMayIntersectViewport(a, b, { route, bend: { x: 0, y: 0 } }, viewport), true);
+    assert.equal(connectionMayIntersectViewport(a, b, { route, bend: { x: 9000, y: 9000 } }, viewport), true);
+  }
+});
+
+test('overlapping rectangles retain cubic controls outside the endpoint union', () => {
+  const a = { x: 100, y: 0, width: 300, height: 100 }, b = { x: 150, y: 0, width: 300, height: 100 };
+  const bounds = connectionGeometry(a, b).bounds;
+  assert.ok(bounds.minX < a.x && bounds.maxX > b.x + b.width);
+  for (const x of [bounds.minX, bounds.maxX]) {
+    assert.equal(connectionMayIntersectViewport(a, b, {}, { minX: x, maxX: x, minY: 50, maxY: 50 }), true,
+      'A tangent control touching a viewport boundary must be retained.');
+  }
+  const verticalA = { x: 0, y: 100, width: 100, height: 300 }, verticalB = { x: 0, y: 150, width: 100, height: 300 };
+  const vertical = connectionGeometry(verticalA, verticalB).bounds;
+  assert.ok(vertical.minY < verticalA.y && vertical.maxY > verticalB.y + verticalB.height);
+  assert.equal(connectionMayIntersectViewport(verticalA, verticalB, {}, { minX: 50, maxX: 50, minY: vertical.maxY, maxY: vertical.maxY }), true);
+});
+
+test('broad-phase culling rejects safely distant unbent paths without mutating geometry inputs', () => {
+  const viewport = { minX: -100, minY: -100, maxX: 100, maxY: 100 };
+  const a = { ...source, x: 5000, y: 5000 }, b = { ...target, x: 5500, y: 5100 };
+  const original = JSON.stringify({ a, b, viewport });
+  for (const route of ['curve', 'straight', 'elbow'] as const) assert.equal(connectionMayIntersectViewport(a, b, { route }, viewport), false);
+  assert.equal(connectionMayIntersectViewport({ ...a, x: -5000 }, { ...b, x: -5500 }, {}, viewport), false);
+  assert.equal(JSON.stringify({ a, b, viewport }), original);
+  assert.equal(connectionMayIntersectViewport({ ...a, x: NaN }, b, {}, viewport), true, 'Malformed coordinates must not create false-negative culling.');
+});
+
+test('deterministic varied rectangles never cull a viewport intersecting actual control bounds', () => {
+  let seed = 0x1a2b3c4d;
+  const random = () => { seed = Math.imul(seed, 1664525) + 1013904223 | 0; return (seed >>> 0) / 4294967296; };
+  const rectangle = (): EdgeRectangle => ({ x: (random() - .5) * 20000, y: (random() - .5) * 20000, width: 1 + random() * 1500, height: 1 + random() * 1500 });
+  for (let index = 0; index < 1200; index++) {
+    const a = rectangle(), b = index % 3 ? rectangle() : { ...a, x: a.x + (random() - .5) * a.width, y: a.y + (random() - .5) * a.height };
+    const options: EdgeGeometryOptions = { route: (['curve', 'straight', 'elbow'] as const)[index % 3] };
+    const bounds = connectionGeometry(a, b, options).bounds;
+    const x = bounds.minX + (bounds.maxX - bounds.minX) * random(), y = bounds.minY + (bounds.maxY - bounds.minY) * random();
+    const viewport = { minX: x - random() * 100, minY: y - random() * 100, maxX: x + random() * 100, maxY: y + random() * 100 };
+    assert.equal(connectionMayIntersectViewport(a, b, options, viewport), true);
+    for (const [cx, cy] of [[bounds.minX, bounds.minY], [bounds.maxX, bounds.maxY]]) {
+      assert.equal(connectionMayIntersectViewport(a, b, options, { minX: cx, maxX: cx, minY: cy, maxY: cy }), true,
+        `Conservative envelope lost the control bounds for rectangle sample ${index}.`);
+    }
+  }
 });

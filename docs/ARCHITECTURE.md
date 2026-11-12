@@ -10,6 +10,8 @@ Nodus stores editable graphs on the server, supports private workspaces and shar
 | Graph edits, derived growth, keyboard placement, share snapshots | `lib/graph.ts`, `lib/node-growth.ts`, `lib/flow.ts`, `lib/board-snapshot.ts` |
 | Canvas, content popup, application coordination | `components/Canvas.tsx`, `components/Inspector.tsx`, `components/Modal.tsx`, `components/NodusApp.tsx` |
 | Layouts and personal appearance | `lib/layouts.ts`, `components/DesignPanel.tsx`, `hooks/use-canvas-preferences.ts` |
+| Interactive magnetic view and guarded application | `lib/magnetic-layout.ts`, `lib/magnetic-view.ts`, `hooks/use-magnetic-canvas.ts`, `components/MagneticPanel.tsx` |
+| Popup motion and presentation | `components/Modal.tsx`, `components/node-dialog.css` |
 | Private persistence | `hooks/workspace-store.ts`, `lib/server/store.ts`, `/api/workspace` |
 | Shared protocol and persistence | `lib/collaboration.ts`, `hooks/shared-workspace-store.ts`, `lib/server/collaboration.ts`, `/api/rooms` |
 | Store selection and React subscriptions | `hooks/use-workspace.ts` |
@@ -68,7 +70,7 @@ Connections support curved, straight, and orthogonal elbow routes. Bend dragging
 
 | Layout | Behavior |
 | --- | --- |
-| Neural | Groups connected components, uses a bounded deterministic force calculation on smaller boards, and packs connected chunks above 250 nodes. There is no continuous force simulation. |
+| Neural | Groups connected components, uses a bounded deterministic force calculation on smaller boards, and packs connected chunks above 250 nodes. This action is separate from the interactive magnetic view. |
 | Tree | Places directed branches and task relationships in levels, handling cycles and disconnected components. |
 | Orbit | Organizes thoughts around prominent connected ideas. |
 | Grid | Packs variable-size cards into a regular browsing layout. |
@@ -80,6 +82,20 @@ Sort choices include creation time, title, kind, color, and task status, with as
 Applied layout is canonical board metadata: `Board.layout` records kind, sort, direction, spacing, language, and optional fixed Kanban `columnStep` alongside the saved coordinates. Shared peers receive the same arrangement and guides. Stored orientation and lane spacing prevent guides from drifting when a viewer changes UI language or a task changes status. Guide captions can use the viewer's language without changing their geometry. Layout is a one-time manual application: branch growth, task status or scheduled dates do not automatically move existing cards. Reapply the layout to reposition them; decorative motion continues independently of layout.
 
 Personal appearance remains separate. Node display mode, background, density, accent, and connection-label visibility are scoped to account, room-or-personal mode, and board in local storage. They do not create shared revisions. Viewport pan/zoom is stored under the board ID; theme and UI language are browser preferences. Preference storage failures leave the current view usable and are surfaced where appropriate.
+
+### Interactive magnetic view
+
+`lib/magnetic-layout.ts` owns a deterministic force simulation over node centers. Springs include graph links and explicit task-parent relationships, deduplicating repeated relationships and ignoring invalid endpoints. Link attraction, repulsion, center gravity and desired link distance are normalized settings. Node radii follow the current neuron/card growth projections; larger thoughts have bounded additional mass. Persistent pins and the currently dragged node are held in place while still influencing their neighbors.
+
+Repulsion approximates distant groups through a quadtree; collision queries have bounded visits and candidate pairs, including a rotating sample for coincident buckets. Time steps, acceleration, speed and coordinates are bounded. Damping and cooling stop a quiet simulation, with a maximum burst as a backstop. `use-magnetic-canvas.ts` schedules animation frames only while enabled, allowed and active, and lowers its update cadence for larger graphs. These are work bounds, not a guaranteed frame rate or a proof that every pinned/degenerate arrangement is overlap-free.
+
+The hook keeps simulation bodies and captured render positions separate from `Workspace`. Its geometry key excludes note text, so content edits do not rebuild or reheat the force graph; derived branch growth is likewise cached by topology. Hover reading, inline writing, popups, context menus, connecting and edge editing suspend movement. Hidden pages and reduced-motion preferences also stop it. Starting, changing forces, rebalancing, pin changes, dragging or changed geometry can wake it again. Decorative node/edge lighting remains a separate motion layer.
+
+Settings live in the existing account/room/board appearance preferences; positions and pins use a separate scoped local cache. The cache records node IDs, board IDs, expected base coordinates and bounded personal positions. On restoration, only entries still matching the current graph are accepted. Scope changes persist the outgoing view and isolate the next one. Pause retains local positions; Restore clears the personal simulation and pins. Normal manual dragging still commits its node through the ordinary document edit path. Keyboard placement and directional navigation use `positionDocument` to work from the visible personal positions without copying that whole view into a new node's commit.
+
+**Apply layout** calls `applyMagneticView` within one workspace update. It validates every supplied node's identity, board and expected base `x/y`, plus finite bounded target coordinates, before changing anything. Any conflicting entry rejects the whole application. A valid change updates coordinates, clears that board's old structured `layout` metadata, preserves content/relationships and enters ordinary private/shared save and undo handling once. Simulation frames never enter graph history or generate network writes. Read-only access disables application; the personal view is not another writer or a collaborator lock.
+
+`MagneticPanel` exposes Start/Pause, Rebalance, Restore, Apply layout, the pin count, Gentle/Balanced/Organic presets and the four force sliders. Pins are changed through node context actions. The panel reports running, settled or paused state; closing the panel does not itself stop the chosen mode. Lane/date guides are hidden while an active or displaced magnetic view would make their stored positions misleading.
 
 ## Editing and client state
 
@@ -95,7 +111,9 @@ The input guards IME composition and deduplicates blur following a keyboard comm
 
 ### Content popup and draft lifecycle
 
-`Modal` owns the focus scope, initial focus, inert background, Escape handling and return focus. The node popup starts on its introduction for a click or in notes for Shift+Enter. Tab and Shift+Tab remain inside, including from a non-tabbable introductory element. Dismissal returns focus to the source node; leaving for inline writing, connection mode or a nested board lets the destination own focus after the popup unmounts. Composition and handled field keys are not repurposed as dismissal.
+`Modal` owns the focus scope, initial focus, Escape handling and return focus; `NodusApp` makes the background inert. The node popup starts on its introduction for a click or in notes for Shift+Enter. Tab and Shift+Tab remain inside, including from a non-tabbable introductory element. Dismissal returns focus to the source node; leaving for inline writing, connection mode or a nested board lets the destination own focus after the popup unmounts. Composition and handled field keys are not repurposed as dismissal.
+
+For node popups, `Canvas.getNodeRect` supplies a captured viewport-space origin. `Modal` measures its untransformed destination bounds and uses CSS variables for a uniform source-centered expansion, staged content reveal and brief rim glow. Missing or offscreen origins fall back to a centered transition. The root validates draft changes before setting `closing`; the dialog stays mounted and focus-contained while its content is inert. Its own exit animation or a cleaned-up fallback timer invokes `onExited` once, after which the root unmounts and restores focus. Related-node switching and direct navigation cancel the old exit lifecycle. Reduced-motion preferences bypass the transforms and finish closing without the animation delay. Generic dialogs retain their existing behavior.
 
 `Inspector.flushPending()` validates local URL/coordinate drafts and requires an accepted workspace mutation before close, node switching or another popup action. Rejection preserves the open editor and draft. Escape first cancels a dirty field. Capture-phase departure handling flushes drafts before store recovery guards. Annotation Save remains explicit and drafts survive popup unmount in scoped session storage; failed saves do not clear them. Read-only shared rooms disable graph mutations while preserving local annotation recovery. Opening a popup gates canvas shortcuts and paste actions.
 
@@ -176,7 +194,8 @@ A transport failure retains the in-flight operation ID because the server may al
 | Private unsaved graph | `localStorage`: `nodus:workspace:draft:<userId>` and `recovery` variant | Document/base revision; survives reload and normal browser restarts while storage remains available. |
 | Shared unsaved graph | `sessionStorage`: `nodus:shared:draft:<encoded-userId>:<encoded-roomId>` and `recovery` variant | Base/local documents, revision, timestamp. Per-tab storage avoids one tab replacing another's draft; closing the tab can discard it. |
 | Unposted annotation | Session storage and in-memory fallback, scoped to user, personal/room context, and node | Explicit-save draft; unavailable storage retains a departure warning while needed. |
-| Canvas appearance | Local storage scoped to account, personal/room context, and board | Personal display settings, independent of canonical `Board.layout` and graph revisions. |
+| Canvas appearance and magnetic forces | `localStorage`: `nodus:canvas-design:v1:<encoded-scope>`, scoped to account, personal/room context, and board | Personal display/force settings, independent of canonical `Board.layout` and graph revisions. Existing version-1 preferences remain compatible with the optional magnetic field. |
+| Magnetic positions and pins | `localStorage`: `nodus:magnetic-view:v1:<encoded-scope>`, with the same account/context/board scope | Personal view cache. Entries restore only while node/board/base coordinates match; pause preserves the view, Restore clears it, and explicit Apply enters normal document persistence/undo. Not a server backup. |
 | Viewport | `localStorage`: `nodus:view:<boardId>` | Pan/zoom independent of graph data. |
 | Theme and UI language | Browser-local preferences | Do not alter graph ownership or shared coordinates. |
 
@@ -282,7 +301,7 @@ Files are immutable. Removing a node removes its current room-derived file grant
 
 ## Verification and its boundaries
 
-The living-node release regression pass recorded **130/130 automated tests passing**. Suites cover graph/flow, unique branch growth and containment, growth-aware collision placement/layouts, tasks and anchors, geometry, calendar dates, board-subtree snapshots, private persistence, shared queues/history/recovery, presence, guarded operations, and backend storage/security. This is a verification snapshot, not a claim that every browser or deployment condition is covered.
+The current magnetic-release regression pass recorded **157/157 automated tests passing**, with TypeScript checking also passing. The previous living-node release recorded 130/130 tests. Suites cover graph/flow, unique branch growth and containment, growth-aware collision placement/layouts, magnetic simulation and guarded application, tasks and anchors, geometry, calendar dates, board-subtree snapshots, private persistence, shared queues/history/recovery, presence, guarded operations, and backend storage/security. This is a verification snapshot, not a claim that every browser or deployment condition is covered.
 
 Run the current checkout's checks with:
 
@@ -298,7 +317,9 @@ Backend tests execute actual SQLite SQL and transactions through a D1-shaped ada
 
 `tests/browser/living-fixture.html` embeds the real app using the isolated `fixture-living-nodes` identity and a deterministic scene of 37 nodes, 30 edges and three boards. It includes 0/5/20-branch nodes, long Persian text, a saved annotation, tasks/subtasks and a nested project. Reset and 390 × 844 frame controls support repeatable checks. Its workspace mock validates revisioned saves, reports write/branch metrics and uses a separate session-storage key. Other API calls are mocked or blocked, and there are no asset references. The flow fixture's default scene and production entrypoints/authentication are unchanged.
 
-The current managed-browser pass confirmed immediate click-to-dialog, real content, initial focus, trapped Shift+Tab, and return focus on close. F2 → Tab child → Enter sibling → Escape completed the writing flow, with growth updating after additions and Delete/Undo. Dragging an enlarged neuron's center moved the intended node without opening a popup. The scene reported 0/5/20 direct branches; at 45% fit zoom, all 25 visible edges showed flow and particles while hover/animation produced zero writes. Switching to cards and applying the neural layout showed six animated card frames, three flow paths and three moving signals.
+### Previous living-node release
+
+That managed-browser pass confirmed immediate click-to-dialog, real content, initial focus, trapped Shift+Tab, and return focus on close. F2 → Tab child → Enter sibling → Escape completed the writing flow, with growth updating after additions and Delete/Undo. Dragging an enlarged neuron's center moved the intended node without opening a popup. The scene reported 0/5/20 direct branches; at 45% fit zoom, all 25 visible edges showed flow and particles while hover/animation produced zero writes. Switching to cards and applying the neural layout showed six animated card frames, three flow paths and three moving signals.
 
 The desktop popup displayed all 1,515 characters of the Persian note without horizontal overflow and used a 29 px title. An annotation draft survived close/reopen and then explicit Save. A blank X coordinate blocked closing without losing the draft; X = 1,200 saved, and restoring the original position worked. Task completion updated progress to 2/3, and selecting child details kept one modal. Entering the nested project from its popup and adding a node updated the parent's contained count to four and recalculated growth.
 
@@ -306,12 +327,22 @@ After the neural layout settled in card view, the six cards had zero bounding-re
 
 At 390 × 844, the popup occupied x = 14–376 and y = 8–836, with width 362 px and equal `clientWidth`/`scrollWidth` of 360 px. Title and text measured 25 px and 16 px. Ctrl+End placed the textarea selection at 1,515/1,515 with `scrollTop` 1,372 and `scrollHeight` 1,618. Keyboard focus reached lower actions, colors and date controls while the header close button remained visible; that button closed the popup successfully.
 
-Reduced-motion runtime behavior remains unverified. The hidden-page check was inconclusive: switching Chrome tabs through desktop automation left the inspected canvas at `data-motion="on"`, which did not establish hidden-page pausing. The implementation handles reduced-motion and document visibility, but those runtime checks are not counted as passed.
+### Current magnetic release
+
+The real app was checked in the isolated living fixture. Start/Pause, all four force sliders and the settled status worked; a native keyboard adjustment changed distance from 180 to 170 in RTL. Pinning `living-twenty` held its center while other nodes moved. Pause and reload restored all 28 projected positions byte-for-byte, including the pin. Simulation movement caused zero workspace writes before Apply layout; Apply produced one write and cleared dirty state, and Undo produced the second write and restored the layout. Restore later cleared personal positions, pins and dirty state, paused the mode and made no workspace save.
+
+Right-click pinning and native pointer dragging moved the pinned center from (706, −114) to (891.94, −312.20), retaining its pin. Native hover exposed a preview-placement bug; after the fix, side placement avoided overlap with the source node. Tab → child title → Enter → sibling title → Escape created two linked nodes. Inline editing paused the magnetic loop and movement resumed afterward. The six-node card board settled with zero bounding-rectangle overlaps and zero extra writes; this observed fixture result is not a guarantee of overlap-free settling for every graph.
+
+The popup reported `data-motion-origin="node"` and a 380 ms entrance. An invalid X = 20,000,000 blocked closing with `aria-invalid`; Escape canceled the field draft, and eventual close restored focus to its source. At 390 × 844, the final popup bounds were x = 14, y = 8, width = 362 and height = 828 px, with `clientWidth` = `scrollWidth` = 360 px. The magnetic panel measured x = 12, y = 134, width = 316 and height = 626 px; its footer remained inside and `clientWidth` = `scrollWidth` = 314 px. The light-theme panel used the corrected darker accent and had no horizontal overflow. The current screenshots are [magnetic network](screenshots/nodus-magnetic-network.jpg) and [source-node popup](screenshots/nodus-magnetic-popup.jpg).
+
+### Coverage limits
+
+Reduced-motion behavior was reviewed in code; runtime behavior remains unverified. The earlier hidden-page check was inconclusive: switching Chrome tabs through desktop automation left the inspected canvas at `data-motion="on"`, which did not establish hidden-page pausing. The implementation handles reduced-motion and document visibility, but those runtime checks are not counted as passed for this release.
 
 Managed-browser fixture results establish UI behavior against synthetic servers. They are not evidence of production sign-in, two real signed-in users, Site allowlist setup, cross-account R2 access, physical touch devices, or native IME sessions. See the [README verification record](../README.md#browser-verification) for verified behavior and remaining coverage limits.
 
 ## Current scope and extension points
 
-Shared editing and live presence are implemented by the room service. Synchronization is polling-based and subject to latency/backoff; presence is ephemeral, and same-text-field conflicts require resolution. There are no editing locks, character-level CRDTs, invitation emails, calendar reminders, or continuous background rearrangement. Decorative node/edge animation is independent of saved layout.
+Shared editing and live presence are implemented by the room service. Synchronization is polling-based and subject to latency/backoff; presence is ephemeral, and same-text-field conflicts require resolution. There are no editing locks, character-level CRDTs, invitation emails or calendar reminders. Optional magnetic movement belongs to a personal view and reaches shared coordinates only through explicit guarded application; it does not continuously rearrange the server document. Decorative node/edge animation is independent of saved layout.
 
 Content remains user-authored. There are no model credentials, AI generation, PDF text extraction, transcription, or background analysis. Potential extensions include explicitly bounded analysis jobs, portable graph-plus-media backups, asset garbage collection, and explicit cross-board references. Each needs its own authorization, persistence, and failure behavior rather than weakening revision or ownership checks.
