@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { findDirectionalNode, getThoughtParent, insertThought, prepareThought } from '../lib/flow.ts';
 import { makeNode } from '../lib/graph.ts';
 import { validateWorkspace } from '../lib/server/validation.ts';
+import { buildNodeGrowth, projectCardNode } from '../lib/node-growth.ts';
 import type { GraphNode, Language, Workspace } from '../lib/types.ts';
 
 const createdAt = '2026-11-12T00:00:00.000Z';
@@ -101,15 +102,59 @@ test('placement and parent lookup stay on the requested board', () => {
   document.boards.push({ id: 'other', title: 'Other', description: '', parentNodeId: null, createdAt });
   const before = structuredClone(document);
   const child = prepareThought(document, 'home', 'root', 'child', { language: 'en' });
-  assert.equal(child.node.x, 348);
-  assert.equal(child.node.y, 0);
   const saved = commit(document, child, 'Local child');
+  const visibleRoot = projectCardNode(saved.nodes[0], buildNodeGrowth(saved).get('root'));
+  assert.equal(child.node.x, visibleRoot.x + visibleRoot.width + 104);
+  assert.ok(Math.abs(child.node.y) < 1e-9);
   assert.equal(saved.nodes.find(node => node.id === 'foreign'), document.nodes[1]);
   assert.equal(saved.boards, document.boards);
   const staleSelection = prepareThought(document, 'home', 'foreign', 'child', { anchor: { x: 900, y: 200 } });
   assert.equal(staleSelection.node.boardId, 'home');
   assert.equal(staleSelection.parentId, null);
   assert.equal(staleSelection.node.x + staleSelection.node.width / 2, 900);
+  assert.deepEqual(document, before);
+});
+
+test('Tab anticipates the first branch growth and Enter uses tall visible bounds without resizing or moving existing nodes', () => {
+  for (const language of ['en', 'fa'] as const) for (const childCount of [0, 20]) {
+    const root = { ...note('root'), width: 4096, height: 4096 };
+    const leaves = Array.from({ length: childCount }, (_, index) => note(`leaf-${index}`, 15000, index * 1000));
+    const document = workspace([root, ...leaves]);
+    document.edges = leaves.map(leaf => ({ id: `edge-${leaf.id}`, boardId: 'home', sourceId: root.id, targetId: leaf.id, label: '' }));
+    const before = structuredClone(document);
+    for (const relation of ['child', 'sibling'] as const) {
+      const plan = prepareThought(document, 'home', root.id, relation, { language });
+      const repeated = prepareThought(document, 'home', root.id, relation, { language });
+      assert.equal(plan.node.x, repeated.node.x);
+      assert.equal(plan.node.y, repeated.node.y);
+      const saved = commit(document, plan, 'New thought'), growth = buildNodeGrowth(saved);
+      const visible = saved.nodes.map(item => projectCardNode(item, growth.get(item.id)));
+      const visibleRoot = visible.find(item => item.id === root.id)!;
+      if (relation === 'child') {
+        const clearance = language === 'en' ? plan.node.x - visibleRoot.x - visibleRoot.width : visibleRoot.x - plan.node.x - plan.node.width;
+        assert.ok(Math.abs(clearance - 104) < 1e-9, `${language}: the new child clears the parent's post-insert growth`);
+      } else assert.ok(Math.abs(plan.node.y - visibleRoot.y - visibleRoot.height - 48) < 1e-9);
+      assertNoOverlap(visible);
+      assert.equal(plan.node.width, 244); assert.equal(plan.node.height, 172);
+      assert.deepEqual(saved.nodes.slice(0, document.nodes.length), document.nodes);
+      assert.equal(validateWorkspace(saved), saved);
+    }
+    assert.deepEqual(document, before);
+  }
+});
+
+test('Enter avoids the expanded bounds of unrelated occupied cards, including nested content', () => {
+  const source = note('source', 272, -220);
+  const blocker = { ...note('blocker'), childBoardId: 'nested' };
+  const document = workspace([source, blocker, ...Array.from({ length: 40 }, (_, index) => note(`inside-${index}`, 0, 0, 'nested'))]);
+  document.boards.push({ id: 'nested', title: 'Nested', description: '', parentNodeId: blocker.id, createdAt });
+  const before = structuredClone(document);
+  const plan = prepareThought(document, 'home', source.id, 'sibling', { language: 'en' });
+  assert.equal(plan.node.x, source.x);
+  assert.ok(plan.node.y > 0, 'The old stored-only position at y=0 intersects the grown blocker.');
+  const saved = commit(document, plan, 'Clear of the project'), growth = buildNodeGrowth(saved);
+  assertNoOverlap(saved.nodes.filter(item => item.boardId === 'home').map(item => projectCardNode(item, growth.get(item.id))));
+  assert.deepEqual(saved.nodes.slice(0, document.nodes.length), document.nodes);
   assert.deepEqual(document, before);
 });
 

@@ -6,7 +6,7 @@ The application has a React interface, a server API, a persistent SQL database a
 
 ## Working with a board
 
-- Select a node to keep thinking on the canvas. Open **Details** or press **Shift+Enter** to read its full content and attachments.
+- Hover over a node for a readable content preview. Click it to open its full content and attachments in a popup; **Shift+Enter** opens the notes editor directly.
 - Write titles directly beside neurons or on cards. **Enter** commits a thought and starts its next sibling; **Tab** commits it and starts a connected child. Focus follows the new thought without a modal or a fit-to-canvas jump.
 - Drag a node to move it. Drag the background to pan, and use the zoom controls, wheel or touch pinch to change scale.
 - Connect existing nodes, or create multiple connected branches from a list of titles.
@@ -27,7 +27,7 @@ The following shortcuts apply while the canvas or a thought card has focus. Ordi
 | Tab | Start a connected child of the current thought. |
 | Shift+Tab | Finish the title and return to its graph parent; without a parent, normal backward focus remains available on a card. |
 | Arrow keys | Move to a card in that physical direction. From the empty canvas selection, enter at the closest thought. |
-| F2 / double-click a note | Edit its title in place. Typing on a focused card also starts a replacement title. |
+| F2 | Edit the focused node's title in place. Typing on a focused card also starts a replacement title. |
 | Shift+Enter | Finish the title and open notes and details. |
 | Ctrl / Cmd+Enter | Open the focused card's nested project. |
 | Escape | Finish inline writing, or discard an empty new draft. On a card, clear selection and focus the canvas; Tab can then leave the canvas. |
@@ -37,7 +37,7 @@ The following shortcuts apply while the canvas or a thought card has focus. Ordi
 | Shift+F10 | Open the context menu for the focused node, connection or canvas. |
 | Ctrl / Cmd+Z | Undo a committed graph change. Text fields retain native text undo. |
 
-Enter on a root thought creates another independent root. A sibling shares the source's first valid incoming connection; this does not turn an arbitrary graph into a strict tree. Children start on the left in Persian and on the right in English. Placement avoids existing cards without moving earlier thoughts.
+Enter on a root thought creates another independent root. A sibling shares the source's first valid incoming connection; this does not turn an arbitrary graph into a strict tree. Children start on the left in Persian and on the right in English. Placement accounts for growth-expanded cards, including the parent after its new branch, without moving earlier thoughts.
 
 An empty new card is only a view draft: repeated Enter or Tab does not save empty notes. Its title and connection enter undo history together when committed. Persian text, input-method composition, paste, and native text shortcuts are handled within the inline editor.
 
@@ -47,17 +47,19 @@ Starting a title from a zoomed-out overview raises the scale to 100%, bounded by
 
 Choose **New task** in the add menu, press **T** with the canvas focused, or use **Make a task** in a card's context menu. Any content node can also be a task. Tasks have **To do**, **In progress** and **Done** states. **Tab** on a task creates a subtask; **Enter** creates another task with the same task parent. Completion controls and subtask progress appear on the cards and in Details. Task ancestry is separate from ordinary graph connections, so changing an edge does not silently move a task to another parent. Removing a parent's task status or deleting it promotes its surviving direct subtasks to root tasks.
 
-In Details, select a phrase in the title or notes and add an **annotation**. Comments retain the exact quote, can be edited, colored, resolved, reopened or deleted, and have an explicit save action. Unsaved comment drafts are scoped to the account and node. Editing surrounding text adjusts an unambiguous annotation anchor. A removed or changed quote keeps its comment and is marked as detached, rather than attaching the comment to unrelated text.
+In Details, select a phrase in the title or notes and add an **annotation**. Comments retain the exact quote, can be edited, colored, resolved, reopened or deleted, and have an explicit save action. Unsaved comment drafts are scoped to the account, room and node. Editing surrounding text adjusts an unambiguous annotation anchor. A removed or changed quote keeps its comment and is marked as detached, rather than attaching the comment to unrelated text.
 
 Right-click a card, connection or empty part of the canvas for relevant actions. **Shift+F10** or the keyboard context-menu key opens the same menu. Native text-field menus remain available. **Delete**, **Backspace** and **Ctrl/Cmd+Delete** remove a focused card or connection; deleting a project with contained nodes asks for confirmation. Undo restores removed graph content. In text fields these keys continue to edit text.
 
 Select a connection to change its label, endpoints, direction, color, width, solid/dashed/dotted stroke and curved/straight/elbow route. Drag its middle handle to reshape the path, or nudge the focused handle with arrow keys. Resetting the handle restores the automatic route. Nodes have card, sticky-note and outline appearances, plus editable canvas coordinates.
 
-Subtle light travels from source to destination on relevant connections. Animation is bounded to visible connections, pauses when the page is hidden, and respects the operating system's reduced-motion preference. It can also be disabled per connection. New cards have a brief entrance transition.
+Visible nodes breathe subtly and light travels along connections in both neuron and card views, including overview zoom. Every eligible visible connection has directional flow, with a bounded set of bright moving particles. Motion pauses when the page is hidden, and reduced-motion preferences use a static presentation. Animation can also be disabled per connection. These effects and hover previews do not change the document or create saves.
 
 ### Neural views, layout and personal appearance
 
-Open **Canvas layout and style**, beside the board heading. The default view uses small luminous neuron cores with readable titles. Selecting a neuron reveals its content preview and actions; entering a title expands the writing area. **Content cards** remain available for boards where images, files and longer excerpts are more useful.
+Open **Canvas layout and style**, beside the board heading. The default view uses luminous neuron cores with readable titles. Nodes grow with their outgoing branches, reachable descendants and contained project content; incoming links alone and note length do not inflate them. Cycles and converging branches count each reachable node once. **Content cards** use a more restrained version of the same growth, without changing stored node dimensions.
+
+Hover previews remain readable when the board is zoomed out. A click opens the real node in a full content popup; **F2** keeps title editing on the canvas. Opening an internal project still changes the working board rather than expanding all its descendants into the parent canvas.
 
 | Layout | What it does |
 | --- | --- |
@@ -70,9 +72,9 @@ Open **Canvas layout and style**, beside the board heading. The default view use
 
 Suggestions use the actual board's links, task hierarchy, content kinds and dates. They are deterministic recommendations, not generated AI content. Ordering controls include creation date, title, content type, color and task status, with ascending/descending order and adjustable spacing. Timeline dates and task lanes take priority over sorting; the selected sort orders ideas within those groups.
 
-Layouts apply to the current board as one undoable change. They retain content, containment and relationships, and reset manually bent paths on that board. The layout description and lane orientation are saved with the board so collaborators see the same arrangement and language changes do not swap lane meanings. Applying a layout is an explicit action: after changing task states, dates or adding ideas, apply it again to regroup them. Dragging a node does not change its task state or date.
+Layouts apply to the current board as one undoable change. They use the same growth-expanded card bounds as keyboard placement to avoid collisions, retain content, containment and relationships, and reset manually bent paths on that board. The layout description and lane orientation are saved with the board so collaborators see the same arrangement and language changes do not swap lane meanings. Applying a layout is an explicit action: after changing task states, dates or adding ideas, apply it again to regroup them. Growth does not automatically move existing nodes. Dragging a node does not change its task state or date.
 
-Neural physics runs for a bounded number of iterations when applied, then stops. Boards above 250 nodes use connected clusters instead of the all-pairs simulation. Nothing continuously moves the writing target or streams physics updates to the server.
+Neural physics runs for a bounded number of iterations when applied, then stops. Boards above 250 nodes use connected clusters instead of the all-pairs simulation. Decorative motion continues while node positions and writing targets stay fixed; it does not stream physics updates to the server.
 
 Personal appearance includes neuron/card presentation, dots/grid/plain background, three density settings, six accent colors and optional connection labels. These settings are scoped to account, room and board on the current device; each collaborator can choose their own presentation while sharing the same graph and positions. Reduced motion remains respected.
 
@@ -98,9 +100,11 @@ Inline typing stays local to its input rather than serializing the entire worksp
 
 If a title cannot be committed, its text remains editable. The `beforeunload` guard requests the browser's departure confirmation so a failed title commit is not silently treated as saved.
 
+The content popup keeps keyboard focus inside it and returns focus to its node when dismissed. URL and position drafts are validated and committed before closing or leaving for another action; a rejected edit keeps the popup and draft open. Escape can cancel a dirty field before closing the popup. Annotation drafts retain their explicit Save action and scoped recovery when the popup closes. Native text editing and input-method composition keep their own key handling.
+
 Personal writes include the document revision. When another tab has saved newer personal content, the server rejects a stale write instead of overwriting it. Shared rooms send guarded field operations and merge compatible edits against the current revision. Retry receipts prevent a lost save acknowledgement from applying a shared edit twice. Recovery can preserve the local graph as separate root boards. Keep the page open if saving fails and the browser reports that its recovery storage is unavailable.
 
-Shared recovery drafts use per-tab session storage, scoped to account and room. They survive a refresh in that tab but are not a durable backup after closing it. Revoked access freezes shared writes and retains pending work for export. Remote document application pauses during an inline title or unsaved annotation draft, so the visible editing base remains protected even when an earlier save response arrives.
+Shared recovery drafts use per-tab session storage, scoped to account and room. They survive a refresh in that tab but are not a durable backup after closing it. Revoked access freezes shared writes and retains pending work for export. Remote document application pauses during inline writing or unsaved popup drafts, including URL, position and annotation edits, so the visible editing base remains protected even when an earlier save response arrives.
 
 Current limits are:
 
@@ -191,7 +195,7 @@ Run the graph, layouts, keyboard-flow, collaboration, recovery and backend suite
 node --import ./tests/server-loader.mjs --test tests/*.test.ts tests/*.test.mjs
 ```
 
-All **114 automated tests pass**. The suite covers graph and task hierarchy, annotation anchors, layouts, connection geometry, recovery, collaboration and persistence. The backend tests use an in-memory SQLite database initialized from the checked-in migrations. They exercise actual conditional save statements and transactions, independent identities, field conflicts, receipt retries, revocation during commit, rollback, attachment access, graph validation and media byte ranges. Client tests cover pause/resume races, lost acknowledgements, guarded own undo, room/account scoping and presence lifecycle.
+The living-node release regression snapshot passed **130/130 automated tests**. The suite covers graph and task hierarchy, branch growth, growth-aware layout and keyboard placement, annotation anchors, connection geometry, recovery, collaboration and persistence. The backend tests use an in-memory SQLite database initialized from the checked-in migrations. They exercise actual conditional save statements and transactions, independent identities, field conflicts, receipt retries, revocation during commit, rollback, attachment access, graph validation and media byte ranges. Client tests cover pause/resume races, lost acknowledgements, guarded own undo, room/account scoping and presence lifecycle.
 
 ### Browser verification
 
@@ -199,7 +203,9 @@ The development server exposes [tests/browser/flow-fixture.html](tests/browser/f
 
 [tests/browser/shared-fixture.html](tests/browser/shared-fixture.html) adds two instances of the real app under separate synthetic identities. Both use one fixture-only canonical room, actual guarded diff/apply and graph validation, presence, membership and idempotent receipts. Controls simulate each peer going offline and a lost acknowledgement. The fixture never grants access to production data or bypasses production authentication.
 
-The completed browser checks verified:
+[tests/browser/living-fixture.html](tests/browser/living-fixture.html) adds a deterministic 37-node, 30-edge, three-board scene with identifiable 0/5/20-branch nodes, long Persian text, an annotation, task/subtasks and a nested project. It mounts the real app under a separate synthetic identity, shows branch and write metrics, and provides reset and 390 × 844 frame controls. Its isolated workspace API validates saves and persists only fixture state in session storage. All other API calls are mocked or blocked, and the scene has no asset references. The existing flow fixture remains unchanged.
+
+Earlier completed fixture checks established:
 
 | Interaction | Observed result |
 | --- | --- |
@@ -216,8 +222,7 @@ The completed browser checks verified:
 | Delete and context menus | Node and edge Delete and Ctrl+Delete remove the intended item; undo restores it. Native text Delete edits only the text. Pointer right-click and Shift+F10 expose context actions. |
 | Connection editing | Route, stroke, color, width, label and direction changes are rendered. Duplicate endpoints are rejected. Dragging the middle handle and arrow-key nudges reshape the path; Delete on the handle resets it. |
 | Persisted feature metadata | Task states, task hierarchy, node appearance, annotations and edge styling survive a fixture reload. |
-| Mobile feature panels | At 390 × 844, task conversion and annotation creation work. The Inspector is 390 px wide and the connection editor stays within the viewport, with no horizontal overflow. |
-| Traveling light | Selected task connections render SVG motion along their path. Reduced-motion, hidden-page and 24-signal limits are implemented and reviewed in code. |
+| Mobile feature panels | At 390 × 844, task conversion and annotation creation worked in the previous Details presentation; the connection editor stayed within the viewport. The new full popup is covered in the current pass below. |
 | Neural keyboard editing | Enter and Tab create connected thoughts in the minimal view; the second session receives their titles and relationships. |
 | Shared edits and reconnection | Different fields edited by two synthetic accounts converge. After one session goes offline and rejoins, both local and peer edits remain. Own undo preserves the peer's text. |
 | Shared presence | The other session shows the cursor, name and selected node at its own zoom level. Pan/zoom changes remain local. |
@@ -226,7 +231,27 @@ The completed browser checks verified:
 | Member access | Removing the editor in the room panel makes the other session report lost access; adding the email back permits a fresh authorized session. |
 | Mobile design and sharing | Both app frames run at 390 × 844. Design and collaboration dialogs stay within the viewport with scrollable contents and no horizontal overflow. |
 
-These are browser checks against synthetic persistence, not a deployed authenticated UI test. Physical touch devices, native IME sessions and production signed-in behavior were not verified in this pass.
+The current living-node browser pass confirmed:
+
+| Interaction | Observed result |
+| --- | --- |
+| Click and content | A clean node click opens the full dialog with the node's real text. |
+| Popup focus | Initial focus is correct, Shift+Tab stays inside the dialog, and closing returns focus to the originating node. |
+| Branch metrics | The scene reports the expected 0, 5 and 20 direct branches. |
+| Keyboard growth and history | F2 → Tab child → Enter sibling → Escape completes the writing flow. Added branches update growth immediately; Delete and Undo recalculate it. |
+| Grown-node dragging | Dragging from the enlarged neuron's center moves the intended node accurately without opening the popup. |
+| Long Persian content | The desktop popup renders the complete 1,515-character note without horizontal overflow, with a 29 px title. |
+| Annotation drafts | An unposted comment survives closing and reopening the popup, then saves through the explicit Save action. |
+| Coordinate validation | A blank X value blocks closing and keeps its draft. A valid X value of 1,200 persists, and the original position can then be restored. |
+| Tasks and child details | A checkbox updates progress to 2/3. Opening a subtask's details keeps one modal open. |
+| Nested-project growth | From the project popup, entering its board and adding a node updates the parent's nested count to four and recalculates growth. |
+| Overview motion and saves | At 45% fit zoom, all 25 visible connections render flow and moving particles. Hover previews and ongoing animation leave the fixture write count at zero. |
+| Card-view motion | Switching to cards and applying the neural layout shows six animated card frames, three flow paths and three moving signals. |
+| Settled card layout and hover | The six cards have no bounding-rectangle overlaps and their edges attach correctly. Hover enlarges a card and previews its real 1,515-character note. |
+| Mobile popup | At 390 × 844, the popup is 362 px wide with no horizontal overflow; its title is 25 px and text is 16 px. Ctrl+End reaches character 1,515, keyboard focus reaches the lower actions/colors/date, and the header close control remains visible and dismisses successfully. |
+| Per-edge motion | Disabling one edge's animation through its context controls reduces flow paths and particles from three to two while all six card frames remain animated. Re-enabling restores both counts to three. |
+
+Reduced-motion behavior is implemented but was not verified at runtime. The hidden-page check was inconclusive: switching Chrome tabs through desktop automation left the inspected canvas at `data-motion="on"`, so that check did not establish whether hidden-page pausing works. These are browser checks against synthetic persistence, not a deployed authenticated UI test or a test with two real signed-in users. Physical touch devices, native IME sessions and production signed-in behavior were not verified in this pass.
 
 ![Inline title editing in the synthetic browser verification workspace](docs/screenshots/keyboard-flow.jpg)
 

@@ -7,8 +7,8 @@ Nodus stores editable graphs on the server, supports private workspaces and shar
 | Area | Main implementation |
 | --- | --- |
 | Interfaces and constraints | `lib/types.ts`, `lib/server/validation.ts`, `lib/node-features.ts`, `lib/calendar.ts` |
-| Graph edits, keyboard placement, share snapshots | `lib/graph.ts`, `lib/flow.ts`, `lib/board-snapshot.ts` |
-| Canvas, details, application coordination | `components/Canvas.tsx`, `components/Inspector.tsx`, `components/NodusApp.tsx` |
+| Graph edits, derived growth, keyboard placement, share snapshots | `lib/graph.ts`, `lib/node-growth.ts`, `lib/flow.ts`, `lib/board-snapshot.ts` |
+| Canvas, content popup, application coordination | `components/Canvas.tsx`, `components/Inspector.tsx`, `components/Modal.tsx`, `components/NodusApp.tsx` |
 | Layouts and personal appearance | `lib/layouts.ts`, `components/DesignPanel.tsx`, `hooks/use-canvas-preferences.ts` |
 | Private persistence | `hooks/workspace-store.ts`, `lib/server/store.ts`, `/api/workspace` |
 | Shared protocol and persistence | `lib/collaboration.ts`, `hooks/shared-workspace-store.ts`, `lib/server/collaboration.ts`, `/api/rooms` |
@@ -52,15 +52,19 @@ Inline titles, inspector edits, duplication title changes, and project renaming 
 
 ### Neural display and saved geometry
 
-The default display is `neuron`: a small core, readable label, and contextual details. Core diameter reflects density, connection count, and project containment. Connection endpoints use a derived core-sized anchor centered within the node's saved rectangle. Switching to cards does not rewrite `x`, `y`, `width`, or `height`, so one document remains usable in either presentation. Inline editing, selection, dragging, keyboard navigation, and project opening still address the original node.
+The default display is `neuron`: a luminous core, readable label, and contextual preview. `buildNodeGrowth` derives weight from unique outgoing graph/task children, reachable descendants and nodes in contained projects. Incoming degree and text length do not contribute. Cycles and converging paths count each reachable node once; descendant counting saturates at 128 with a separate overflow flag, while direct and nested counts remain exact. Growth is derived visual state, not a saved dimension change.
+
+Neuron cores use the full bounded growth scale. `projectCardNode` applies a restrained scale around the saved center for card rendering, explicit layouts and keyboard collision checks. Connection endpoints, fit and hit areas use the displayed geometry. Switching presentation does not rewrite `x`, `y`, `width` or `height`.
+
+Hover opens a screen-space preview with real content and project/media affordances, readable at overview zoom. An unmoved click opens the full content popup immediately; drag and connection gestures retain their separate intent. F2 starts inline title editing. Full content uses the current workspace node rather than a copied snapshot, and opening a contained project changes the active board.
 
 Peer cursors are drawn at world coordinates with inverse zoom scaling. Only peers on the active board are drawn, and off-screen cursors are culled. Peer selections add labeled accents to existing nodes; they are indicators, not editing locks.
 
-Connections support curved, straight, and orthogonal elbow routes. Bend dragging previews locally and commits on release. Route, stroke, width, color, endpoints, and bends are document changes. Traveling light is a visual effect capped at 24 eligible visible edges. Motion respects reduced-motion preferences and page visibility and does not change graph data. Canvas media previews do not autoplay audio or video.
+Connections support curved, straight, and orthogonal elbow routes. Bend dragging previews locally and commits on release. Route, stroke, width, color, endpoints, and bends are document changes. Node breathing/glow and directional edge flow persist across neuron/card views and zoom levels. Every visible eligible edge has a flow path; bright particles are distributed over at most 36 edges plus an eligible selected edge. Per-edge `animated: false` disables its flow and particle. Hidden pages and reduced-motion preferences use static presentation without active particles. These visual effects and hover interactions do not write graph data or move saved positions. Canvas media previews do not autoplay audio or video.
 
 ### Six explicit layouts
 
-`arrangeWorkspace` applies a chosen layout to the active board in one undoable document change. It preserves other boards and content, writes bounded coordinates, and clears custom bends on the arranged board.
+`arrangeWorkspace` applies a chosen layout to the active board in one undoable document change. Collision spacing uses growth-expanded card projections shared with rendering and keyboard placement. It preserves other boards, content and stored dimensions, writes bounded coordinates, and clears custom bends on the arranged board.
 
 | Layout | Behavior |
 | --- | --- |
@@ -73,7 +77,7 @@ Connections support curved, straight, and orthogonal elbow routes. Bend dragging
 
 Sort choices include creation time, title, kind, color, and task status, with ascending/descending order and bounded spacing. Suggestions use graph statistics such as links, tasks, dates, and media; they do not call an AI service.
 
-Applied layout is canonical board metadata: `Board.layout` records kind, sort, direction, spacing, language, and optional fixed Kanban `columnStep` alongside the saved coordinates. Shared peers receive the same arrangement and guides. Stored orientation and lane spacing prevent guides from drifting when a viewer changes UI language or a task changes status. Guide captions can use the viewer's language without changing their geometry. Layout is a one-time manual application: changing task status or scheduled dates does not continuously move cards. Reapply the layout to reposition them.
+Applied layout is canonical board metadata: `Board.layout` records kind, sort, direction, spacing, language, and optional fixed Kanban `columnStep` alongside the saved coordinates. Shared peers receive the same arrangement and guides. Stored orientation and lane spacing prevent guides from drifting when a viewer changes UI language or a task changes status. Guide captions can use the viewer's language without changing their geometry. Layout is a one-time manual application: branch growth, task status or scheduled dates do not automatically move existing cards. Reapply the layout to reposition them; decorative motion continues independently of layout.
 
 Personal appearance remains separate. Node display mode, background, density, accent, and connection-label visibility are scoped to account, room-or-personal mode, and board in local storage. They do not create shared revisions. Viewport pan/zoom is stored under the board ID; theme and UI language are browser preferences. Preference storage failures leave the current view usable and are surfaced where appropriate.
 
@@ -85,13 +89,19 @@ Personal appearance remains separate. Node display mode, background, density, ac
 
 `use-thought-flow.ts` owns one inline session while the input owns temporary text. A blank new thought is a view-only node. Its first nonempty commit inserts the node and connection atomically, producing one undo item rather than an item per character. Existing inline titles also commit as a complete graph edit.
 
-Enter creates a sibling; Tab creates a child. For tasks, a sibling retains the source task's explicit parent and a child points to the source task. Task roots remain roots even with incoming graph edges. Ordinary thoughts use the first valid incoming edge for parent navigation. Shift+Tab moves toward that parent, arrows follow physical positions, and Ctrl/Command+Enter opens a nested project. Normal textareas retain native multiline editing.
+Enter creates a sibling; Tab creates a child. For tasks, a sibling retains the source task's explicit parent and a child points to the source task. Task roots remain roots even with incoming graph edges. Ordinary thoughts use the first valid incoming edge for parent navigation. `prepareThought` measures growth-expanded occupied cards and the parent's prospective growth after adding the branch, placing only the new thought in the interface's RTL/LTR direction. It never rearranges existing thoughts. Shift+Tab moves toward the parent, arrows follow physical positions, and Ctrl/Command+Enter opens a nested project. F2 edits the title in place; normal textareas retain native multiline editing.
 
 The input guards IME composition and deduplicates blur following a keyboard commit. Navigation and page-departure paths read the current DOM value. A capture-phase unload handler runs before store recovery checks; failed commits retain editable text and can trigger the departure guard. Blank new drafts never become durable graph data. Account ownership is checked again before commit, and external controls keep focus after a blur commit.
 
-### Visible-base freeze during shared inline work
+### Content popup and draft lifecycle
 
-Remote synchronization must not silently change an expected value behind a text buffer that has not entered the document. The application calls `setRemotePaused(true)` when inline writing starts and while an annotation draft is dirty.
+`Modal` owns the focus scope, initial focus, inert background, Escape handling and return focus. The node popup starts on its introduction for a click or in notes for Shift+Enter. Tab and Shift+Tab remain inside, including from a non-tabbable introductory element. Dismissal returns focus to the source node; leaving for inline writing, connection mode or a nested board lets the destination own focus after the popup unmounts. Composition and handled field keys are not repurposed as dismissal.
+
+`Inspector.flushPending()` validates local URL/coordinate drafts and requires an accepted workspace mutation before close, node switching or another popup action. Rejection preserves the open editor and draft. Escape first cancels a dirty field. Capture-phase departure handling flushes drafts before store recovery guards. Annotation Save remains explicit and drafts survive popup unmount in scoped session storage; failed saves do not clear them. Read-only shared rooms disable graph mutations while preserving local annotation recovery. Opening a popup gates canvas shortcuts and paste actions.
+
+### Visible-base freeze during shared editing
+
+Remote synchronization must not silently change an expected value behind a buffer that has not entered the document. The application calls `setRemotePaused(true)` when inline writing starts or a popup URL, coordinate or annotation draft is dirty.
 
 During this pause, shared GET polling stops, but local commits, saves, and independent presence continue. A PATCH acknowledgement may contain newer peer fields. The store acknowledges its own operation and advances the revision while deferring untouched remote fields instead of replacing the visible editing base. A subsequent title commit retains the expected-before value the writer actually saw. A peer's same-field edit produces a conflict rather than being accepted as a hidden new base and overwritten.
 
@@ -272,7 +282,7 @@ Files are immutable. Removing a node removes its current room-derived file grant
 
 ## Verification and its boundaries
 
-The feature regression pass recorded **114/114 automated tests passing**. Suites cover graph/flow, tasks and anchors, geometry, layouts/calendar dates, board-subtree snapshots, private persistence, shared queues/history/recovery, presence, guarded operations, and backend storage/security. This is a verification snapshot, not a claim that every browser or deployment condition is covered.
+The living-node release regression pass recorded **130/130 automated tests passing**. Suites cover graph/flow, unique branch growth and containment, growth-aware collision placement/layouts, tasks and anchors, geometry, calendar dates, board-subtree snapshots, private persistence, shared queues/history/recovery, presence, guarded operations, and backend storage/security. This is a verification snapshot, not a claim that every browser or deployment condition is covered.
 
 Run the current checkout's checks with:
 
@@ -286,10 +296,22 @@ Backend tests execute actual SQLite SQL and transactions through a D1-shaped ada
 
 `tests/browser/flow-fixture.html` mounts the real app against a synthetic private API; `flow-mobile.html` provides a narrow frame. `tests/browser/shared-fixture.html` mounts two real `NodusApp` sessions in separate frames against a synthetic canonical server with synthetic owner/editor identities. It uses protocol application and graph validation, and can simulate network interruption or lost acknowledgements. Fixture state uses session storage. API requests are intercepted or blocked, real attachment access is disabled, and fixtures are development-only. Their in-page cooperation is test infrastructure, not the production transport.
 
-Managed-browser fixture results establish UI behavior against those synthetic servers. They are not evidence of production sign-in, Site allowlist setup, cross-account R2 access, physical touch devices, or native IME sessions. See the [README verification record](../README.md#browser-verification) for current interaction and deployment checks.
+`tests/browser/living-fixture.html` embeds the real app using the isolated `fixture-living-nodes` identity and a deterministic scene of 37 nodes, 30 edges and three boards. It includes 0/5/20-branch nodes, long Persian text, a saved annotation, tasks/subtasks and a nested project. Reset and 390 × 844 frame controls support repeatable checks. Its workspace mock validates revisioned saves, reports write/branch metrics and uses a separate session-storage key. Other API calls are mocked or blocked, and there are no asset references. The flow fixture's default scene and production entrypoints/authentication are unchanged.
+
+The current managed-browser pass confirmed immediate click-to-dialog, real content, initial focus, trapped Shift+Tab, and return focus on close. F2 → Tab child → Enter sibling → Escape completed the writing flow, with growth updating after additions and Delete/Undo. Dragging an enlarged neuron's center moved the intended node without opening a popup. The scene reported 0/5/20 direct branches; at 45% fit zoom, all 25 visible edges showed flow and particles while hover/animation produced zero writes. Switching to cards and applying the neural layout showed six animated card frames, three flow paths and three moving signals.
+
+The desktop popup displayed all 1,515 characters of the Persian note without horizontal overflow and used a 29 px title. An annotation draft survived close/reopen and then explicit Save. A blank X coordinate blocked closing without losing the draft; X = 1,200 saved, and restoring the original position worked. Task completion updated progress to 2/3, and selecting child details kept one modal. Entering the nested project from its popup and adding a node updated the parent's contained count to four and recalculated growth.
+
+After the neural layout settled in card view, the six cards had zero bounding-rectangle overlaps and correct edge anchors. Hover enlarged the card and previewed the real 1,515-character note. Disabling one edge's animation reduced both flow and particle counts from three to two while six card frames remained animated; re-enabling restored both counts to three.
+
+At 390 × 844, the popup occupied x = 14–376 and y = 8–836, with width 362 px and equal `clientWidth`/`scrollWidth` of 360 px. Title and text measured 25 px and 16 px. Ctrl+End placed the textarea selection at 1,515/1,515 with `scrollTop` 1,372 and `scrollHeight` 1,618. Keyboard focus reached lower actions, colors and date controls while the header close button remained visible; that button closed the popup successfully.
+
+Reduced-motion runtime behavior remains unverified. The hidden-page check was inconclusive: switching Chrome tabs through desktop automation left the inspected canvas at `data-motion="on"`, which did not establish hidden-page pausing. The implementation handles reduced-motion and document visibility, but those runtime checks are not counted as passed.
+
+Managed-browser fixture results establish UI behavior against synthetic servers. They are not evidence of production sign-in, two real signed-in users, Site allowlist setup, cross-account R2 access, physical touch devices, or native IME sessions. See the [README verification record](../README.md#browser-verification) for verified behavior and remaining coverage limits.
 
 ## Current scope and extension points
 
-Shared editing and live presence are implemented by the room service. Synchronization is polling-based and subject to latency/backoff; presence is ephemeral, and same-text-field conflicts require resolution. There are no editing locks, character-level CRDTs, invitation emails, calendar reminders, or continuous background layout motion.
+Shared editing and live presence are implemented by the room service. Synchronization is polling-based and subject to latency/backoff; presence is ephemeral, and same-text-field conflicts require resolution. There are no editing locks, character-level CRDTs, invitation emails, calendar reminders, or continuous background rearrangement. Decorative node/edge animation is independent of saved layout.
 
 Content remains user-authored. There are no model credentials, AI generation, PDF text extraction, transcription, or background analysis. Potential extensions include explicitly bounded analysis jobs, portable graph-plus-media backups, asset garbage collection, and explicit cross-board references. Each needs its own authorization, persistence, and failure behavior rather than weakening revision or ownership checks.

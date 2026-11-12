@@ -1,5 +1,6 @@
 import { makeNode, uid } from './graph.ts';
 import { assertNodeFeatureMetadata, assertTaskParent } from './node-features.ts';
+import { buildNodeGrowth, projectCardNode } from './node-growth.ts';
 import type { GraphNode, Language, Workspace } from './types';
 
 export type ThoughtRelation = 'child' | 'sibling';
@@ -113,16 +114,23 @@ export function prepareThought(
     parentId: source?.task ? relation === 'child' ? source.id : source.task.parentId : null,
   } : undefined;
   const node = makeNode(boardId, 'note', 0, 0, { title: '', text: '', color: source?.color ?? 'sage', ...(task ? { task } : {}) });
+  // Include the planned branch while measuring occupied bounds: committing its
+  // edge grows the parent immediately, even though existing positions never move.
+  const prospective = { ...document, nodes: [...document.nodes, node],
+    edges: parent ? [...document.edges, { id: node.id, boardId, sourceId: parent.id, targetId: node.id, label: '' }] : document.edges,
+  };
+  const growth = buildNodeGrowth(prospective);
+  const visibleSource = source ? projectCardNode(source, growth.get(source.id)) : null;
   const direction = (options.language ?? 'fa') === 'fa' ? -1 : 1;
   let x: number;
   let y: number;
-  if (source) {
+  if (visibleSource) {
     if (relation === 'child') {
-      x = direction > 0 ? source.x + source.width + HORIZONTAL_GAP : source.x - node.width - HORIZONTAL_GAP;
-      y = source.y + (source.height - node.height) / 2;
+      x = direction > 0 ? visibleSource.x + visibleSource.width + HORIZONTAL_GAP : visibleSource.x - node.width - HORIZONTAL_GAP;
+      y = visibleSource.y + (visibleSource.height - node.height) / 2;
     } else {
-      x = source.x + (source.width - node.width) / 2;
-      y = source.y + source.height + VERTICAL_GAP;
+      x = visibleSource.x + (visibleSource.width - node.width) / 2;
+      y = visibleSource.y + visibleSource.height + VERTICAL_GAP;
     }
   } else {
     const anchor = options.anchor ?? { x: 0, y: 0 };
@@ -131,7 +139,7 @@ export function prepareThought(
     y = anchor.y - node.height / 2;
   }
   if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error('The source thought has an invalid canvas position.');
-  const occupied = document.nodes.filter(item => item.boardId === boardId && hasGeometry(item));
+  const occupied = document.nodes.filter(item => item.boardId === boardId && hasGeometry(item)).map(item => projectCardNode(item, growth.get(item.id)));
   const position = availablePosition(x, y, node, occupied, direction);
   return { node: { ...node, ...position }, parentId: parent?.id ?? null };
 }

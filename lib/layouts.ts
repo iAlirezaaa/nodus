@@ -1,4 +1,5 @@
 import type { BoardLayout, GraphEdge, GraphNode, Language, NodeColor, Workspace } from './types';
+import { buildNodeGrowth, projectCardNode } from './node-growth';
 
 export interface CanvasDesign {
   nodeStyle: 'neuron' | 'cards'; background: 'dots' | 'grid' | 'none';
@@ -186,7 +187,10 @@ function kanban(nodes: GraphNode[], options: LayoutOptions): Positioned[] {
 export function arrangeWorkspace(document: Workspace, boardId: string, options: LayoutOptions): Workspace {
   const board = document.boards.find(item => item.id === boardId);
   if (!board) return document;
-  const nodes = sorted(document.nodes.filter(node => node.boardId === boardId), options);
+  const originalNodes = sorted(document.nodes.filter(node => node.boardId === boardId), options);
+  const growth = buildNodeGrowth(document);
+  const nodes = originalNodes.map(node => projectCardNode(node, growth.get(node.id)));
+  const originalsById = new Map(originalNodes.map(node => [node.id, node]));
   const edges = document.edges.filter(edge => edge.boardId === boardId), gap = spacing(options);
   const layout: BoardLayout = { kind: options.kind, sort: options.sort, direction: options.direction, spacing: gap, language: options.language,
     ...(options.kind === 'kanban' ? { columnStep: dimensions(nodes).width + gap * 2 } : {}),
@@ -202,7 +206,12 @@ export function arrangeWorkspace(document: Workspace, boardId: string, options: 
   else if (options.kind === 'kanban') items = kanban(nodes, options);
   else items = neural(nodes, edges, gap);
   if (options.kind !== 'kanban') items = centered(items);
-  const positions = new Map(items.map(item => [item.node.id, { x: limit(item.x), y: limit(item.y) }]));
+  // Algorithms pack visible rectangles. Persist only the corresponding original
+  // rectangles' positions, keeping widths/heights and repeated arrangements stable.
+  const positions = new Map(items.map(item => {
+    const original = originalsById.get(item.node.id)!;
+    return [item.node.id, { x: limit(item.x + (item.node.width - original.width) / 2), y: limit(item.y + (item.node.height - original.height) / 2) }];
+  }));
   let changed = !sameLayout;
   const nextNodes = document.nodes.map(node => { const at = positions.get(node.id); if (!at || (at.x === node.x && at.y === node.y)) return node; changed = true; return { ...node, ...at }; });
   const nextEdges = document.edges.map(edge => { if (edge.boardId !== boardId || !edge.bend) return edge; changed = true; const next = { ...edge }; delete next.bend; return next; });
@@ -210,7 +219,9 @@ export function arrangeWorkspace(document: Workspace, boardId: string, options: 
 }
 
 export function layoutGuides(document: Workspace, boardId: string, options: LayoutOptions, displayLanguage: Language = options.language): LayoutGuide[] {
-  const nodes = document.nodes.filter(node => node.boardId === boardId), gap = spacing(options);
+  if (options.kind !== 'timeline' && options.kind !== 'kanban') return [];
+  const growth = buildNodeGrowth(document);
+  const nodes = document.nodes.filter(node => node.boardId === boardId).map(node => projectCardNode(node, growth.get(node.id))), gap = spacing(options);
   if (!nodes.length) return [];
   if (options.kind === 'timeline') {
     const formatter = new Intl.DateTimeFormat(displayLanguage === 'fa' ? 'fa-IR' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });

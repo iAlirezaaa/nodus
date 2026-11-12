@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { arrangeWorkspace, DEFAULT_LAYOUT_OPTIONS, layoutGuides, suggestLayouts, type LayoutKind, type LayoutOptions } from '../lib/layouts.ts';
+import { buildNodeGrowth, projectCardNode } from '../lib/node-growth.ts';
 import type { GraphNode, Workspace } from '../lib/types.ts';
 
 const createdAt = '2026-11-12T12:00:00.000Z';
@@ -11,8 +12,9 @@ function fixture(count = 24): Workspace {
 }
 function assertGeometry(document: Workspace) {
   for (const item of document.nodes) { assert.ok(Number.isFinite(item.x) && Number.isFinite(item.y)); assert.ok(Math.abs(item.x) <= 1e7 && Math.abs(item.y) <= 1e7); }
-  for (let a = 0; a < document.nodes.length; a++) for (let b = a + 1; b < document.nodes.length; b++) {
-    const left = document.nodes[a], right = document.nodes[b]; if (left.boardId !== right.boardId) continue;
+  const growth = buildNodeGrowth(document), visible = document.nodes.map(item => projectCardNode(item, growth.get(item.id)));
+  for (let a = 0; a < visible.length; a++) for (let b = a + 1; b < visible.length; b++) {
+    const left = visible[a], right = visible[b]; if (left.boardId !== right.boardId) continue;
     assert.equal(left.x < right.x + right.width - .01 && left.x + left.width > right.x + .01 && left.y < right.y + right.height - .01 && left.y + left.height > right.y + .01, false, `${left.id} overlaps ${right.id}`);
   }
 }
@@ -36,14 +38,15 @@ test('arrangement preserves content and foreign board identity; only local bends
   assert.equal(arrangeWorkspace(document, 'missing', DEFAULT_LAYOUT_OPTIONS), document);
 });
 
-test('every layout is deterministic, bounded, collision-free, and stable when reapplied', () => {
+test('every layout packs grown card bounds, preserves saved dimensions, and is deterministic and stable when reapplied', () => {
   const document = fixture();
   document.edges.push({ id: 'cycle', boardId: 'home', sourceId: 'n023', targetId: 'n000', label: '' });
   for (const kind of ['neural', 'tree', 'orbit', 'grid', 'timeline', 'kanban'] as LayoutKind[]) {
     const options = { ...DEFAULT_LAYOUT_OPTIONS, kind, language: 'en' as const };
     const first = arrangeWorkspace(document, 'home', options), second = arrangeWorkspace(document, 'home', options);
-    assert.deepEqual(first, second, kind); assert.deepEqual(arrangeWorkspace(first, 'home', options), first, kind);
+    assert.deepEqual(first, second, kind); assert.equal(arrangeWorkspace(first, 'home', options), first, kind);
     assertGeometry(first); assert.equal(first.nodes.length, document.nodes.length); assert.equal(first.edges.length, document.edges.length);
+    assert.deepEqual(first.nodes.map(({ id, width, height }) => ({ id, width, height })), document.nodes.map(({ id, width, height }) => ({ id, width, height })), kind);
   }
 });
 
@@ -90,7 +93,8 @@ test('kanban keeps four visible lanes including non-tasks and mirrors lane order
 test('shared Kanban geometry survives translation, status changes, and wider additions until reapplication', () => {
   const options = { ...DEFAULT_LAYOUT_OPTIONS, kind: 'kanban' as const, language: 'en' as const };
   const result = arrangeWorkspace(fixture(8), 'home', options), layout = result.boards[0].layout!;
-  assert.equal(layout.columnStep, Math.max(...result.nodes.map(item => item.width)) + options.spacing * 2);
+  const growth = buildNodeGrowth(result);
+  assert.equal(layout.columnStep, Math.max(244, ...result.nodes.map(item => projectCardNode(item, growth.get(item.id)).width)) + options.spacing * 2);
   const before = layoutGuides(result, 'home', layout, 'en');
   const translated = layoutGuides(result, 'home', layout, 'fa');
   assert.deepEqual(translated.map(({ x, width, id }) => ({ x, width, id })), before.map(({ x, width, id }) => ({ x, width, id })));
@@ -102,6 +106,39 @@ test('shared Kanban geometry survives translation, status changes, and wider add
   const reapplied = arrangeWorkspace(updated, 'home', layout);
   assert.equal(reapplied.boards[0].layout!.columnStep, 800 + options.spacing * 2);
   assert.equal(result.boards[0].layout, layout);
+});
+
+test('timeline and persisted Kanban guides enclose nested-project growth and remain fixed until explicit rearrangement', () => {
+  const document = fixture(3);
+  document.nodes = [node('project', { childBoardId: 'inside', width: 380, height: 260, task: { status: 'todo', parentId: null } }),
+    node('next', { scheduledAt: '2026-12-01', task: { status: 'doing', parentId: null } }),
+    ...Array.from({ length: 40 }, (_, index) => node(`inside-${index}`, { boardId: 'inside' }))];
+  document.boards.push({ ...document.boards[0], id: 'inside', parentNodeId: 'project' });
+  document.edges = [];
+  const before = structuredClone(document);
+  for (const kind of ['timeline', 'kanban'] as const) {
+    const result = arrangeWorkspace(document, 'home', { ...DEFAULT_LAYOUT_OPTIONS, kind, language: 'en' });
+    const layout = result.boards[0].layout!, growth = buildNodeGrowth(result);
+    const guides = layoutGuides(result, 'home', layout);
+    for (const item of result.nodes.filter(item => item.boardId === 'home')) {
+      const visible = projectCardNode(item, growth.get(item.id));
+      const guide = guides.find(guide => guide.id === (kind === 'kanban' ? `lane-${item.task!.status}` : `date-${item.scheduledAt ?? item.createdAt.slice(0, 10)}`))!;
+      assert.ok(visible.x >= guide.x && visible.x + visible.width <= guide.x + guide.width);
+      assert.ok(visible.y >= guide.y && visible.y + visible.height <= guide.y + guide.height);
+    }
+    assert.equal(arrangeWorkspace(result, 'home', layout), result);
+    assert.equal(result.nodes[0].width, 380);
+    assert.equal(result.nodes[0].height, 260);
+    assert.equal(result.nodes.find(item => item.id === 'inside-0'), document.nodes.find(item => item.id === 'inside-0'));
+    if (kind === 'kanban') {
+      const expanded = { ...result, nodes: [...result.nodes, ...Array.from({ length: 40 }, (_, index) => node(`more-${index}`, { boardId: 'inside' }))] };
+      assert.deepEqual(layoutGuides(expanded, 'home', layout).map(({ x, width }) => ({ x, width })), guides.map(({ x, width }) => ({ x, width })));
+      assert.deepEqual(expanded.nodes.slice(0, result.nodes.length), result.nodes, 'Growing contained content does not move existing cards.');
+      const rearranged = arrangeWorkspace(expanded, 'home', layout);
+      assert.ok(rearranged.boards[0].layout!.columnStep! > layout.columnStep!);
+    }
+  }
+  assert.deepEqual(document, before);
 });
 
 test('grid sorting and content-aware suggestions reflect the selected data', () => {
