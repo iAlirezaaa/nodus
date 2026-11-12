@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": null,
-  "heartbeat_at": null,
-  "expires_at": null,
-  "current_task_id": null,
-  "feature_branch": null,
+  "owner_run_id": "nodus-auto-run03-20261112T1915Z",
+  "acquired_at": "2026-11-12T19:15:24.488Z",
+  "heartbeat_at": "2026-11-12T19:15:24.488Z",
+  "expires_at": "2026-11-12T20:45:24.488Z",
+  "current_task_id": "ND-001",
+  "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001_in_progress_release_gates_blocked",
+    "phase": "run03_acquired_validate_nd001",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -31,7 +31,8 @@
     ],
     "last_test": "8/8 targeted node tests passed; isolated helper tsc 5.8.3 passed with stub types",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
-    "last_blocker": "No supported Nodus checkout, installed app dependencies, authenticated Sites action or browser preview in this environment"
+    "last_blocker": "No supported Nodus checkout, installed app dependencies, authenticated Sites action or browser preview in this environment",
+    "observed_control_head": "b4444af900418325a40ef81fa2692e1a5287d3c0"
   },
   "last_completed_run": {
     "run_id": "nodus-auto-run02-20261112T181440",
@@ -40,5 +41,5 @@
     "completed_at": "2026-11-12T18:25:21.446Z",
     "summary": "Implemented bounded 70-result previous/next search pages with 151-case and stale-offset regression; 8 exact-source targeted tests and helper-only TypeScript passed. Branch only; main and live unchanged. Full repo checks and authenticated Sites release unavailable."
   },
-  "updated_at": "2026-11-12T18:25:21.446Z"
+  "updated_at": "2026-11-12T19:15:24.488Z"
 }
