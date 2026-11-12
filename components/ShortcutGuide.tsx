@@ -20,7 +20,7 @@ export default function ShortcutGuide({ language }: { language: Language }) {
         { keys: 'Tab', label: L('زیرشاخهٔ فکر انتخاب‌شده', 'A child of the selected thought') },
         { keys: 'F2', label: L('ویرایش عنوان فکر انتخاب‌شده', 'Edit the selected thought’s title') },
       ],
-      note: L('Delete فکر یا اتصالِ انتخاب‌شده را حذف می‌کند. Esc انتخاب را برمی‌دارد.', 'Delete removes the selected thought or connection. Esc clears the selection.'),
+      note: L('Delete فکرها یا اتصالِ انتخاب‌شده را حذف می‌کند. Esc انتخاب را برمی‌دارد. برای انتخاب چندتایی، Shift را نگه دار و روی فکرها کلیک کن یا روی فضای خالی کادر بکش.', 'Delete removes the selected thoughts or connection. Esc clears selection. Hold Shift and click thoughts or drag a box on empty canvas to select a group.'),
     },
     {
       id: 'title', number: '02', title: L('هنگام نوشتن عنوان روی بوم', 'While writing a title on the canvas'),
@@ -52,6 +52,7 @@ export default function ShortcutGuide({ language }: { language: Language }) {
     { keys: 'Space', label: L('روی بوم: جابه‌جایی موقت؛ روی فکر: باز کردن جزئیات', 'On the canvas: temporary pan; on a thought: open details') },
     { keys: 'Shift + F10', label: L('منوی عملیات فکر یا اتصال', 'Open the thought or connection’s context menu') },
     { keys: 'Ctrl / ⌘ + K', label: L('جست‌وجو، وقتی تمرکز روی بوم یا فکر است', 'Search, while the canvas or a thought has focus') },
+    { keys: 'Ctrl / ⌘ + A', label: L('انتخاب همهٔ فکرهای همین بوم؛ هنگام تایپ، انتخاب متن حفظ می‌شود', 'Select every thought on this board; text fields keep normal Select all') },
     { keys: 'Ctrl / ⌘ + Z', label: L('بازگردانی تغییر بوم، وقتی تمرکز روی بوم یا فکر است', 'Undo a graph change, while the canvas or a thought has focus') },
     { keys: 'Ctrl / ⌘ + Shift + Z', label: L('انجام دوبارهٔ تغییر بوم', 'Redo a graph change') },
   ];

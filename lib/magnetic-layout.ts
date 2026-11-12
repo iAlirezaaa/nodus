@@ -25,8 +25,8 @@ export function normalizeMagneticSettings(value: unknown): MagneticSettings {
 export interface MagneticPoint { id: string; x: number; y: number; radius: number; mass?: number; }
 export interface MagneticLink { sourceId: string; targetId: string; }
 export interface MagneticBody { id: string; x: number; y: number; vx: number; vy: number; radius: number; mass: number; }
-interface Body extends MagneticBody { index: number; charge: number; }
-interface Spring { source: number; target: number; }
+interface Body extends MagneticBody { index: number; charge: number; degree: number; neighborSpan: number; damping: number; }
+interface Spring { source: number; target: number; sourceWeight: number; targetWeight: number; branchSpace: number; }
 interface Quad {
   x: number; y: number; size: number; mass: number; cx: number; cy: number; radius: number;
   items: Body[] | null; children: Quad[] | null;
@@ -55,6 +55,9 @@ export interface MagneticSimulation {
   _links: Spring[];
   _fx: Float64Array;
   _fy: Float64Array;
+  _dvx: Float64Array;
+  _dvy: Float64Array;
+  _contacts: Uint16Array;
   _quiet: number;
   _pins: Set<string>;
 }
@@ -64,6 +67,8 @@ const MAX_BURST_MS = 8000;
 const MAX_SPEED = 22;
 const MAX_COORDINATE = 1e7;
 const COLLISION_GAP = 12;
+const COLLISION_SLOP = .08;
+const MAX_COLLISION_CORRECTION = 10;
 const FORCE_VISIT_LIMIT = 64;
 const COLLISION_VISIT_LIMIT = 112;
 const COLLISION_PAIR_LIMIT = 32;
@@ -74,14 +79,22 @@ const diagnostics = (): MagneticDiagnostics => ({ treeCells: 0, forceVisits: 0, 
 const hash = (value: string) => { let result = 2166136261; for (let i = 0; i < value.length; i++) result = Math.imul(result ^ value.charCodeAt(i), 16777619); return result >>> 0; };
 function direction(id: string): Point { const angle = hash(id) / 4294967296 * Math.PI * 2; return { x: Math.cos(angle), y: Math.sin(angle) }; }
 
-export function createMagneticSimulation(points: readonly MagneticPoint[], links: readonly MagneticLink[], settings: MagneticSettings = { ...DEFAULT_MAGNETIC_SETTINGS }): MagneticSimulation {
+export function createMagneticSimulation(points: readonly MagneticPoint[], links: readonly MagneticLink[], settings: MagneticSettings = { ...DEFAULT_MAGNETIC_SETTINGS }, previous?: MagneticSimulation): MagneticSimulation {
   const nodes: Body[] = [], bodies = new Map<string, MagneticBody>();
+  let continued = false;
   // Stable order also makes force approximation independent of document array order.
   for (const point of [...points].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)) {
     if (!point.id || bodies.has(point.id)) continue;
     const mass = clamp(finite(point.mass ?? 1, 1), .25, 12);
     const body: Body = { id: point.id, x: coordinate(point.x), y: coordinate(point.y), radius: clamp(finite(point.radius, 12), 1, 1000), mass,
-      vx: 0, vy: 0, index: nodes.length, charge: Math.sqrt(mass) };
+      vx: 0, vy: 0, index: nodes.length, charge: Math.sqrt(mass), degree: 0, neighborSpan: 0, damping: .76 };
+    const prior = previous?.bodies.get(body.id);
+    if (previous && prior && body.x === prior.x && body.y === prior.y) {
+      continued = true;
+      // The caller seeds retained view positions. A new, deliberately moved,
+      // or held body starts still; changing a radius/link does not brake peers.
+      if (!previous._pins.has(body.id)) { body.vx = finite(prior.vx); body.vy = finite(prior.vy); }
+    }
     nodes.push(body); bodies.set(body.id, body);
   }
   const indices = new Map(nodes.map(body => [body.id, body.index])), known = new Set<string>(), springs: Spring[] = [];
@@ -90,13 +103,36 @@ export function createMagneticSimulation(points: readonly MagneticPoint[], links
     if (a === undefined || b === undefined || a === b) continue;
     const source = Math.min(a, b), target = Math.max(a, b), key = `${source}:${target}`;
     if (known.has(key)) continue;
-    known.add(key); springs.push({ source, target });
+    known.add(key); springs.push({ source, target, sourceWeight: 1, targetWeight: 1, branchSpace: 0 });
   }
   springs.sort((a, b) => a.source - b.source || a.target - b.target);
+  for (const spring of springs) {
+    const source = nodes[spring.source], target = nodes[spring.target];
+    source.degree++; target.degree++;
+    source.neighborSpan += target.radius * 2 + COLLISION_GAP;
+    target.neighborSpan += source.radius * 2 + COLLISION_GAP;
+  }
+  for (const body of nodes) {
+    body.neighborSpan /= Math.max(1, body.degree);
+    // A popular thought reserves some breathing room, without turning a large
+    // star into a rigid circle or multiplying charge by its number of links.
+    body.charge *= 1 + .18 * Math.log2(Math.max(1, body.degree));
+    body.damping = .76 - Math.min(.08, Math.log2(Math.max(1, body.degree)) * .014);
+  }
+  for (const spring of springs) {
+    const source = nodes[spring.source], target = nodes[spring.target];
+    spring.sourceWeight = 1 / Math.pow(Math.max(1, source.degree), .75);
+    spring.targetWeight = 1 / Math.pow(Math.max(1, target.degree), .75);
+    spring.branchSpace = .3 * (source.neighborSpan * (Math.sqrt(Math.max(1, source.degree)) - 1)
+      + target.neighborSpan * (Math.sqrt(Math.max(1, target.degree)) - 1));
+  }
   const normalized = normalizeMagneticSettings(settings);
-  const center = nodes.length ? { x: nodes.reduce((sum, body) => sum + body.x / nodes.length, 0), y: nodes.reduce((sum, body) => sum + body.y / nodes.length, 0) } : { x: 0, y: 0 };
+  if (!normalized.enabled) for (const body of nodes) { body.vx = 0; body.vy = 0; }
+  const center = continued && previous ? { ...previous.center } : nodes.length ? { x: nodes.reduce((sum, body) => sum + body.x / nodes.length, 0), y: nodes.reduce((sum, body) => sum + body.y / nodes.length, 0) } : { x: 0, y: 0 };
   return { bodies, settings: normalized, active: normalized.enabled && nodes.length > 1, iteration: 0, elapsedMs: 0, energy: 0, center,
-    diagnostics: diagnostics(), _nodes: nodes, _links: springs, _fx: new Float64Array(nodes.length), _fy: new Float64Array(nodes.length), _quiet: 0, _pins: new Set() };
+    diagnostics: diagnostics(), _nodes: nodes, _links: springs, _fx: new Float64Array(nodes.length), _fy: new Float64Array(nodes.length),
+    _dvx: new Float64Array(nodes.length), _dvy: new Float64Array(nodes.length), _contacts: new Uint16Array(nodes.length), _quiet: 0,
+    _pins: new Set(previous ? [...previous._pins].filter(id => bodies.has(id)) : []) };
 }
 
 export function reheatMagneticSimulation(simulation: MagneticSimulation): void {
@@ -174,8 +210,13 @@ function repel(simulation: MagneticSimulation, tree: Quad, alpha: number) {
   }
 }
 
-function collide(simulation: MagneticSimulation, tree: Quad) {
+/** A bounded Jacobi pass: read one spatial snapshot, then apply all corrections.
+ * Positional correction does not become momentum, so dense cards do not bounce
+ * apart and keep oscillating after their spring forces have cooled. */
+function collide(simulation: MagneticSimulation, tree: Quad, unit: number) {
   const stack: Quad[] = [], stats = simulation.diagnostics;
+  simulation._fx.fill(0); simulation._fy.fill(0);
+  simulation._dvx.fill(0); simulation._dvy.fill(0); simulation._contacts.fill(0);
   for (const body of simulation._nodes) {
     let visits = 0, pairs = 0; stack.push(tree);
     while (stack.length && visits < COLLISION_VISIT_LIMIT && pairs < COLLISION_PAIR_LIMIT) {
@@ -193,16 +234,53 @@ function collide(simulation: MagneticSimulation, tree: Quad) {
         let x = other.x - body.x, y = other.y - body.y;
         const minimum = body.radius + other.radius + COLLISION_GAP, squared = x * x + y * y;
         if (squared >= minimum * minimum) continue;
+        const inverse = simulation._pins.has(body.id) ? 0 : 1 / body.mass;
+        const otherInverse = simulation._pins.has(other.id) ? 0 : 1 / other.mass;
+        const totalInverse = inverse + otherInverse;
+        // Overlapping pinned nodes cannot be resolved; they must not keep an
+        // otherwise quiet graph running for the entire burst.
+        if (!totalInverse) continue;
         let distance = Math.sqrt(squared);
         const overlap = minimum - distance;
         stats.maxOverlap = Math.max(stats.maxOverlap, overlap); stats.collisionPairs++;
         if (distance < .001) { const axis = direction(`${body.id}:${other.id}`); x = axis.x; y = axis.y; distance = 1; }
-        const force = Math.min(36, overlap * .36), fx = x / distance * force, fy = y / distance * force;
-        simulation._fx[body.index] -= fx; simulation._fy[body.index] -= fy;
-        simulation._fx[other.index] += fx; simulation._fy[other.index] += fy;
+        const nx = x / distance, ny = y / distance;
+        const correction = Math.max(0, overlap - COLLISION_SLOP) * (1 - Math.pow(.18, unit)) / totalInverse;
+        simulation._fx[body.index] -= nx * correction * inverse;
+        simulation._fy[body.index] -= ny * correction * inverse;
+        simulation._fx[other.index] += nx * correction * otherInverse;
+        simulation._fy[other.index] += ny * correction * otherInverse;
+        // Remove only closing velocity. Tangential motion still lets neighbors
+        // slide around a hub, and a dragged/pinned body receives no recoil.
+        const closing = Math.min(0, (other.vx - body.vx) * nx + (other.vy - body.vy) * ny);
+        simulation._dvx[body.index] += nx * closing * inverse / totalInverse;
+        simulation._dvy[body.index] += ny * closing * inverse / totalInverse;
+        simulation._dvx[other.index] -= nx * closing * otherInverse / totalInverse;
+        simulation._dvy[other.index] -= ny * closing * otherInverse / totalInverse;
+        simulation._contacts[body.index]++; simulation._contacts[other.index]++;
       }
     }
     stats.collisionVisits += visits; stack.length = 0;
+  }
+  for (const body of simulation._nodes) {
+    if (simulation._pins.has(body.id)) continue;
+    const contacts = simulation._contacts[body.index]; if (!contacts) continue;
+    // Average crowded contacts so a 50-branch hub cannot receive 50 full
+    // depenetrations in a frame. The final displacement has an independent cap.
+    const weight = Math.max(1, contacts * .5);
+    let dx = simulation._fx[body.index] / weight, dy = simulation._fy[body.index] / weight;
+    const length = Math.hypot(dx, dy), limit = MAX_COLLISION_CORRECTION * unit;
+    if (length > limit) { dx *= limit / length; dy *= limit / length; }
+    // A contact correction shares the integration displacement budget. It can
+    // remove penetration, but it cannot teleport a node on a crowded frame.
+    let moveX = body.vx * unit + dx, moveY = body.vy * unit + dy;
+    const travel = Math.hypot(moveX, moveY), maxTravel = MAX_SPEED * unit;
+    if (travel > maxTravel) { moveX *= maxTravel / travel; moveY *= maxTravel / travel; }
+    body.x = coordinate(body.x - body.vx * unit + moveX); body.y = coordinate(body.y - body.vy * unit + moveY);
+    body.vx += simulation._dvx[body.index] / contacts;
+    body.vy += simulation._dvy[body.index] / contacts;
+    const speed = Math.hypot(body.vx, body.vy);
+    if (speed > MAX_SPEED) { body.vx *= MAX_SPEED / speed; body.vy *= MAX_SPEED / speed; }
   }
 }
 
@@ -235,13 +313,14 @@ export function stepMagneticSimulation(simulation: MagneticSimulation, deltaMs: 
       const source = simulation._nodes[spring.source], target = simulation._nodes[spring.target];
       let dx = target.x - source.x, dy = target.y - source.y, distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < .001) { const axis = direction(`${source.id}:${target.id}`); dx = axis.x; dy = axis.y; distance = 1; }
-      const rest = simulation.settings.distance + source.radius + target.radius;
+      const rest = simulation.settings.distance + source.radius + target.radius + Math.min(simulation.settings.distance * 1.5, spring.branchSpace);
       const force = clamp((distance - rest) * linkStrength, -20, 20), fx = dx / distance * force, fy = dy / distance * force;
-      simulation._fx[source.index] += fx; simulation._fy[source.index] += fy;
-      simulation._fx[target.index] -= fx; simulation._fy[target.index] -= fy;
+      // Balance the total spring load at busy endpoints. Each new leaf still
+      // responds promptly, while its parent is not yanked by every branch.
+      simulation._fx[source.index] += fx * spring.sourceWeight; simulation._fy[source.index] += fy * spring.sourceWeight;
+      simulation._fx[target.index] -= fx * spring.targetWeight; simulation._fy[target.index] -= fy * spring.targetWeight;
     }
-    collide(simulation, tree);
-    const gravity = simulation.settings.center * .0019 * alpha, drag = Math.pow(.76, unit);
+    const gravity = simulation.settings.center * .0019 * alpha;
     let totalEnergy = 0, maxSpeed = 0, movable = 0;
     for (const body of simulation._nodes) {
       if (nextPins.has(body.id)) { body.vx = 0; body.vy = 0; continue; }
@@ -249,12 +328,20 @@ export function stepMagneticSimulation(simulation: MagneticSimulation, deltaMs: 
       let ay = simulation._fy[body.index] / body.mass + (simulation.center.y - body.y) * gravity;
       const squaredAcceleration = ax * ax + ay * ay;
       if (squaredAcceleration > 6400) { const scale = 80 / Math.sqrt(squaredAcceleration); ax *= scale; ay *= scale; }
+      const drag = Math.pow(body.damping, unit);
       body.vx = (body.vx + ax * unit) * drag; body.vy = (body.vy + ay * unit) * drag;
       const squaredSpeed = body.vx * body.vx + body.vy * body.vy;
       if (squaredSpeed > MAX_SPEED * MAX_SPEED) { const scale = MAX_SPEED / Math.sqrt(squaredSpeed); body.vx *= scale; body.vy *= scale; }
       body.x = coordinate(body.x + body.vx * unit); body.y = coordinate(body.y + body.vy * unit);
+      movable++;
+    }
+    // Rebuild after integration: broad-phase bounds now match the positions
+    // being corrected, including a newly moved drag pin.
+    collide(simulation, buildTree(simulation._nodes, simulation.diagnostics)!, unit);
+    for (const body of simulation._nodes) {
+      if (nextPins.has(body.id)) continue;
       const energy = body.vx * body.vx + body.vy * body.vy;
-      totalEnergy += energy; maxSpeed = Math.max(maxSpeed, energy); movable++;
+      totalEnergy += energy; maxSpeed = Math.max(maxSpeed, energy);
     }
     simulation.energy = movable ? totalEnergy / movable : 0;
     simulation.elapsedMs += duration / steps; simulation.iteration++;

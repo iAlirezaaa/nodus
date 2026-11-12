@@ -16,6 +16,37 @@ const distance = (simulation: MagneticSimulation, a = 'a', b = 'b') => {
   const first = simulation.bodies.get(a)!, second = simulation.bodies.get(b)!;
   return Math.hypot(first.x - second.x, first.y - second.y);
 };
+function maximumGapDeficit(simulation: MagneticSimulation) {
+  const nodes = [...simulation.bodies.values()]; let deficit = 0;
+  for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+    deficit = Math.max(deficit, nodes[i].radius + nodes[j].radius + 12 - distance(simulation, nodes[i].id, nodes[j].id));
+  }
+  return deficit;
+}
+function trace(simulation: MagneticSimulation, pins?: ReadonlyMap<string, { x: number; y: number }>) {
+  let frames = 0, hubPath = 0, maxTravel = 0, maxHubTravel = 0;
+  while (simulation.active && frames < 500) {
+    const before = new Map([...simulation.bodies].map(([id, body]) => [id, { x: body.x, y: body.y }]));
+    stepMagneticSimulation(simulation, frame, pins);
+    for (const [id, body] of simulation.bodies) {
+      if (pins?.has(id)) continue;
+      const prior = before.get(id)!, travel = Math.hypot(body.x - prior.x, body.y - prior.y);
+      maxTravel = Math.max(maxTravel, travel);
+      if (id === 'hub') { hubPath += travel; maxHubTravel = Math.max(maxHubTravel, travel); }
+    }
+    frames++;
+  }
+  assert.ok(frames < 500 && !simulation.active, 'Even a dense graph must settle or release the animation loop within eight simulated seconds.');
+  return { frames, hubPath, maxTravel, maxHubTravel };
+}
+function star(branches: number, asymmetric = false) {
+  const points = [point('hub', 0, 0, asymmetric ? 70 : 162, asymmetric ? 4 : 3), ...Array.from({ length: branches }, (_, index) => {
+    const angle = index / branches * Math.PI * 2;
+    return asymmetric ? point(`n-${index}`, 200 + index % 5 * 15, Math.floor(index / 5) * 15, 40 + index % 3 * 25)
+      : point(`n-${index}`, Math.cos(angle) * 110, Math.sin(angle) * 110, 90);
+  })];
+  return { points, links: points.slice(1).map(node => ({ sourceId: 'hub', targetId: node.id })) };
+}
 function settle(simulation: MagneticSimulation, pins?: ReadonlyMap<string, { x: number; y: number }>) {
   let frames = 0;
   while (frames < 600 && stepMagneticSimulation(simulation, frame, pins)) frames++;
@@ -210,4 +241,110 @@ test('a persistently busy network still yields within the hard burst limit', () 
   const simulation = createMagneticSimulation(nodes, [], settings({ repulsion: 1, center: 1 }));
   settle(simulation);
   assert.ok(simulation.elapsedMs <= 8000 + frame);
+});
+
+test('20- and 50-branch hubs untangle large cards without the parent ricocheting through its branches', () => {
+  for (const branches of [20, 50]) {
+    const fixture = star(branches), simulation = createMagneticSimulation(fixture.points, fixture.links, settings());
+    const result = trace(simulation);
+    assert.ok(result.hubPath < 100, `A ${branches}-branch parent should remain a steady anchor while its leaves spread (${result.hubPath}).`);
+    assert.ok(result.maxHubTravel < 12, 'A busy hub must not receive the full impulse of every spring.');
+    assert.ok(result.maxTravel <= 22.001, 'Integration and collision correction share one visible movement budget.');
+    assert.ok(maximumGapDeficit(simulation) < .75, 'The full grown card bounds retain their readable collision gap.');
+    const resting = positions(simulation);
+    for (let i = 0; i < 30; i++) stepMagneticSimulation(simulation, frame);
+    assert.deepEqual(positions(simulation), resting, 'A settled dense graph has no idle jitter.');
+  }
+});
+
+test('a crowded one-sided 50-branch cluster opens space while limiting parent travel', () => {
+  const fixture = star(50, true), simulation = createMagneticSimulation(fixture.points, fixture.links, settings());
+  const result = trace(simulation);
+  assert.ok(result.hubPath < 200, 'The parent is not pulled back and forth by fifty independently strong springs.');
+  assert.ok(result.maxHubTravel < 15);
+  assert.ok(result.maxTravel <= 22.001);
+  assert.ok(maximumGapDeficit(simulation) < .75);
+});
+
+test('different card sizes separate gently, without turning depenetration into launch velocity', () => {
+  const nodes = Array.from({ length: 30 }, (_, index) => point(`n-${index}`, index % 6 * 90, Math.floor(index / 6) * 90,
+    40 + index % 4 * 27, 1 + index % 5 * .3));
+  const simulation = createMagneticSimulation(nodes, [], settings({ repulsion: .35 }));
+  const result = trace(simulation);
+  assert.ok(result.maxTravel < 18, 'Resolving a tightly packed set of varied card bounds should remain gradual.');
+  assert.ok(maximumGapDeficit(simulation) < .5);
+  assert.ok([...simulation.bodies.values()].every(body => body.vx === 0 && body.vy === 0));
+});
+
+test('incoming, outgoing and duplicated hub links have the same physical behavior', () => {
+  const fixture = star(20, true);
+  const forward = createMagneticSimulation(fixture.points, fixture.links, settings());
+  const reversed = fixture.links.map(link => ({ sourceId: link.targetId, targetId: link.sourceId }));
+  const backward = createMagneticSimulation([...fixture.points].reverse(), [...reversed, ...fixture.links, ...reversed].reverse(), settings());
+  trace(forward); trace(backward);
+  assert.deepEqual(positions(forward), positions(backward), 'Degree, spacing and collision order depend on unique neighbors, not arrow direction.');
+});
+
+test('collision response respects held nodes and never jumps their neighbors when a drag resumes', () => {
+  const fixture = star(20), simulation = createMagneticSimulation(fixture.points, fixture.links, settings());
+  const held = new Map([['hub', { x: 0, y: 0 }]]);
+  trace(simulation, held);
+  const before = new Map(positions(simulation).map(body => [body.id, body]));
+  held.set('hub', { x: 180, y: -120 });
+  assert.equal(stepMagneticSimulation(simulation, frame, held), true);
+  const hub = simulation.bodies.get('hub')!;
+  assert.deepEqual({ x: hub.x, y: hub.y, vx: hub.vx, vy: hub.vy }, { ...held.get('hub'), vx: 0, vy: 0 });
+  let moved = false;
+  for (const [id, body] of simulation.bodies) if (id !== 'hub') {
+    const prior = before.get(id)!, travel = Math.hypot(body.x - prior.x, body.y - prior.y);
+    assert.ok(travel <= 22.001, 'Moving the held node may wake neighbors, but cannot teleport them.');
+    if (travel > .01) moved = true;
+  }
+  assert.ok(moved, 'Neighbors respond immediately after a settled drag restarts.');
+  trace(simulation, held);
+  assert.equal(hub.x, 180); assert.equal(hub.y, -120);
+  assert.ok(maximumGapDeficit(simulation) < .75);
+});
+
+test('overlapping held nodes do not keep an unrelated resting node awake', () => {
+  const simulation = createMagneticSimulation([point('a', 0, 0, 90), point('b', 0, 0, 90), point('free', 800, 800)], [],
+    settings({ attraction: 0, repulsion: 0, center: 0 }));
+  const result = trace(simulation, new Map([['a', { x: 0, y: 0 }], ['b', { x: 0, y: 0 }]]));
+  assert.ok(result.frames <= 16, 'An unresolvable held overlap is not a reason to run an eight-second burst.');
+  assert.deepEqual(positions(simulation), [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 0, y: 0 }, { id: 'free', x: 800, y: 800 }]);
+});
+
+test('dense radius-aware collisions are consistent at 60, 30 and 20 update steps per second', () => {
+  const fixture = star(20, true);
+  const fast = createMagneticSimulation(fixture.points, fixture.links, settings());
+  const medium = createMagneticSimulation(fixture.points, fixture.links, settings());
+  const slow = createMagneticSimulation(fixture.points, fixture.links, settings());
+  for (let i = 0; i < 120; i++) stepMagneticSimulation(fast, frame);
+  for (let i = 0; i < 60; i++) stepMagneticSimulation(medium, frame * 2);
+  for (let i = 0; i < 40; i++) stepMagneticSimulation(slow, frame * 3);
+  assert.deepEqual(positions(fast), positions(medium));
+  assert.deepEqual(positions(fast), positions(slow));
+});
+
+test('a topology or radius update preserves retained motion and the local center, with fresh or moved nodes at rest', () => {
+  const original = createMagneticSimulation([point('a', -400), point('b', 400), point('held', 900, 300)], link, settings());
+  const held = new Map([['held', { x: 950, y: 400 }]]);
+  for (let i = 0; i < 5; i++) stepMagneticSimulation(original, frame, held);
+  const a = original.bodies.get('a')!, b = original.bodies.get('b')!, pinned = original.bodies.get('held')!;
+  const before = JSON.stringify([...original.bodies.values()]);
+  const updated = createMagneticSimulation([
+    { ...a, radius: 70, mass: 4 }, { ...b, x: b.x + 100 }, { ...pinned, radius: 100 }, point('new', -8000, -3000),
+  ], [...link, { sourceId: 'a', targetId: 'new' }], settings(), original);
+  assert.equal(updated.bodies.get('a')!.vx, a.vx); assert.equal(updated.bodies.get('a')!.vy, a.vy);
+  assert.ok(Math.hypot(a.vx, a.vy) > 0, 'The retained node was already moving.');
+  assert.deepEqual(updated.center, original.center, 'Adding a far-away idea does not recenter every existing body.');
+  assert.equal(updated.bodies.get('b')!.vx, 0, 'An explicitly moved node starts without its old momentum.');
+  assert.equal(updated.bodies.get('held')!.vx, 0); assert.equal(updated.bodies.get('held')!.vy, 0);
+  assert.equal(updated.bodies.get('new')!.vx, 0); assert.equal(updated.bodies.get('new')!.vy, 0);
+  assert.equal(JSON.stringify([...original.bodies.values()]), before, 'Continuation never mutates the previous simulation.');
+  assert.notEqual(updated.bodies.get('a'), a);
+  stepMagneticSimulation(updated, frame, held);
+  assert.deepEqual({ x: updated.bodies.get('held')!.x, y: updated.bodies.get('held')!.y }, held.get('held'));
+  const fresh = createMagneticSimulation([{ ...a }, point('new', 8000, 3000)], [], settings());
+  assert.equal(fresh.bodies.get('a')!.vx, 0, 'A different scope without an explicit prior simulation never inherits momentum.');
 });

@@ -39,15 +39,21 @@ test('shared card projection preserves the saved center and dimensions while res
   assert.deepEqual({ ...visible, x: original.x, y: original.y, width: original.width, height: original.height }, original);
 });
 
-test('only outgoing branches grow a node; incoming links and content do not mutate its saved rectangle', () => {
+test('links grow both ends without changing saved rectangles or treating content length as weight', () => {
   const doc = workspace([node('parent'), node('leaf', 'root', { text: 'long content '.repeat(1000), width: 500 }), node('isolated')], [edge('parent', 'leaf')]);
   const original = JSON.stringify(doc);
   const growth = buildNodeGrowth(doc);
   assert.equal(growth.size, 3);
   assert.equal(growth.get('parent')!.direct, 1);
+  assert.equal(growth.get('parent')!.incoming, 0);
+  assert.equal(growth.get('parent')!.connections, 1);
   assert.equal(growth.get('parent')!.descendants, 1);
   assert.ok(growth.get('parent')!.scale > 1);
-  assert.deepEqual(growth.get('leaf'), defaultNodeGrowth);
+  assert.equal(growth.get('leaf')!.direct, 0);
+  assert.equal(growth.get('leaf')!.incoming, 1);
+  assert.equal(growth.get('leaf')!.connections, 1);
+  assert.equal(growth.get('leaf')!.descendants, 0);
+  assert.equal(growth.get('leaf')!.scale, growth.get('parent')!.scale);
   assert.deepEqual(growth.get('isolated'), defaultNodeGrowth);
   assert.ok(Object.isFrozen(defaultNodeGrowth));
   assert.equal(JSON.stringify(doc), original);
@@ -67,8 +73,59 @@ test('deduplicates graph and explicit task children while ignoring self, danglin
   [board('root'), board('other')]);
   const growth = buildNodeGrowth(doc);
   assert.equal(growth.get('parent')!.direct, 3);
+  assert.equal(growth.get('parent')!.connections, 3);
   assert.equal(growth.get('parent')!.descendants, 3);
-  for (const id of ['one', 'two', 'three', 'foreign']) assert.deepEqual(growth.get(id), defaultNodeGrowth);
+  for (const id of ['one', 'two', 'three']) {
+    assert.equal(growth.get(id)!.incoming, 1);
+    assert.equal(growth.get(id)!.connections, 1);
+    assert.equal(growth.get(id)!.mass, 1);
+  }
+  assert.deepEqual(growth.get('foreign'), defaultNodeGrowth);
+});
+
+test('incoming hubs grow as much as outgoing hubs while retaining directed branch counts', () => {
+  for (const count of [1, 5, 20, 200, 5000]) {
+    const outgoing = star(count);
+    const incoming = { ...outgoing, edges: outgoing.edges.map(item => ({ ...item, sourceId: item.targetId, targetId: item.sourceId })) };
+    const hub = buildNodeGrowth(incoming).get('parent')!;
+    const source = buildNodeGrowth(outgoing).get('parent')!;
+    assert.equal(hub.direct, 0);
+    assert.equal(hub.descendants, 0);
+    assert.equal(hub.incoming, count);
+    assert.equal(hub.connections, count);
+    assert.equal(hub.mass, source.mass);
+    assert.equal(hub.scale, source.scale);
+  }
+});
+
+test('reciprocal, duplicate and explicit task relationships count each neighbor only once', () => {
+  const doc = workspace([
+    node('a', 'root', { task: { status: 'todo', parentId: null } }),
+    node('b', 'root', { task: { status: 'doing', parentId: 'a' } }),
+    node('c'),
+  ], [edge('a', 'b'), edge('a', 'b', 'root', 'again'), edge('b', 'a'), edge('b', 'a', 'root', 'reverse-again'), edge('c', 'a')]);
+  const growth = buildNodeGrowth(doc);
+  const a = growth.get('a')!, b = growth.get('b')!;
+  assert.equal(a.direct, 1);
+  assert.equal(a.incoming, 2);
+  assert.equal(a.connections, 2);
+  assert.equal(a.mass, 2);
+  assert.equal(b.direct, 1);
+  assert.equal(b.incoming, 1);
+  assert.equal(b.connections, 1);
+  assert.equal(b.mass, 1);
+});
+
+test('adding a reverse edge in a cycle cannot make a node shrink', () => {
+  const doc = workspace(['a', 'b', 'c'].map(id => node(id)), [edge('a', 'b'), edge('b', 'c'), edge('c', 'a')]);
+  const before = buildNodeGrowth(doc);
+  const after = buildNodeGrowth({ ...doc, edges: [...doc.edges, edge('a', 'c')] });
+  for (const id of ['a', 'b', 'c']) {
+    assert.equal(after.get(id)!.connections, before.get(id)!.connections);
+    assert.equal(after.get(id)!.mass, before.get(id)!.mass);
+    assert.equal(after.get(id)!.scale, before.get(id)!.scale);
+  }
+  assert.equal(after.get('a')!.direct, before.get('a')!.direct + 1);
 });
 
 test('diamonds and directed cycles count each reachable child once and exclude the source', () => {
@@ -81,7 +138,9 @@ test('diamonds and directed cycles count each reachable child once and exclude t
   assert.equal(growth.get('b')!.descendants, 2);
   assert.equal(growth.get('c')!.descendants, 3);
   assert.equal(growth.get('d')!.descendants, 2);
-  assert.deepEqual(growth.get('e'), defaultNodeGrowth);
+  assert.equal(growth.get('e')!.incoming, 1);
+  assert.equal(growth.get('e')!.connections, 1);
+  assert.equal(growth.get('e')!.descendants, 0);
   assert.equal(growth.get('a')!.mass, 2.7);
 });
 
@@ -161,6 +220,20 @@ test('deleting a branch or contained project immediately reduces surviving growt
   assert.equal(before.get('project')!.nested, 1);
 });
 
+test('deleting incoming connections shrinks the hub and restoring the document restores its exact growth', () => {
+  const original = workspace([node('a'), node('b'), node('hub')], [edge('a', 'hub'), edge('b', 'hub')]);
+  const snapshot = structuredClone(original);
+  const before = buildNodeGrowth(original).get('hub')!;
+  const oneRemoved = buildNodeGrowth(deleteNode(original, 'a')).get('hub')!;
+  const bothRemoved = buildNodeGrowth(deleteNode(deleteNode(original, 'a'), 'b')).get('hub')!;
+  assert.equal(before.connections, 2);
+  assert.equal(oneRemoved.connections, 1);
+  assert.ok(oneRemoved.scale < before.scale);
+  assert.deepEqual(bothRemoved, defaultNodeGrowth);
+  assert.deepEqual(buildNodeGrowth(snapshot).get('hub'), before);
+  assert.deepEqual(original, snapshot, 'Derived growth and deletion keep undo history intact.');
+});
+
 test('scale grows smoothly and visibly for 1, 5 and 20 branches while staying bounded', () => {
   const scales = [0, 1, 5, 20, 100, 5000].map(count => buildNodeGrowth(star(count)).get('parent')!.scale);
   assert.equal(scales[0], 1);
@@ -195,6 +268,8 @@ test('a 5,000-node graph with thousands of roots sharing a dense cycle keeps exa
   const growth = buildNodeGrowth(workspace(nodes, edges));
   assert.equal(growth.size, 5000);
   assert.equal(growth.get('n-0')!.direct, 119);
+  assert.equal(growth.get('n-0')!.incoming, 4999);
+  assert.equal(growth.get('n-0')!.connections, 4999);
   assert.equal(growth.get('n-0')!.descendants, 119);
   for (let index = cycleSize; index < nodes.length; index++) {
     const item = growth.get(`n-${index}`)!;
@@ -214,7 +289,9 @@ test('long branch chains cap correctly without recursive graph traversal', () =>
   assert.equal(growth.get('n-4871')!.descendants, 128);
   assert.equal(growth.get('n-4871')!.descendantsCapped, false);
   assert.equal(growth.get('n-4998')!.descendants, 1);
-  assert.deepEqual(growth.get('n-4999'), defaultNodeGrowth);
+  assert.equal(growth.get('n-4999')!.incoming, 1);
+  assert.equal(growth.get('n-4999')!.connections, 1);
+  assert.equal(growth.get('n-4999')!.descendants, 0);
 });
 
 test('very deep contained projects count exactly without stack growth or quadratic ancestor walks', () => {

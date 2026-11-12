@@ -4,6 +4,10 @@ import type { GraphNode, Workspace } from './types';
 export interface NodeGrowth {
   /** Unique outgoing graph children and explicit task children on the same board. */
   direct: number;
+  /** Unique incoming graph parents and an explicit task parent on the same board. */
+  incoming: number;
+  /** Unique neighbors in either direction; reciprocal and task links count once. */
+  connections: number;
   /** Unique reachable children, including direct children; at most 128. */
   descendants: number;
   /** True only when more than 128 unique descendants actually exist. */
@@ -16,7 +20,7 @@ export interface NodeGrowth {
 }
 
 export const defaultNodeGrowth: NodeGrowth = Object.freeze({
-  direct: 0, descendants: 0, descendantsCapped: false, nested: 0, mass: 0, scale: 1,
+  direct: 0, incoming: 0, connections: 0, descendants: 0, descendantsCapped: false, nested: 0, mass: 0, scale: 1,
 });
 
 /** Cards grow more gently than neuron cores so their text remains easy to scan. */
@@ -176,7 +180,7 @@ function nestedBoardTotals(graph: CondensedGraph, nodeCounts: readonly number[])
 }
 
 /**
- * Derive growth from topology, not text length, incoming degree, or saved dimensions.
+ * Derive growth from connected neighbors and contained work, not text length or saved dimensions.
  * Cycles and diamonds count each node once. Branch reachability is visually capped;
  * contained projects retain an exact count and do not require recursive traversal.
  */
@@ -186,11 +190,13 @@ export function buildNodeGrowth(document: Workspace): Map<string, NodeGrowth> {
   const nodeIndices = new Map(nodes.map((node, index) => [node.id, index]));
   const boardIndices = new Map(boards.map((board, index) => [board.id, index]));
   const childSets = nodes.map(() => new Set<number>());
+  const parentSets = nodes.map(() => new Set<number>());
   for (const edge of document.edges) {
     const source = nodeIndices.get(edge.sourceId), target = nodeIndices.get(edge.targetId);
     if (source === undefined || target === undefined || source === target) continue;
     if (!boardIndices.has(edge.boardId) || nodes[source].boardId !== edge.boardId || nodes[target].boardId !== edge.boardId) continue;
     childSets[source].add(target);
+    parentSets[target].add(source);
   }
   for (let child = 0; child < nodes.length; child++) {
     const parentId = nodes[child].task?.parentId;
@@ -198,6 +204,7 @@ export function buildNodeGrowth(document: Workspace): Map<string, NodeGrowth> {
     if (parent === undefined || parent === child || !nodes[parent].task) continue;
     if (!boardIndices.has(nodes[child].boardId) || nodes[parent].boardId !== nodes[child].boardId) continue;
     childSets[parent].add(child);
+    parentSets[child].add(parent);
   }
   const adjacency = childSets.map(set => [...set]);
   const branchGraph = condense(adjacency);
@@ -219,6 +226,9 @@ export function buildNodeGrowth(document: Workspace): Map<string, NodeGrowth> {
   for (let index = 0; index < nodes.length; index++) {
     const node = nodes[index];
     const direct = adjacency[index].length;
+    const incoming = parentSets[index].size;
+    let connections = direct;
+    for (const parent of parentSets[index]) if (!childSets[index].has(parent)) connections++;
     const reachable = branchCounts[branchGraph.componentOf[index]] - 1;
     const descendants = Math.min(DESCENDANT_LIMIT, reachable);
     const descendantsCapped = reachable > DESCENDANT_LIMIT;
@@ -227,9 +237,11 @@ export function buildNodeGrowth(document: Workspace): Map<string, NodeGrowth> {
     // An invalid containment cycle may lead back to the source; never count itself.
     const ownBoard = boardIndices.get(node.boardId);
     if (childBoard !== undefined && ownBoard !== undefined && boardGraph.componentOf[childBoard] === boardGraph.componentOf[ownBoard]) nested--;
-    const mass = direct + 0.35 * Math.max(0, descendants - direct) + 0.5 * nested;
+    // Reserve the full weight for unique neighbors. A reverse edge must not
+    // reduce mass by turning an already-counted neighbor into a direct child.
+    const mass = connections + 0.35 * Math.max(0, descendants - connections) + 0.5 * nested;
     const scale = Math.max(1, Math.min(2.8, 1 + 1.8 * (1 - Math.exp(-Math.sqrt(mass) / 4))));
-    growth.set(node.id, mass === 0 ? defaultNodeGrowth : { direct, descendants, descendantsCapped, nested, mass, scale });
+    growth.set(node.id, mass === 0 ? defaultNodeGrowth : { direct, incoming, connections, descendants, descendantsCapped, nested, mass, scale });
   }
   return growth;
 }

@@ -14,7 +14,7 @@ export interface ShortcutEvent {
 }
 export type GraphShortcut = 'ignore' | 'search' | 'undo' | 'redo' | 'sibling' | 'child' | 'parent'
   | 'details' | 'project' | 'edit' | 'clear' | 'delete' | 'new-thought' | 'new-task' | 'fit'
-  | 'hand' | 'select' | 'pan' | 'left' | 'right' | 'up' | 'down';
+  | 'hand' | 'select' | 'select-all' | 'pan' | 'left' | 'right' | 'up' | 'down';
 
 const editingSelector = 'input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"],[role="combobox"]';
 export function isEditableTarget(target: EventTarget | null): boolean {
@@ -49,6 +49,7 @@ export function resolveGraphShortcut(event: ShortcutEvent, context: {
     if (letter === 'z') action = shift ? 'redo' : 'undo';
     else if (!shift && letter === 'y') action = 'redo';
     else if (!shift && letter === 'k') action = 'search';
+    else if (!shift && letter === 'a') action = 'select-all';
     else if (!shift && event.key === 'Enter' && hasNode) action = 'project';
     else if (!shift && event.key === 'Delete' && (hasNode || hasEdge)) action = 'delete';
   } else if (event.key === 'Escape' && !shift) action = 'clear';

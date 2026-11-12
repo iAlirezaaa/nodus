@@ -359,6 +359,12 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
 .space-item.active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 17%, transparent); color: var(--accent); }
 .space-item.active .space-icon { color: var(--accent); }
 .space-item.active>small { color: var(--accent); opacity: .65; }
+.space-row { display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
+.space-row .space-item { flex: 1; min-width: 0; margin-bottom: 0; }
+.space-row .space-delete { flex: none; width: 27px; height: 32px; color: var(--muted); opacity: .65; }
+.space-row:hover .space-delete, .space-row .space-delete:focus-visible { opacity: 1; }
+.space-row .space-delete:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+@media (pointer: coarse) { .space-row .space-delete { width: 36px; min-height: 40px; opacity: 1; } }
 .nested-space { display: flex; gap: 9px; align-items: center; width: 100%; min-height: 35px; padding-block: 6px; padding-inline-end: 10px; text-align: start; color: var(--faint); font-size: 10px; }
 .nested-space>span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nested-space.active { color: var(--foreground); }

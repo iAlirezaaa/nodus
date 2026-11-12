@@ -3,8 +3,8 @@
 .dock-selection { display: flex; align-items: center; gap: 8px; padding: 3px 5px 9px; font-size: 10px; color: var(--muted); }
 .dock-selection > span { flex-shrink: 0; }
 .dock-selection strong { flex: 1; min-width: 0; max-width: 295px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; font-size: 11px; color: var(--foreground); font-weight: 500; }
-.dock-selection button { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; margin-inline-start: auto; }
-.dock-selection button:hover { background: var(--surface-hover); }
+.dock-selection > button { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; border-radius: 6px; margin-inline-start: auto; }
+.dock-selection > button:hover { background: var(--surface-hover); }
 .dock-actions { display: flex; align-items: center; gap: 4px; }
 .dock-actions button { flex-shrink: 0; cursor: pointer; }
 .dock-primary, .dock-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 41px; padding: 8px 13px; border-radius: 10px; font-size: 12px; white-space: nowrap; }
@@ -21,6 +21,7 @@
 .dock-hint > span { display: inline-flex; align-items: center; gap: 5px; }
 .dock-hint .dock-scope { color: var(--accent); }
 .dock-hint kbd { font-size: 9px; direction: ltr; padding: 1px 4px; }
+.dock-end-selection { padding: 3px 6px; border-radius: 5px; color: var(--accent); background: var(--surface-hover); font-size: 9px; }
 .dock-more-wrap { position: relative; }
 .dock-menu { position: absolute; bottom: calc(100% + 15px); inset-inline-end: -45px; width: 257px; max-height: min(440px, 65vh); overflow-y: auto; padding: 7px; background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 14px; box-shadow: var(--shadow); overscroll-behavior: contain; }
 .dock-menu button { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 39px; padding: 8px; border-radius: 7px; color: var(--muted); text-align: start; font-size: 11px; }
@@ -47,6 +48,7 @@
   .dock-hint { font-size: 9px; gap: 8px; }
   .dock-hint .dock-scope { display: none; }
   .dock-selection { padding-bottom: 5px; }
+  .dock-selection-label { display: none; }
   .dock-selection strong { max-width: 210px; }
   .dock-divider { margin-inline: 2px; }
   .canvas-dock[data-selected='true'] .dock-redo { display: none; }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { CheckSquare2, CircleHelp, Ellipsis, FolderOpen, GitBranch, Hand, Link2, MousePointer2, Pencil, Plus, Redo2, ScanText, Undo2, Upload, X } from 'lucide-react';
 import { graphShortcutScope } from '@/lib/keyboard';
 import type { Language } from '@/lib/types';
@@ -9,6 +9,9 @@ import './canvas-dock.css';
 interface CanvasDockProps {
   language: Language;
   selectedTitle?: string;
+  selectionSettings?: ReactNode;
+  multiSelectMode?: boolean;
+  onMultiSelectModeChange?: (active: boolean) => void;
   isTask?: boolean;
   editing: boolean;
   tool: 'select' | 'hand';
@@ -71,7 +74,7 @@ export default function CanvasDock(props: CanvasDockProps) {
   if (editing) return null;
 
   return <div className="canvas-dock" data-selected={selected} data-shortcuts-active={graphFocused}>
-    {selected && <div className="dock-selection"><span>{L('ادامهٔ فکر', 'Continue thought')}</span><strong dir="auto">{selectedTitle || L('بدون عنوان', 'Untitled')}</strong><button type="button" onClick={props.onDeselect} aria-label={L('پایان انتخاب فکر', 'Clear thought selection')} title={L('پایان انتخاب', 'Clear selection')}><X size={13} /></button></div>}
+    {selected && <div className="dock-selection"><span className="dock-selection-label">{L('ادامهٔ فکر', 'Continue thought')}</span><strong dir="auto">{selectedTitle || L('بدون عنوان', 'Untitled')}</strong>{props.selectionSettings}<button type="button" onClick={props.onDeselect} aria-label={L('پایان انتخاب فکر', 'Clear thought selection')} title={L('پایان انتخاب', 'Clear selection')}><X size={13} /></button></div>}
     <div className="dock-actions" role="group" aria-label={selected ? L('ادامهٔ این فکر', 'Continue this thought') : L('ساختن روی بوم', 'Create on the canvas')}>
       {selected ? <>
         <button type="button" className="dock-primary" onClick={props.onChild} title={L('زیرشاخهٔ تازه از این فکر · Tab روی بوم', 'Create a child · Tab on the canvas')}><GitBranch size={17} /><span>{props.isTask ? L('ساب‌تسک', 'Subtask') : L('زیرشاخه', 'Branch')}</span></button>
@@ -97,6 +100,7 @@ export default function CanvasDock(props: CanvasDockProps) {
           <button type="button" onClick={() => run(props.onNewLink)}><Link2 size={16} /><span>{L('افزودن لینک', 'Add a link')}</span></button>
           <button type="button" onClick={() => run(props.onUpload)}><Upload size={16} /><span>{L('تصویر، ویدیو یا فایل', 'Image, video or file')}</span></button>
           <div className="dock-menu-divider" />
+          {props.onMultiSelectModeChange && <button type="button" aria-pressed={!!props.multiSelectMode} onClick={() => run(() => props.onMultiSelectModeChange?.(!props.multiSelectMode))}><CheckSquare2 size={16} /><span>{L('انتخاب چندتایی', 'Select multiple thoughts')}</span>{props.multiSelectMode && <i />}</button>}
           <button type="button" aria-pressed={tool === 'select'} onClick={() => run(() => props.onToolChange('select'))}><MousePointer2 size={16} /><span>{L('انتخاب و جابه‌جایی فکر', 'Select and move thoughts')}</span>{tool === 'select' && <i />}</button>
           <button type="button" aria-pressed={tool === 'hand'} onClick={() => run(() => props.onToolChange('hand'))}><Hand size={16} /><span>{L('حرکت کل بوم', 'Pan the canvas')}</span>{tool === 'hand' && <i />}</button>
         </div>}
@@ -107,7 +111,7 @@ export default function CanvasDock(props: CanvasDockProps) {
       <button type="button" className="dock-icon dock-help" onClick={props.onHelp} aria-label={L('راهنمای میانبرها', 'Shortcut guide')} title={L('راهنمای میانبرها', 'Shortcut guide')}><CircleHelp size={17} /></button>
     </div>
     <div className="dock-hint" aria-live="off">
-      {graphFocused ? <><span className="dock-scope">{L('روی بوم', 'On canvas')}</span><span><kbd>Enter</kbd>{selected ? L('هم‌سطح', 'sibling') : L('فکر تازه', 'new thought')}</span>{selected ? <><span><kbd>Tab</kbd>{L('زیرشاخه', 'branch')}</span><span><kbd>Esc</kbd>{L('پایان انتخاب', 'clear selection')}</span></> : <span><kbd>F</kbd>{L('نمایش همه', 'fit all')}</span>}</> : <span>{tool === 'hand' ? L('حالت حرکت بوم · ابزار انتخاب در منوی بیشتر', 'Pan mode · selection tool is in More actions') : L('مکث روی فکر: پیش‌نمایش · کلیک: باز کردن', 'Hover to preview · click to open')}</span>}
+      {props.multiSelectMode ? <><span>{L('انتخاب چندتایی · لمس فکرها یا کشیدن کادر', 'Multi-select · tap thoughts or draw a box')}</span><button type="button" className="dock-end-selection" onClick={() => props.onMultiSelectModeChange?.(false)}>{L('پایان', 'Done')}</button></> : graphFocused ? <><span className="dock-scope">{L('روی بوم', 'On canvas')}</span><span><kbd>Enter</kbd>{selected ? L('هم‌سطح', 'sibling') : L('فکر تازه', 'new thought')}</span>{selected ? <><span><kbd>Tab</kbd>{L('زیرشاخه', 'branch')}</span><span><kbd>Esc</kbd>{L('پایان انتخاب', 'clear selection')}</span></> : <span><kbd>F</kbd>{L('نمایش همه', 'fit all')}</span>}</> : <span>{tool === 'hand' ? L('حالت حرکت بوم · ابزار انتخاب در منوی بیشتر', 'Pan mode · selection tool is in More actions') : L('مکث روی فکر: پیش‌نمایش · کلیک: باز کردن', 'Hover to preview · click to open')}</span>}
     </div>
   </div>;
 }

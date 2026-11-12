@@ -90,7 +90,7 @@ export function useMagneticCanvas(options: Options) {
       return point;
     });
     const links = [...edges, ...nodes.filter(n => n.task?.parentId).map(n => ({ sourceId: n.task!.parentId!, targetId: n.id }))];
-    model.current = { scope, nodes: base, pins, simulation: shouldCreate ? createMagneticSimulation(seeded, links, settings) : null };
+    model.current = { scope, nodes: base, pins, simulation: shouldCreate ? createMagneticSimulation(seeded, links, settings, changedScope ? undefined : previous.simulation ?? undefined) : null };
     capture(); setWake(value => value + 1);
   }, [options.scope, geometryKey, capture, persist, stop]);
 

@@ -9,7 +9,7 @@ test('text, native controls, and an unfocused body never mutate a selected graph
     { key: 'Enter' }, { key: 'Tab' }, { key: 'Delete' }, { key: 'Backspace' }, { key: ' ' },
     { key: 'Escape' }, { key: 'n' }, { key: 't' }, { key: 'f' }, { key: 'ArrowDown' },
     { key: 'z', ctrlKey: true }, { key: 'z', metaKey: true }, { key: 'y', ctrlKey: true },
-    { key: 'k', ctrlKey: true }, { key: 'Enter', metaKey: true },
+    { key: 'k', ctrlKey: true }, { key: 'Enter', metaKey: true }, { key: 'a', ctrlKey: true }, { key: 'a', metaKey: true },
   ];
   for (const scope of ['text', 'control', 'outside'] satisfies GraphShortcutScope[]) {
     for (const event of keys) assert.equal(resolveGraphShortcut(event, { ...graph, scope }), null, `${scope}: ${JSON.stringify(event)}`);
@@ -49,7 +49,7 @@ test('handled events, IME composition, modal layers, and ambiguous modifiers are
 });
 
 test('held mutation and history keys cannot create a chain or delete multiple thoughts', () => {
-  for (const event of [{ key: 'Enter' }, { key: 'Tab' }, { key: 'Delete' }, { key: 'Backspace' }, { key: 'n' }, { key: 't' }, { key: 'z', ctrlKey: true }]) {
+  for (const event of [{ key: 'Enter' }, { key: 'Tab' }, { key: 'Delete' }, { key: 'Backspace' }, { key: 'n' }, { key: 't' }, { key: 'z', ctrlKey: true }, { key: 'a', ctrlKey: true }, { key: 'a', metaKey: true }]) {
     assert.equal(resolveGraphShortcut({ ...event, repeat: true }, graph), 'ignore');
   }
   assert.equal(resolveGraphShortcut({ key: 'ArrowRight', repeat: true }, graph), 'right');
@@ -77,4 +77,20 @@ test('undo and redo preserve standard platform modifier combinations on graph fo
     assert.equal(resolveGraphShortcut({ key: 'y', ...modifier }, graph), 'redo');
     assert.equal(resolveGraphShortcut({ key: 'k', ...modifier }, graph), 'search');
   }
+});
+
+test('select-all belongs only to an unblocked focused graph and preserves editor/platform combinations', () => {
+  for (const scope of ['canvas', 'node', 'edge'] satisfies GraphShortcutScope[]) {
+    for (const modifier of [{ ctrlKey: true }, { metaKey: true }]) {
+      assert.equal(resolveGraphShortcut({ key: 'a', ...modifier }, { scope }), 'select-all');
+      assert.equal(resolveGraphShortcut({ key: 'A', ...modifier }, { scope }), 'select-all');
+      assert.equal(resolveGraphShortcut({ key: 'a', ...modifier, repeat: true }, { scope }), 'ignore');
+      for (const guard of [{ shiftKey: true }, { altKey: true }, { isComposing: true }, { keyCode: 229 }, { defaultPrevented: true }]) {
+        assert.equal(resolveGraphShortcut({ key: 'a', ...modifier, ...guard }, { scope }), null);
+      }
+      assert.equal(resolveGraphShortcut({ key: 'a', ...modifier }, { scope, blocked: true }), null);
+    }
+  }
+  assert.equal(resolveGraphShortcut({ key: 'a' }, { scope: 'canvas' }), null);
+  assert.equal(resolveGraphShortcut({ key: 'a', ctrlKey: true, metaKey: true }, { scope: 'canvas' }), null);
 });
