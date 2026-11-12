@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": null,
-  "heartbeat_at": null,
-  "expires_at": null,
-  "current_task_id": null,
-  "feature_branch": null,
+  "owner_run_id": "nodus-auto-run02-20261112T181440",
+  "acquired_at": "2026-11-12T18:14:40.582Z",
+  "heartbeat_at": "2026-11-12T18:14:40.582Z",
+  "expires_at": "2026-11-12T19:44:40.582Z",
+  "current_task_id": "ND-001",
+  "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001_in_progress_release_gates_blocked",
+    "phase": "run02_acquired_ND001_validation",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -38,5 +38,5 @@
     "completed_at": "2026-11-12T17:30:37.692Z",
     "summary": "Implemented exact total/visible search counts, paged access beyond 70 and full root-to-board paths on fix/nd-001-search-clarity. Five target tests passed and isolated helper typecheck passed. Full repo build, real UI QA and Sites publication unavailable; main and live unchanged. Continue ND-001 before ND-002."
   },
-  "updated_at": "2026-11-12T17:30:37.692Z"
+  "updated_at": "2026-11-12T18:14:40.582Z"
 }
