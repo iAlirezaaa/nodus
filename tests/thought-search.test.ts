@@ -101,3 +101,30 @@ test('Arabic vowel marks and tatweel do not prevent an otherwise matching search
   assert.deepEqual(searchThoughts(nodes, 'مدون').visible.map(n => n.id), ['a']);
   assert.deepEqual(searchThoughts(nodes, 'کتاب').visible.map(n => n.id), ['b']);
 });
+
+test('a parent or nested project name finds only thoughts under that location', () => {
+  const nodes = [thought('container', 'Container', 'root'), thought('nested', 'Lighting notes', 'shot'), thought('other', 'Lighting notes', 'other')];
+  const paths = buildBoardPaths({ boards: [board('root', 'Studio'), board('shot', 'Episode / Shot 12', 'container'), board('other', 'Unrelated')], nodes }, 'Untitled');
+  assert.deepEqual(searchThoughts(nodes, 'Studio', 70, 0, paths).visible.map(n => n.id), ['container', 'nested']);
+  assert.deepEqual(searchThoughts(nodes, 'Shot 12', 70, 0, paths).visible.map(n => n.id), ['nested']);
+  assert.deepEqual(searchThoughts(nodes, 'Lighting', 70, 0, paths).visible.map(n => n.id), ['nested','other']);
+  assert.deepEqual(searchThoughts(nodes, 'Shot 12').visible.map(n => n.id), []);
+});
+
+test('location search tolerates mixed Persian/Arabic keyboard forms and leaves source intact', () => {
+  const nodes = [thought('in', 'Draft', 'book'), thought('out', 'Draft', 'another')];
+  const doc = { nodes, boards: [board('book', 'کتاب‌های ۱۲۳'), board('another', 'Notes')] };
+  const paths = buildBoardPaths(doc, 'Untitled');
+  assert.deepEqual(searchThoughts(nodes, 'كتابهاي 123', 70, 0, paths).visible.map(n=>n.id), ['in']);
+  assert.equal(doc.boards[0].title, 'کتاب‌های ۱۲۳');
+  assert.equal(nodes[0].title, 'Draft');
+});
+
+test('location-only matches retain exact count, capped pages and ignore missing path entries', () => {
+  const nodes = [...Array.from({ length: 151 }, (_, i) => thought(String(i), 'Untitled item', 'inside')), thought('orphan', 'Elsewhere', 'missing')];
+  const paths = new Map([['inside', 'Studio / Lighting']]);
+  const pages = [0, 70, 140].map(offset => searchThoughts(nodes, 'Lighting', 70, offset, paths));
+  assert.deepEqual(pages.map(page => [page.total, page.offset, page.visible.length]), [[151,0,70],[151,70,70],[151,140,11]]);
+  assert.deepEqual(pages.flatMap(page=>page.visible.map(n=>n.id)), nodes.slice(0,151).map(n=>n.id));
+  assert.deepEqual(searchThoughts(nodes, 'missing', 70, 0, paths).visible, []);
+});

@@ -16,11 +16,18 @@ function normalizeSearchText(value: string): string {
 }
 
 /** Count all matches and return one bounded page, without mutating or saving the graph. */
-export function searchThoughts(nodes: readonly GraphNode[], query: string, limit = SEARCH_PAGE_SIZE, offset = 0): ThoughtSearchPage {
+export function searchThoughts(nodes: readonly GraphNode[], query: string, limit = SEARCH_PAGE_SIZE, offset = 0, boardPaths?: ReadonlyMap<string, string>): ThoughtSearchPage {
   const needle = normalizeSearchText(query.trim());
   const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : SEARCH_PAGE_SIZE;
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;
-  const matches = (node: GraphNode) => !needle || normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? '')).includes(needle);
+  // Normalize each board path once, not once per result. Paths are location
+  // labels for this workspace only; they never become saved node content.
+  const normalizedPaths = needle && boardPaths
+    ? new Map(Array.from(boardPaths, ([id, path]) => [id, normalizeSearchText(path)]))
+    : null;
+  const matches = (node: GraphNode) => !needle
+    || normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? '')).includes(needle)
+    || (normalizedPaths?.get(node.boardId)?.includes(needle) ?? false);
   const visible: GraphNode[] = [];
   let total = 0;
   for (const node of nodes) {
