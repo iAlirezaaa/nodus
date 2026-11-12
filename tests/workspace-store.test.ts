@@ -218,3 +218,121 @@ test('default browser fetch keeps the global receiver for load and save', async 
     globalThis.fetch = originalFetch;
   }
 });
+
+test('one committed document is encoded once, while duplicate lifecycle flushes keep its durable draft', async () => {
+  const storage = memoryStorage();
+  let encodings = 0;
+  let draftWrites = 0;
+  const setItem = storage.setItem;
+  storage.setItem = (key, value) => { draftWrites++; setItem(key, value); };
+  const store = new WorkspaceStore({ makeWorkspace: workspace, storage, debounceMs: 60_000,
+    fetcher: (async (_url, init) => {
+      if (init?.method !== 'PUT') return remote(workspace());
+      const body = JSON.parse(String(init.body));
+      assert.equal(body.document.nodes[0].title, 'Committed on Enter');
+      return json({ revision: 2, updatedAt: 'saved' });
+    }) as typeof fetch });
+  try {
+    await store.load();
+    store.update(current => {
+      const next = edit('Committed on Enter')(current);
+      Object.defineProperty(next, 'toJSON', { value: () => { encodings++; return { ...next }; } });
+      return next;
+    });
+    // Recovery is already durable before the update call returns.
+    assert.equal(JSON.parse(storage.getItem('nodus:workspace:draft:owner')!).document.nodes[0].title, 'Committed on Enter');
+    store.persistDraft(); store.persistDraft(); store.suspend();
+    assert.equal(encodings, 1);
+    assert.equal(draftWrites, 1);
+    await store.flush();
+    assert.equal(encodings, 1, 'The server request reuses the already encoded document.');
+    assert.equal(store.getSnapshot().saveState, 'saved');
+    assert.equal(storage.values.size, 0);
+  } finally { store.suspend(); }
+});
+
+test('no-op updates avoid writes, notifications and undo entries; bursts retain every committed draft', async () => {
+  const storage = memoryStorage();
+  let durableWrites = 0;
+  let serverWrites = 0;
+  const setItem = storage.setItem;
+  storage.setItem = (key, value) => { durableWrites++; setItem(key, value); };
+  const store = new WorkspaceStore({ makeWorkspace: workspace, storage, debounceMs: 60_000,
+    fetcher: (async (_url, init) => {
+      if (init?.method !== 'PUT') return remote(workspace());
+      serverWrites++;
+      const body = JSON.parse(String(init.body));
+      assert.equal(body.document.nodes[0].title, 'Thought 20');
+      return json({ revision: 2, updatedAt: 'saved' });
+    }) as typeof fetch });
+  try {
+    await store.load();
+    let notifications = 0;
+    const unsubscribe = store.subscribe(() => { notifications++; });
+    const previousSnapshot = store.getSnapshot();
+    store.update(current => current);
+    await store.retry();
+    assert.equal(store.getSnapshot(), previousSnapshot);
+    assert.equal(notifications, 0);
+    assert.equal(durableWrites, 0);
+    assert.equal(store.getSnapshot().canUndo, false);
+    for (let index = 1; index <= 20; index++) {
+      store.update(edit(`Thought ${index}`));
+      assert.equal(JSON.parse(storage.getItem('nodus:workspace:draft:owner')!).document.nodes[0].title, `Thought ${index}`);
+    }
+    assert.equal(durableWrites, 20, 'Real committed changes are never delayed or skipped.');
+    assert.equal(serverWrites, 0);
+    await store.flush();
+    assert.equal(serverWrites, 1);
+    assert.equal(store.getSnapshot().saveState, 'saved');
+    unsubscribe();
+  } finally { store.suspend(); }
+});
+
+test('draft write deduplication detects another tab replacing or deleting the storage entry', async () => {
+  const storage = memoryStorage();
+  const key = 'nodus:workspace:draft:owner';
+  const store = new WorkspaceStore({ makeWorkspace: workspace, storage, debounceMs: 60_000,
+    fetcher: (async () => remote(workspace())) as typeof fetch });
+  try {
+    await store.load(); store.update(edit('Keep this local thought'));
+    storage.setItem(key, JSON.stringify({ from: 'another tab' }));
+    store.persistDraft();
+    assert.equal(JSON.parse(storage.getItem(key)!).document.nodes[0].title, 'Keep this local thought');
+    storage.removeItem(key);
+    store.persistDraft();
+    assert.equal(JSON.parse(storage.getItem(key)!).document.nodes[0].title, 'Keep this local thought');
+  } finally { store.suspend(); }
+});
+
+test('pending recovery revision advances after an earlier save even when its document is unchanged', async () => {
+  const storage = memoryStorage();
+  let releaseFirst!: (response: Response) => void;
+  let releaseSecond!: (response: Response) => void;
+  let notifySecond!: () => void;
+  const secondStarted = new Promise<void>(resolve => { notifySecond = resolve; });
+  let requests = 0;
+  const store = new WorkspaceStore({ makeWorkspace: workspace, storage, debounceMs: 60_000,
+    fetcher: (async (_url, init) => {
+      if (init?.method !== 'PUT') return remote(workspace());
+      requests++;
+      if (requests === 1) return new Promise<Response>(resolve => { releaseFirst = resolve; });
+      notifySecond();
+      return new Promise<Response>(resolve => { releaseSecond = resolve; });
+    }) as typeof fetch });
+  try {
+    await store.load(); store.update(edit('First'));
+    const saving = store.flush();
+    await Promise.resolve();
+    store.update(edit('Second'));
+    assert.equal(JSON.parse(storage.getItem('nodus:workspace:draft:owner')!).baseRevision, 1);
+    releaseFirst(json({ revision: 2, updatedAt: 'first' }));
+    await secondStarted;
+    const durable = JSON.parse(storage.getItem('nodus:workspace:draft:owner')!);
+    assert.equal(durable.baseRevision, 2, 'Draft deduplication must include the expected server revision.');
+    assert.equal(durable.document.nodes[0].title, 'Second');
+    releaseSecond(json({ revision: 3, updatedAt: 'second' }));
+    await saving;
+    assert.equal(store.getSnapshot().saveState, 'saved');
+  } finally { store.suspend(); }
+});

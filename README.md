@@ -6,7 +6,8 @@ The application has a React interface, a server API, a persistent SQL database a
 
 ## Working with a board
 
-- Select a node to read or edit its content.
+- Select a node to keep thinking on the canvas. Open **Details** or press **Shift+Enter** to read its full content and attachments.
+- Write titles directly on cards. **Enter** commits a thought and starts its next sibling; **Tab** commits it and starts a connected child. Focus follows the new card without a modal or a fit-to-canvas jump.
 - Drag a node to move it. Drag the background to pan, and use the zoom controls, wheel or touch pinch to change scale.
 - Connect existing nodes, or create multiple connected branches from a list of titles.
 - Open a node's internal project to work on its own board; the breadcrumb trail leads back out.
@@ -16,9 +17,36 @@ The application has a React interface, a server API, a persistent SQL database a
 
 Graph connections and containment are different relationships. Connections may form cycles. A project cannot contain itself, directly or indirectly.
 
+### Keep thinking with the keyboard
+
+The following shortcuts apply while the canvas or a thought card has focus. Ordinary fields, dialogs, link controls, and the notes textarea keep their normal keyboard behavior.
+
+| Key | Action |
+| --- | --- |
+| Enter | Start a thought, or commit the current title and start a sibling. |
+| Tab | Start a connected child of the current thought. |
+| Shift+Tab | Finish the title and return to its graph parent; without a parent, normal backward focus remains available on a card. |
+| Arrow keys | Move to a card in that physical direction. From the empty canvas selection, enter at the closest thought. |
+| F2 / double-click a note | Edit its title in place. Typing on a focused card also starts a replacement title. |
+| Shift+Enter | Finish the title and open notes and details. |
+| Ctrl / Cmd+Enter | Open the focused card's nested project. |
+| Escape | Finish inline writing, or discard an empty new draft. On a card, clear selection and focus the canvas; Tab can then leave the canvas. |
+| N / F | New independent thought / fit the canvas, outside text fields. |
+| Ctrl / Cmd+Z | Undo a committed graph change. Text fields retain native text undo. |
+
+Enter on a root thought creates another independent root. A sibling shares the source's first valid incoming connection; this does not turn an arbitrary graph into a strict tree. Children start on the left in Persian and on the right in English. Placement avoids existing cards without moving earlier thoughts.
+
+An empty new card is only a view draft: repeated Enter or Tab does not save empty notes. Its title and connection enter undo history together when committed. Persian text, input-method composition, paste, and native text shortcuts are handled within the inline editor.
+
+Starting a title from a zoomed-out overview raises the scale to 100%, bounded by the available width of the card. Subsequent Enter and Tab keep that scale and pan only as needed. Reveal margins keep the active card above the floating toolbar.
+
 ## Saving, recovery and limits
 
 The server is the durable source of truth. Browser storage holds view preferences and a recovery draft for pending changes. “Saved” is shown only after the server acknowledges a write.
+
+Inline typing stays local to its input rather than serializing the entire workspace per character. Enter, Tab, blur, navigation and page-departure handlers commit the current title into the ordinary recovery/save queue. “Writing…” distinguishes an active unsaved title from a server-acknowledged save. Recovery storage is still written synchronously for every committed graph change.
+
+If a title cannot be committed, its text remains editable. The `beforeunload` guard requests the browser's departure confirmation so a failed title commit is not silently treated as saved.
 
 Writes include the document revision. When another tab has saved newer content, the server rejects a stale write instead of overwriting it. Recovery can preserve the local graph as separate root boards. Keep the page open if saving fails and the browser reports that its recovery storage is unavailable.
 
@@ -39,7 +67,7 @@ A JSON export contains the graph, text, relationships and attachment references.
 
 ## Scope of this version
 
-Nodus does not currently call an AI model, generate branches from document contents, transcribe media, extract PDF text or provide simultaneous multiplayer editing. Branches are authored by the user. Revision conflict handling protects edits across tabs; it is not a real-time collaboration engine. First load requires access to the authenticated server; local draft recovery is not a complete offline mode.
+Nodus does not currently call an AI model, automatically infer branches, transcribe media, extract PDF text or provide simultaneous multiplayer editing. Branches are authored by the user, either individually or by splitting the lines of an existing note. Revision conflict handling protects edits across tabs; it is not a real-time collaboration engine. First load requires access to the authenticated server; local draft recovery is not a complete offline mode.
 
 ## Technology
 
@@ -99,13 +127,33 @@ Inspect and commit the generated SQL and Drizzle metadata. Build again if bindin
 
 ### Tests
 
-Run the graph, recovery and backend suites:
+Run the graph, keyboard-flow, recovery and backend suites:
 
 ```sh
-node --import ./tests/server-loader.mjs --test tests/graph.test.ts tests/workspace-store.test.ts tests/server.test.mjs
+node --import ./tests/server-loader.mjs --test tests/graph.test.ts tests/flow.test.ts tests/workspace-store.test.ts tests/server.test.mjs
 ```
 
-The backend suite uses an in-memory SQLite database initialized from the checked-in migrations. It exercises actual conditional save statements, account isolation, attachment ownership, graph validation and media byte ranges. These tests do not replace a visual/browser verification of the deployed application.
+The latest completed run passed all **45 tests**. The backend suite uses an in-memory SQLite database initialized from the checked-in migrations. It exercises actual conditional save statements, account isolation, attachment ownership, graph validation and media byte ranges.
+
+### Browser verification
+
+The development server exposes [tests/browser/flow-fixture.html](tests/browser/flow-fixture.html) and the [390 × 844 mobile frame](tests/browser/flow-mobile.html). Vinext may remove `.html` from the displayed URL. The fixture mounts the real interface with a clearly labelled synthetic workspace and a page-local workspace API. Its fake server validates revisions and persists in session storage across refreshes; attachment API calls are blocked. These files are development fixtures outside production entrypoints. Production authentication is unchanged.
+
+The completed browser checks verified:
+
+| Interaction | Observed result |
+| --- | --- |
+| Persian Enter, Tab and Shift+Tab | Sibling creation, child creation and return to the parent work in sequence. |
+| Twenty sibling branches | A parent and 20 children produce 21 nodes and 20 edges, preserved after reload. |
+| Empty drafts and history | Empty cards are not saved; undo and redo treat each new node and its connection atomically. |
+| Notes and project navigation | Notes retain native multiline editing; Ctrl+Enter opens the nested board. Returning to the parent board commits the current inline title. |
+| Focus transitions | Escape followed by Tab leaves the canvas. Clicking the language control commits the current title and leaves focus on that control. |
+| Mobile frame | Title editing and branch creation work at 390 × 844, with readable cards clear of the toolbar. |
+| Pointer controls | Dragging changes the saved node position; canvas panning and zoom controls remain available. |
+
+These are browser checks against synthetic persistence, not a deployed authenticated UI test. Physical touch devices, native IME sessions and production signed-in behavior were not verified in this pass.
+
+![Inline title editing in the synthetic browser verification workspace](docs/screenshots/keyboard-flow.jpg)
 
 ## Hosting
 

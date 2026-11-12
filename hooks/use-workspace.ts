@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { createWorkspace } from '@/lib/graph';
 import type { Language } from '@/lib/types';
 import { WorkspaceStore } from './workspace-store';
@@ -33,7 +33,9 @@ export function useWorkspace(language: Language = 'fa') {
     };
   }, [store]);
 
-  return {
+  // Preserve the result identity through parent-only renders (for example a
+  // locally edited title). Store action methods themselves are already stable.
+  return useMemo(() => ({
     ...state,
     update: store.update, undo: store.undo, redo: store.redo,
     flush: store.flush, retry: store.retry, reload: store.reload,
@@ -41,5 +43,5 @@ export function useWorkspace(language: Language = 'fa') {
     resolveConflict: store.resolveConflict, exportDraft: store.exportDraft,
     getRecoveryDocument: store.getRecoveryDocument,
     getUserId: store.getUserId,
-  };
+  }), [state, store]);
 }

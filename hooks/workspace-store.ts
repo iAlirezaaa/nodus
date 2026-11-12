@@ -48,6 +48,8 @@ function isWorkspace(value: unknown): value is Workspace {
 }
 
 function sameDocument(a: Workspace | null, b: Workspace | null) {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
@@ -92,6 +94,10 @@ export class WorkspaceStore {
   private recovery: Draft | null = null;
   private protectedPending = false;
   private clearRecoveryAfterSaveSerial: number | null = null;
+  // The store's update contract is immutable. Keep only the most recent encoded
+  // document, rather than retaining one large JSON string per undo history entry.
+  private encodedDocument: { document: Workspace; json: string } | null = null;
+  private draftWrites = new Map<string, { document: Workspace; revision: number; json: string }>();
 
   constructor(options: StoreOptions) { this.options = options; }
   getSnapshot = () => this.snapshot;
@@ -103,8 +109,16 @@ export class WorkspaceStore {
   };
   setLanguage(language: Language) { this.options.language = language; }
   private publish(patch: Partial<WorkspaceSnapshot>) {
-    this.snapshot = { ...this.snapshot, ...patch, canUndo: this.past.length > 0, canRedo: this.future.length > 0 };
+    const next = { ...this.snapshot, ...patch, canUndo: this.past.length > 0, canRedo: this.future.length > 0 };
+    if ((Object.keys(next) as (keyof WorkspaceSnapshot)[]).every(key => Object.is(next[key], this.snapshot[key]))) return;
+    this.snapshot = next;
     this.listeners.forEach(listener => listener());
+  }
+  private encodeDocument(document: Workspace) {
+    if (this.encodedDocument?.document === document) return this.encodedDocument.json;
+    const json = JSON.stringify(document);
+    this.encodedDocument = { document, json };
+    return json;
   }
   private get fetcher() { return this.options.fetcher ?? globalThis.fetch.bind(globalThis); }
   private get storage(): StorageLike | null {
@@ -122,13 +136,24 @@ export class WorkspaceStore {
     } catch { return null; }
   }
   private removeDraft(recovery = false) {
-    try { this.storage?.removeItem(this.key(recovery)); } catch { /* Cloud acknowledgement remains authoritative. */ }
+    const key = this.key(recovery);
+    this.draftWrites.delete(key);
+    try { this.storage?.removeItem(key); } catch { /* Cloud acknowledgement remains authoritative. */ }
   }
   private writeDraft(draft: Draft, recovery = false) {
     try {
       const storage = this.storage;
       if (!storage) throw new Error('Browser storage is unavailable.');
-      storage.setItem(this.key(recovery), JSON.stringify(draft));
+      const key = this.key(recovery);
+      const written = this.draftWrites.get(key);
+      // Visibility, unload, suspend and failed requests often flush the same
+      // draft. Verify the actual stored bytes before skipping: another tab can
+      // replace or remove an account's shared localStorage entry.
+      if (written?.document === draft.document && written.revision === draft.baseRevision
+        && storage.getItem(key) === written.json) return true;
+      const json = `{"version":1,"userId":${JSON.stringify(draft.userId)},"baseRevision":${JSON.stringify(draft.baseRevision)},"document":${this.encodeDocument(draft.document)},"savedAt":${JSON.stringify(draft.savedAt)}}`;
+      storage.setItem(key, json);
+      this.draftWrites.set(key, { document: draft.document, revision: draft.baseRevision, json });
       return true;
     } catch {
       this.publish({ draftWarning: 'Browser recovery storage is unavailable or full. Keep this page open until changes are saved to the server.' });
@@ -191,6 +216,10 @@ export class WorkspaceStore {
       if (generation !== this.loadGeneration) return;
       const previousUser = this.userId;
       this.userId = remote.userId;
+      if (previousUser !== this.userId) {
+        this.draftWrites.clear();
+        this.encodedDocument = null;
+      }
       this.revision = remote.revision;
       this.blocked = false;
       this.past = [];
@@ -279,7 +308,7 @@ export class WorkspaceStore {
       try {
         const response = await this.fetcher('/api/workspace', {
           method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Nodus-User-Id': this.userId },
-          body: JSON.stringify({ document, revision: this.revision }),
+          body: `{"document":${this.encodeDocument(document)},"revision":${this.revision}}`,
         });
         if (!response.ok) {
           this.blocked = true;

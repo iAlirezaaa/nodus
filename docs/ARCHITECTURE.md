@@ -30,6 +30,26 @@ Any node can gain a child board without discarding its existing text, media or U
 
 `hooks/use-workspace.ts` connects React to `hooks/workspace-store.ts`. The store owns the document and save queue, so navigating between boards does not create separate competing writers.
 
+### Continuous keyboard entry
+
+`hooks/use-thought-flow.ts` manages one inline edit session. A new thought remains an ephemeral view node until its nonempty title is committed. `lib/flow.ts` plans collision-free placement and inserts the note and connecting edge atomically, so undo removes one complete thought rather than individual keystrokes. Existing titles also commit as one graph edit. The ordinary notes textarea keeps native Enter and Tab behavior.
+
+Enter prepares a sibling; Tab prepares a child; Shift+Tab selects the first valid incoming graph parent. These graph relationships are separate from nested-board containment and can include cycles. Arrow navigation uses physical card positions. Focus and selection are scoped to the canvas; Escape returns to the canvas, and a subsequent Tab exits it. Header controls, dialogs and other text fields are not hijacked by creation shortcuts.
+
+The inline editor owns its text buffer, protects composition events, and deduplicates blur after a keyboard commit. It commits the current DOM value on navigation and page-departure events; a capture-phase unload handler runs before the store's recovery check. Failed insertions keep the typed title editable, and a failed departure-time title commit triggers the `beforeunload` confirmation guard. Editor ownership is checked again against the current signed-in account. Blank new drafts never enter durable data or undo history. Clicking an external control commits the title without reclaiming focus from that control.
+
+### Rendering and serialization costs
+
+Cards and connections are memoized behind stable event dispatchers. Panning only changes the viewport; it does not rebuild unchanged card content or edge geometry. Dragging rebuilds geometry for incident edges. Pointer, wheel and drag state changes coalesce into animation frames, while off-screen culling and reduced zoom detail remain in place. Starting an inline edit from an overview raises zoom toward 100%, bounded by the width available for that card. Subsequent Enter/Tab reveals preserve this scale and adjust only the necessary pan distance. The reveal bounds reserve space above the floating toolbar, including in narrow layouts.
+
+The app caches board/node lookups and counts, searches only while the search dialog is open, and computes deletion descendants only for the deletion dialog. The workspace store reuses the latest immutable document serialization for recovery and the server request. Repeated lifecycle flushes skip duplicate local writes only after checking the actual stored bytes, retaining detection of changes from another tab. Every real committed change still writes its recovery draft synchronously. These changes reduce repeated work; they do not change the full-document revision protocol or guarantee a particular frame rate on all devices.
+
+### Browser verification boundary
+
+`tests/browser/flow-fixture.html` mounts the real application against a synthetic, page-local workspace API with revision checks and session-storage persistence. `tests/browser/flow-mobile.html` hosts it in a 390 × 844 frame. The fixtures are development-only, block attachment API requests and leave production authentication unchanged.
+
+The verification pass covered Persian keyboard entry and parent navigation, 20 sibling branches surviving reload as 21 nodes/20 edges, exclusion of empty drafts, atomic undo/redo, native multiline notes, Ctrl+Enter nested-board navigation, Escape/Tab focus exit, mobile title/branch entry, and committing a title while preserving focus on the clicked language control. All 45 automated tests also passed. See the [browser verification record](../README.md#browser-verification) for the interaction results. This was not a production signed-in UI test; physical touch devices and native IME sessions were not exercised.
+
 ## Save lifecycle
 
 1. The client loads `/api/workspace` using the current authenticated identity.

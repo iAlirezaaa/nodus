@@ -1,0 +1,21 @@
+/* Canvas-owned additions for focused inline writing. */
+.canvas[data-canvas]:focus-visible { outline: 1px solid color-mix(in srgb, var(--accent) 24%, transparent); outline-offset: -3px; }
+.thought-node.is-inline-editing { z-index: 8; border-color: var(--node-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--node-accent) 16%, transparent), var(--canvas-shadow); }
+.inline-title-editor { min-width: 0; margin-top: 8px; }
+.inline-title-input { display: block; width: calc(100% + 12px); min-width: 0; margin-inline: -6px; padding: 4px 6px; border: 1px solid color-mix(in srgb, var(--node-accent) 40%, var(--border)); border-radius: 7px; background: color-mix(in srgb, var(--node-accent) 5%, var(--surface)); color: var(--foreground); font-size: 16px; font-weight: 650; line-height: 1.55; outline: none; user-select: text; touch-action: auto; caret-color: var(--node-accent); }
+.inline-title-input:focus-visible { outline: none; border-color: var(--node-accent); }
+.inline-title-input::placeholder { color: var(--muted); opacity: .8; font-weight: 450; }
+.node-footer-actions { display: flex; align-items: center; gap: 7px; }
+.node-details { font-size: 9px; padding: 4px 3px; color: var(--muted); border-radius: 4px; }
+.node-details:hover, .node-details:focus-visible { color: var(--node-accent); background: var(--surface-hover); }
+.thought-node.compact .inline-title-input { font-size: 24px; }
+.thought-node.miniature.is-inline-editing { border-radius: 16px; }
+.thought-node.miniature .inline-title-input { font-size: 32px; }
+.node-key-hint { position: absolute; inset-inline-start: 0; top: calc(100% + 9px); display: flex; align-items: center; gap: 9px; width: max-content; max-width: 120%; padding: 4px 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 7px; color: var(--muted); box-shadow: 0 4px 14px #0000000b; font-size: 9px; line-height: 1.5; white-space: nowrap; pointer-events: none; user-select: none; }
+.node-key-hint > span { display: inline-flex; align-items: center; gap: 4px; }
+.node-key-hint kbd { font: 9px/1.2 ui-monospace, monospace; color: var(--foreground); background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 2px 3px; direction: ltr; }
+.thought-node.compact .node-key-hint { font-size: 13px; }
+.thought-node.compact .node-key-hint kbd { font-size: 12px; }
+.thought-node.miniature:not(.is-inline-editing) .node-key-hint { display: none; }
+@media (pointer: coarse) { .node-key-hint { display: none; } .inline-title-input { min-height: 40px; } }
+@media (prefers-reduced-motion: reduce) { .thought-node.is-inline-editing { transition: none; } }
