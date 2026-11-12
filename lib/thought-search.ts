@@ -3,12 +3,24 @@ import type { GraphNode, Workspace } from './types';
 export const SEARCH_PAGE_SIZE = 70;
 export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset: number; }
 
+/** Compare mixed Persian/Arabic keyboard spellings without rewriting saved content. */
+function normalizeSearchText(value: string): string {
+  return value.normalize('NFKC')
+    .replace(/[\u064A\u0649]/g, 'ی')
+    .replace(/\u0643/g, 'ک')
+    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
+    .replace(/\u200C/g, '')
+    .replace(/[\u0660-\u0669\u06F0-\u06F9]/g, digit =>
+      String.fromCharCode(48 + digit.charCodeAt(0) - (digit.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660)))
+    .toLocaleLowerCase();
+}
+
 /** Count all matches and return one bounded page, without mutating or saving the graph. */
 export function searchThoughts(nodes: readonly GraphNode[], query: string, limit = SEARCH_PAGE_SIZE, offset = 0): ThoughtSearchPage {
-  const needle = query.trim().toLocaleLowerCase();
+  const needle = normalizeSearchText(query.trim());
   const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : SEARCH_PAGE_SIZE;
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;
-  const matches = (node: GraphNode) => !needle || (node.title + ' ' + node.text + ' ' + (node.asset?.name ?? '')).toLocaleLowerCase().includes(needle);
+  const matches = (node: GraphNode) => !needle || normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? '')).includes(needle);
   const visible: GraphNode[] = [];
   let total = 0;
   for (const node of nodes) {

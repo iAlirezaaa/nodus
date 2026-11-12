@@ -79,3 +79,25 @@ test('invalid offsets, partial pages and zero cap are safe', () => {
   assert.equal(searchThoughts(nodes, 'idea', 3, Number.POSITIVE_INFINITY).offset, 0);
   assert.deepEqual(searchThoughts(nodes, 'idea', 0, 100), { visible: [], total: 9, offset: 0 });
 });
+
+test('Arabic/Persian keyboard letter variants match either way without rewriting saved titles', () => {
+  const a = thought('a', 'کتاب‌های زندگی');
+  const b = thought('b', 'كيان');
+  assert.deepEqual(searchThoughts([a], 'كتابهاي').visible.map(n => n.id), ['a']);
+  assert.deepEqual(searchThoughts([b], 'کیان').visible.map(n => n.id), ['b']);
+  assert.equal(a.title, 'کتاب‌های زندگی');
+  assert.equal(b.title, 'كيان');
+});
+
+test('Arabic-Indic, Persian and Western numerals match across input keyboards', () => {
+  const nodes = [thought('a', 'پروژه ۱۲۳'), thought('b', 'scene ٤٥٦'), thought('c', 'shot 789')];
+  assert.deepEqual(searchThoughts(nodes, '123').visible.map(n => n.id), ['a']);
+  assert.deepEqual(searchThoughts(nodes, '۴۵۶').visible.map(n => n.id), ['b']);
+  assert.deepEqual(searchThoughts(nodes, '٧٨٩').visible.map(n => n.id), ['c']);
+});
+
+test('Arabic vowel marks and tatweel do not prevent an otherwise matching search', () => {
+  const nodes = [thought('a', 'مُدَوَّن'), thought('b', 'كــتاب')];
+  assert.deepEqual(searchThoughts(nodes, 'مدون').visible.map(n => n.id), ['a']);
+  assert.deepEqual(searchThoughts(nodes, 'کتاب').visible.map(n => n.id), ['b']);
+});
