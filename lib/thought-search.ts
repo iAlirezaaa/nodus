@@ -42,7 +42,7 @@ export function buildBoardPaths(document: Pick<Workspace, 'boards' | 'nodes'>, u
     while (cursor && boardById.has(cursor) && !paths.has(cursor) && !visited.has(cursor)) {
       visited.add(cursor);
       pending.push(cursor);
-      const current = boardById.get(cursor)!;
+      const current: Workspace['boards'][number] = boardById.get(cursor)!;
       cursor = current.parentNodeId ? nodeBoardById.get(current.parentNodeId) : undefined;
     }
     let path = (cursor && paths.get(cursor)) || '';
