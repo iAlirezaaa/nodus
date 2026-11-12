@@ -1,0 +1,56 @@
+/* A neuron is a visual projection of the stored node, not a new graph object. */
+.canvas .thought-node.node-neuron { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; pointer-events: none; --label-scale: var(--neuron-label-scale, 1); }
+.canvas .thought-node.node-neuron:hover, .canvas .thought-node.node-neuron.selected, .canvas .thought-node.node-neuron:focus-within { z-index: 9; pointer-events: auto; --label-scale: var(--neuron-detail-scale, 1); }
+.neuron-core { position: absolute; left: 50%; top: 50%; width: var(--neuron-size); height: var(--neuron-size); transform: translate(-50%, -50%); display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--node-accent) 80%, transparent); border-radius: 50%; color: var(--node-accent); background: radial-gradient(circle at 40% 36%, color-mix(in srgb, var(--node-accent) 24%, var(--surface)), var(--surface)); box-shadow: 0 0 15px color-mix(in srgb, var(--node-accent) 18%, transparent), inset 0 0 7px color-mix(in srgb, var(--node-accent) 12%, transparent); pointer-events: auto; }
+.neuron-core i { width: 5px; height: 5px; border-radius: 50%; background: var(--node-accent); box-shadow: 0 0 6px color-mix(in srgb, var(--node-accent) 75%, transparent); }
+.neuron-core.neuron-project { border-style: double; border-width: 3px; }
+.node-neuron.selected .neuron-core, .node-neuron.connecting .neuron-core, .node-neuron:focus-visible .neuron-core { outline: 1px solid var(--node-accent); outline-offset: 5px; box-shadow: 0 0 22px color-mix(in srgb, var(--node-accent) 35%, transparent); }
+.node-neuron.appearance-sticky .neuron-core { border-radius: 6px; }
+.node-neuron.appearance-outline .neuron-core { background: var(--bg); border-style: dashed; }
+.node-neuron.task-doing .neuron-core { border-color: var(--warning); }
+.node-neuron.task-done .neuron-core { background: color-mix(in srgb, var(--node-accent) 18%, var(--surface)); }
+.canvas .node-neuron h3.neuron-label { position: absolute; left: 50%; top: calc(50% + var(--neuron-size) / 2 + 8px * var(--label-scale)); width: max-content; max-width: 190px; margin: 0; padding: 3px 7px; transform: translateX(-50%) scale(var(--label-scale)); transform-origin: center top; font-size: 13px; line-height: 1.65; font-weight: 550; text-align: center; letter-spacing: -.01em; border-radius: 7px; color: var(--foreground); background: color-mix(in srgb, var(--bg) 87%, transparent); pointer-events: auto; -webkit-line-clamp: 2; }
+.canvas[data-density='compact'] .node-neuron h3.neuron-label { max-width: 160px; font-size: 12px; }
+.canvas[data-density='spacious'] .node-neuron h3.neuron-label { max-width: 220px; font-size: 14px; }
+.node-neuron.miniature:not(:hover):not(.selected):not(:focus-within) h3.neuron-label { visibility: hidden; }
+.canvas .node-neuron .inline-title-editor { position: absolute; top: calc(50% + var(--neuron-size) / 2 + 15px); left: 50%; width: 250px; max-width: none; margin: 0; transform: translateX(-50%) scale(var(--neuron-detail-scale)); transform-origin: center top; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--node-accent) 50%, var(--border)); border-radius: 12px; background: var(--surface-raised); box-shadow: var(--canvas-shadow); pointer-events: auto; }
+.canvas .node-neuron .inline-title-input { font-size: 16px; }
+.neuron-peek { position: absolute; top: calc(50% + 76px * var(--neuron-detail-scale)); left: 50%; width: 244px; padding: 12px; border: 1px solid var(--border-strong); border-radius: 13px; background: var(--surface-raised); box-shadow: var(--shadow); transform: translateX(-50%) scale(var(--neuron-detail-scale)); transform-origin: top center; visibility: hidden; opacity: 0; pointer-events: none; }
+.node-neuron:hover .neuron-peek, .node-neuron.selected .neuron-peek, .node-neuron:focus-within .neuron-peek { visibility: visible; opacity: 1; pointer-events: auto; }
+.node-neuron.is-node-dragging .neuron-peek { visibility: hidden; pointer-events: none; }
+.neuron-peek-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 18px; }
+.neuron-peek-heading > span { display: inline-flex; align-items: center; gap: 6px; color: var(--node-accent); font-size: 10px; }
+.neuron-peek p { margin: 8px 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; font-size: 11px; line-height: 1.8; color: var(--muted); overflow-wrap: anywhere; white-space: pre-line; }
+.neuron-peek .project-preview { height: 56px; }
+.neuron-image-preview { display: block; width: 100%; height: 88px; object-fit: cover; border-radius: 7px; margin-top: 9px; background: var(--bg); }
+.neuron-date { display: block; margin-top: 7px; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.neuron-peek footer { display: flex; justify-content: space-between; gap: 7px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.neuron-peek footer button { display: inline-flex; align-items: center; gap: 5px; padding: 4px 2px; border-radius: 4px; color: var(--foreground); font-size: 10px; }
+.neuron-peek footer button:hover, .neuron-peek footer button:focus-visible { color: var(--node-accent); background: var(--surface-hover); }
+.neuron-peek footer button span { color: var(--faint); font-size: 9px; }
+.neuron-annotation { position: absolute; left: calc(50% + var(--neuron-size) / 2 + 8px); top: calc(50% - 20px); display: flex; align-items: center; gap: 3px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); background: var(--surface); font-size: 9px; pointer-events: auto; }
+.canvas .node-neuron .node-port { pointer-events: none; top: calc(50% - 6px); }
+.canvas .node-neuron .port-right { left: calc(50% + var(--neuron-size) / 2 + 7px); right: auto; }
+.canvas .node-neuron .port-left { left: calc(50% - var(--neuron-size) / 2 - 19px); }
+.canvas .node-neuron:hover .node-port, .canvas .node-neuron.selected .node-port, .canvas .node-neuron:focus-within .node-port, .canvas.connect-mode .node-neuron .node-port { pointer-events: auto; }
+.canvas .node-neuron .node-key-hint { left: 50%; inset-inline-start: auto; top: calc(50% + 91px); transform: translateX(-50%) scale(var(--neuron-detail-scale)); transform-origin: top center; }
+.canvas[data-node-style='neuron'] .connection-line { opacity: .55; }
+.canvas[data-node-style='neuron'] .connection.selected .connection-line, .canvas[data-node-style='neuron'] .connection:hover .connection-line { opacity: 1; }
+.canvas[data-node-style='neuron'] .connection-endpoint { display: none; }
+
+.layout-guide { position: absolute; border: 1px solid color-mix(in srgb, var(--guide-color) 16%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--guide-color) 2%, transparent); pointer-events: none; }
+.layout-guide-date { border-inline-start-color: color-mix(in srgb, var(--guide-color) 38%, transparent); }
+.layout-guide-title { display: flex; align-items: center; gap: 10px; padding: 15px 18px; color: var(--guide-color); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.layout-guide-title small { font-size: 10px; font-weight: 400; color: var(--muted); }
+.remote-cursor { position: absolute; z-index: 40; pointer-events: none; transform-origin: top left; color: var(--peer-color); }
+.remote-cursor svg { display: block; fill: var(--peer-color); stroke: var(--surface); stroke-width: 1.5; }
+.remote-cursor > span { display: block; width: max-content; max-width: 150px; margin: 1px 0 0 12px; padding: 3px 7px; border-radius: 3px 7px 7px; color: #101815; background: var(--peer-color); font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node-presence-badge { position: absolute; z-index: 2; top: -24px; inset-inline-end: 2px; max-width: 190px; padding: 3px 7px; border-radius: 6px; color: #101815; background: var(--peer-color); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.thought-node.has-peer-selection:not(.node-neuron) { outline: 1px solid var(--peer-color); outline-offset: 4px; }
+.node-neuron.has-peer-selection .neuron-core { outline: 1px solid var(--peer-color); outline-offset: 7px; }
+.node-neuron .node-presence-badge { top: calc(50% - var(--neuron-size) / 2 - 31px); inset-inline-end: auto; left: 50%; transform: translateX(-50%) scale(var(--neuron-label-scale)); transform-origin: bottom center; }
+.canvas[data-motion='on'] .thought-node { transition: left .22s ease-out, top .22s ease-out, border-color .18s ease, box-shadow .18s ease; }
+.canvas[data-motion='on'] .thought-node.is-node-dragging { transition: border-color .18s ease, box-shadow .18s ease; }
+.canvas[data-motion='off'] .thought-node { transition: none; }
+@media (prefers-reduced-motion: reduce) { .canvas .thought-node { transition: none !important; } }
+@media (pointer: coarse) { .neuron-peek footer button { min-height: 30px; } .neuron-core::after { content: ''; position: absolute; inset: -10px; border-radius: inherit; } }

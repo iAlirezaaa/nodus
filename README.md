@@ -1,18 +1,18 @@
 # Nodus
 
-Nodus is a personal brainstorming application built around connected thoughts and nested projects. A node can contain a note, an uploaded file, a link, or its own board. Opening a project changes the working canvas without losing its place in the parent graph.
+Nodus is a brainstorming application for personal and shared work, built around connected thoughts and nested projects. A node can contain a note, an uploaded file, a link, or its own board. Opening a project changes the working canvas without losing its place in the parent graph.
 
 The application has a React interface, a server API, a persistent SQL database and original-file storage. The initial board is editable guidance, with a real nested project and no pretend uploads.
 
 ## Working with a board
 
 - Select a node to keep thinking on the canvas. Open **Details** or press **Shift+Enter** to read its full content and attachments.
-- Write titles directly on cards. **Enter** commits a thought and starts its next sibling; **Tab** commits it and starts a connected child. Focus follows the new card without a modal or a fit-to-canvas jump.
+- Write titles directly beside neurons or on cards. **Enter** commits a thought and starts its next sibling; **Tab** commits it and starts a connected child. Focus follows the new thought without a modal or a fit-to-canvas jump.
 - Drag a node to move it. Drag the background to pan, and use the zoom controls, wheel or touch pinch to change scale.
 - Connect existing nodes, or create multiple connected branches from a list of titles.
 - Open a node's internal project to work on its own board; the breadcrumb trail leads back out.
 - Drop files onto the canvas or use the upload action. Images, supported video/audio formats and PDFs have previews; other formats retain their original download.
-- Use undo and redo for document changes. The editor keeps up to 60 in-session undo snapshots.
+- Use undo and redo for document changes. Personal workspaces retain up to 60 in-session snapshots; shared rooms retain guarded operations belonging to this session so undo cannot replace a colleague's newer work.
 - The interface supports Persian and English. Content can contain either language independently of the interface language.
 
 Graph connections and containment are different relationships. Connections may form cycles. A project cannot contain itself, directly or indirectly.
@@ -55,6 +55,41 @@ Select a connection to change its label, endpoints, direction, color, width, sol
 
 Subtle light travels from source to destination on relevant connections. Animation is bounded to visible connections, pauses when the page is hidden, and respects the operating system's reduced-motion preference. It can also be disabled per connection. New cards have a brief entrance transition.
 
+### Neural views, layout and personal appearance
+
+Open **Canvas layout and style**, beside the board heading. The default view uses small luminous neuron cores with readable titles. Selecting a neuron reveals its content preview and actions; entering a title expands the writing area. **Content cards** remain available for boards where images, files and longer excerpts are more useful.
+
+| Layout | What it does |
+| --- | --- |
+| Neural network | Uses connection attraction, node repulsion and collision spacing to settle related thoughts into a network. |
+| Thought tree | Places connected generations in columns, including disconnected components and cyclic graphs. |
+| Idea orbits | Places the most connected idea in the center and arranges other ideas on surrounding rings. |
+| Idea grid | Uses consistent rows and columns for scanning content and references. |
+| Timeline | Groups ideas by the date selected in Details, falling back to creation date. |
+| Task lanes | Arranges To do, In progress, Done and ideas without a task status in separate lanes. |
+
+Suggestions use the actual board's links, task hierarchy, content kinds and dates. They are deterministic recommendations, not generated AI content. Ordering controls include creation date, title, content type, color and task status, with ascending/descending order and adjustable spacing. Timeline dates and task lanes take priority over sorting; the selected sort orders ideas within those groups.
+
+Layouts apply to the current board as one undoable change. They retain content, containment and relationships, and reset manually bent paths on that board. The layout description and lane orientation are saved with the board so collaborators see the same arrangement and language changes do not swap lane meanings. Applying a layout is an explicit action: after changing task states, dates or adding ideas, apply it again to regroup them. Dragging a node does not change its task state or date.
+
+Neural physics runs for a bounded number of iterations when applied, then stops. Boards above 250 nodes use connected clusters instead of the all-pairs simulation. Nothing continuously moves the writing target or streams physics updates to the server.
+
+Personal appearance includes neuron/card presentation, dots/grid/plain background, three density settings, six accent colors and optional connection labels. These settings are scoped to account, room and board on the current device; each collaborator can choose their own presentation while sharing the same graph and positions. Reduced motion remains respected.
+
+### Working together
+
+1. Open **Collaborate and share** on a personal board and choose **Create shared copy**. Only the current board and its contained boards are copied; unrelated personal boards are excluded.
+2. Add the other person's **ChatGPT sign-in email**. This grants editing access to that shared room. The app does not send an invitation email.
+3. Copy the room link and open it from both accounts. Each person must also have access to the hosted Site; room membership cannot bypass the Site's private audience policy.
+
+The owner can add and remove members. A copied link alone grants no access. Existing personal content remains available through the room switcher, and creating a shared copy does not keep it linked to the original personal board.
+
+Shared edits are persisted on the server. Changes to different fields can merge, including updates from a temporarily disconnected client. When two people change the same field, the editor preserves the local draft and shows a conflict instead of silently overwriting someone else's work. Recovery can retain the local version as separate boards. Text edits are guarded as complete fields, and annotations are guarded as an array; simultaneous character-by-character coauthoring of one note is not implemented.
+
+Cursors, names and selected-node indicators appear on the same board. Each person can pan, zoom or change their personal presentation independently. Presence expires after 15 seconds without a heartbeat. Document polling starts around one second and backs off when idle; moving cursor updates are throttled to 500 ms, with independent presence reads. Network latency adds to these intervals. Hidden pages pause polling. This implementation uses authenticated HTTP synchronization, not WebSocket streaming.
+
+Uploads remain private unless referenced by a room the viewer currently belongs to. Removing the room reference or a member revokes that shared-file access; the uploader retains access to their own original file. The current room limit is 20 members.
+
 ## Saving, recovery and limits
 
 The server is the durable source of truth. Browser storage holds view preferences and a recovery draft for pending changes. “Saved” is shown only after the server acknowledges a write.
@@ -63,14 +98,18 @@ Inline typing stays local to its input rather than serializing the entire worksp
 
 If a title cannot be committed, its text remains editable. The `beforeunload` guard requests the browser's departure confirmation so a failed title commit is not silently treated as saved.
 
-Writes include the document revision. When another tab has saved newer content, the server rejects a stale write instead of overwriting it. Recovery can preserve the local graph as separate root boards. Keep the page open if saving fails and the browser reports that its recovery storage is unavailable.
+Personal writes include the document revision. When another tab has saved newer personal content, the server rejects a stale write instead of overwriting it. Shared rooms send guarded field operations and merge compatible edits against the current revision. Retry receipts prevent a lost save acknowledgement from applying a shared edit twice. Recovery can preserve the local graph as separate root boards. Keep the page open if saving fails and the browser reports that its recovery storage is unavailable.
+
+Shared recovery drafts use per-tab session storage, scoped to account and room. They survive a refresh in that tab but are not a durable backup after closing it. Revoked access freezes shared writes and retains pending work for export. Remote document application pauses during an inline title or unsaved annotation draft, so the visible editing base remains protected even when an earlier save response arrives.
 
 Current limits are:
 
 | Item | Limit |
 | --- | --- |
 | Individual uploaded file | 25 MiB |
-| Workspace save request | 5 MiB of JSON |
+| Persisted graph, personal or shared | 1,900,000 UTF-8 JSON bytes; media is stored separately |
+| Personal/create transport body | 5 MiB |
+| Shared operation transport body | 12 MiB, including before/after guards |
 | Boards per workspace | 2,000 |
 | Nodes per workspace | 5,000 |
 | Connections per workspace | 20,000 |
@@ -78,11 +117,13 @@ Current limits are:
 
 The canvas can be panned freely; these record limits still apply. Browser codec support determines whether a particular video or audio file can play inline. Unknown file formats, HTML and SVG are served as downloads. Removing a node does not delete its original uploaded file, so undo and recovery retain access to attachments.
 
-A JSON export contains the graph, text, relationships and attachment references. **It does not include binary attachments and is not a complete portable file backup.** Attachment references remain tied to the owning account on the same deployment. Download important originals separately.
+The serialized graph cap leaves headroom below D1's [2,000,000-byte row limit](https://developers.cloudflare.com/d1/platform/limits/). The count limits and byte limit apply together; large notes or metadata can reach the byte limit before the maximum node count. Existing stored graphs remain readable even if a future write exceeds the cap.
+
+A JSON export contains the graph, text, relationships and attachment references. **It does not include binary attachments and is not a complete portable file backup.** Original attachments remain on the same deployment and require current ownership or room access. Download important originals separately.
 
 ## Scope of this version
 
-Nodus does not currently call an AI model, automatically infer branches, transcribe media, extract PDF text or provide simultaneous multiplayer editing. Branches are authored by the user, either individually or by splitting the lines of an existing note. Revision conflict handling protects edits across tabs; it is not a real-time collaboration engine. First load requires access to the authenticated server; local draft recovery is not a complete offline mode.
+Nodus does not currently call an AI model, automatically infer branches, transcribe media or extract PDF text. Branches are authored by the user, either individually or by splitting the lines of an existing note. Shared graph editing and live presence are implemented; same-field conflicts require recovery rather than character-level merging. First load requires access to the authenticated server; local draft recovery is not a complete offline mode.
 
 ## Technology
 
@@ -93,7 +134,8 @@ Nodus does not currently call an AI model, automatically infer branches, transcr
 | Graph records | Cloudflare D1, with versioned Drizzle migrations |
 | Original files | Cloudflare R2 |
 | Authentication | Sites-managed ChatGPT sign-in |
-| Local recovery | Account-scoped browser local storage |
+| Shared synchronization | Guarded field operations, transactional D1 receipts and throttled presence |
+| Local recovery | Account-scoped local storage for personal work; account-and-room-scoped session storage for shared drafts |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data model, API, persistence behavior and extension points.
 
@@ -108,10 +150,11 @@ npm ci
 npm run build
 ```
 
-For a fresh local database, apply the checked-in initial migration once:
+For a fresh local database, apply the checked-in migrations once, in order:
 
 ```sh
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_nebulous_champions.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_spooky_medusa.sql
 ```
 
 Start the development server:
@@ -142,17 +185,19 @@ Inspect and commit the generated SQL and Drizzle metadata. Build again if bindin
 
 ### Tests
 
-Run the graph, keyboard-flow, recovery and backend suites:
+Run the graph, layouts, keyboard-flow, collaboration, recovery and backend suites:
 
 ```sh
-node --import ./tests/server-loader.mjs --test tests/graph.test.ts tests/flow.test.ts tests/node-features.test.ts tests/edge-geometry.test.ts tests/workspace-store.test.ts tests/server.test.mjs
+node --import ./tests/server-loader.mjs --test tests/*.test.ts tests/*.test.mjs
 ```
 
-All 65 tests pass across the six suites, covering graph and task hierarchy, annotation anchors, connection geometry, recovery and persistence. The backend suite uses an in-memory SQLite database initialized from the checked-in migrations. It exercises actual conditional save statements, account isolation, attachment ownership, graph validation and media byte ranges.
+All **114 automated tests pass**. The suite covers graph and task hierarchy, annotation anchors, layouts, connection geometry, recovery, collaboration and persistence. The backend tests use an in-memory SQLite database initialized from the checked-in migrations. They exercise actual conditional save statements and transactions, independent identities, field conflicts, receipt retries, revocation during commit, rollback, attachment access, graph validation and media byte ranges. Client tests cover pause/resume races, lost acknowledgements, guarded own undo, room/account scoping and presence lifecycle.
 
 ### Browser verification
 
 The development server exposes [tests/browser/flow-fixture.html](tests/browser/flow-fixture.html) and the [390 × 844 mobile frame](tests/browser/flow-mobile.html). Vinext may remove `.html` from the displayed URL. The fixture mounts the real interface with a clearly labelled synthetic workspace and a page-local workspace API. Its fake server validates revisions and persists in session storage across refreshes; attachment API calls are blocked. These files are development fixtures outside production entrypoints. Production authentication is unchanged.
+
+[tests/browser/shared-fixture.html](tests/browser/shared-fixture.html) adds two instances of the real app under separate synthetic identities. Both use one fixture-only canonical room, actual guarded diff/apply and graph validation, presence, membership and idempotent receipts. Controls simulate each peer going offline and a lost acknowledgement. The fixture never grants access to production data or bypasses production authentication.
 
 The completed browser checks verified:
 
@@ -173,12 +218,23 @@ The completed browser checks verified:
 | Persisted feature metadata | Task states, task hierarchy, node appearance, annotations and edge styling survive a fixture reload. |
 | Mobile feature panels | At 390 × 844, task conversion and annotation creation work. The Inspector is 390 px wide and the connection editor stays within the viewport, with no horizontal overflow. |
 | Traveling light | Selected task connections render SVG motion along their path. Reduced-motion, hidden-page and 24-signal limits are implemented and reviewed in code. |
+| Neural keyboard editing | Enter and Tab create connected thoughts in the minimal view; the second session receives their titles and relationships. |
+| Shared edits and reconnection | Different fields edited by two synthetic accounts converge. After one session goes offline and rejoins, both local and peer edits remain. Own undo preserves the peer's text. |
+| Shared presence | The other session shows the cursor, name and selected node at its own zoom level. Pan/zoom changes remain local. |
+| Personal appearance | One session uses spacious content cards with a grid while the other keeps balanced neurons with dots. |
+| Timeline and lane metadata | A custom date is saved and creates a separate date group. Both sessions receive the same lane positions; changing interface language translates labels without swapping columns. |
+| Member access | Removing the editor in the room panel makes the other session report lost access; adding the email back permits a fresh authorized session. |
+| Mobile design and sharing | Both app frames run at 390 × 844. Design and collaboration dialogs stay within the viewport with scrollable contents and no horizontal overflow. |
 
 These are browser checks against synthetic persistence, not a deployed authenticated UI test. Physical touch devices, native IME sessions and production signed-in behavior were not verified in this pass.
 
 ![Inline title editing in the synthetic browser verification workspace](docs/screenshots/keyboard-flow.jpg)
 
 ![Tasks, subtasks and text annotations in the synthetic browser verification workspace](docs/screenshots/task-annotations.jpg)
+
+![Two synthetic sessions sharing a neural board, with independent zoom and a live cursor](docs/screenshots/neural-collaboration.jpg)
+
+![Content-aware layout choices and sorting controls](docs/screenshots/layout-options.jpg)
 
 ## Hosting
 

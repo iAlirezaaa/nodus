@@ -2,7 +2,7 @@ import { env } from 'cloudflare:workers';
 import { ApiError, errorResponse } from '../../../../lib/server/errors';
 import { canInline, contentDisposition, parseRange } from '../../../../lib/server/files';
 import { requireIdentity } from '../../../../lib/server/security';
-import { findAsset } from '../../../../lib/server/store';
+import { findReadableAsset } from '../../../../lib/server/store';
 
 export const dynamic = 'force-dynamic';
 type RouteContext = { params: Promise<{ id: string }> };
@@ -12,7 +12,7 @@ async function serve(request: Request, context: RouteContext, headOnly: boolean)
     const userId = requireIdentity(request);
     if (!env.DB || !env.BUCKET) throw new ApiError(503, 'storage_unavailable', 'File storage is temporarily unavailable.');
     const { id } = await context.params;
-    const asset = await findAsset(env.DB, userId, id);
+    const asset = await findReadableAsset(env.DB, userId, request.headers.get('oai-authenticated-user-email')!, id);
     if (!asset) throw new ApiError(404, 'file_not_found', 'This file does not exist in your workspace.');
     const metadata = await env.BUCKET.head(asset.storage_key);
     if (!metadata) throw new ApiError(404, 'file_not_found', 'The original file is unavailable.');

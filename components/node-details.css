@@ -16,6 +16,8 @@
 .nd-section button:disabled { opacity: .48; cursor: default; }
 .nd-section button:focus-visible, .nd-selection-action button:focus-visible, .nd-appearance-details summary:focus-visible, .nd-marked-preview summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .nd-label { display: block; margin: 11px 0 7px; font-size: 10px; line-height: 1.7; color: var(--muted); }
+.timeline-date-label { margin-block: 16px; }
+.timeline-date-label small { display: block; color: var(--faint); font-size: 10px; line-height: 1.8; margin-top: 7px; }
 .nd-status-label { flex-shrink: 0; font-size: 9px; padding: 2px 7px; border-radius: 5px; background: var(--surface-hover); }
 .nd-status-todo { color: var(--muted); }
 .nd-status-doing { color: var(--amber); }

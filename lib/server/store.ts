@@ -5,6 +5,17 @@ import { referencedAssets } from './validation';
 export interface StoredAsset { id: string; user_id: string; storage_key: string; name: string; mime: string; size: number; created_at: string; }
 interface StoredWorkspace { document: string; revision: number; updated_at: string; }
 
+// D1 limits a complete row to 2,000,000 bytes. Leave room for identifiers,
+// titles, revision metadata, and SQLite record overhead without rejecting reads.
+export const MAX_PERSISTED_DOCUMENT_BYTES = 1_900_000;
+export function serializeWorkspace(document: Workspace): string {
+  const serialized = JSON.stringify(document);
+  if (new TextEncoder().encode(serialized).byteLength > MAX_PERSISTED_DOCUMENT_BYTES) {
+    throw new ApiError(413, 'workspace_too_large', 'The graph exceeds the 1.9 MB storage limit. Media files are stored separately. Export a backup or split the graph into smaller workspaces.');
+  }
+  return serialized;
+}
+
 export function assetMeta(asset: StoredAsset): AssetMeta {
   return { id: asset.id, name: asset.name, mime: asset.mime, size: asset.size, url: `/api/assets/${asset.id}` };
 }
@@ -18,9 +29,10 @@ export async function assertOwnedAssets(db: D1Database, userId: string, document
   const references = referencedAssets(document);
   const ids = [...new Set(references.map(asset => asset.id))];
   const owned = new Map<string, StoredAsset>();
-  for (let offset = 0; offset < ids.length; offset += 80) {
-    const batch = ids.slice(offset, offset + 80);
-    const result = await db.prepare(`SELECT id, user_id, storage_key, name, mime, size, created_at FROM assets WHERE user_id = ? AND id IN (${batch.map(() => '?').join(',')})`).bind(userId, ...batch).all<StoredAsset>();
+  if (ids.length) {
+    // A bounded JSON id list uses two bindings and one query, including when
+    // thousands of referenced files would exceed D1's per-request query limit.
+    const result = await db.prepare('SELECT id, user_id, storage_key, name, mime, size, created_at FROM assets WHERE user_id = ? AND id IN (SELECT value FROM json_each(?))').bind(userId, JSON.stringify(ids)).all<StoredAsset>();
     for (const asset of result.results) owned.set(asset.id, asset);
   }
   for (const reference of references) {
@@ -33,9 +45,9 @@ export async function assertOwnedAssets(db: D1Database, userId: string, document
 }
 
 export async function saveWorkspace(db: D1Database, userId: string, document: Workspace, revision: number) {
+  const serialized = serializeWorkspace(document);
   await assertOwnedAssets(db, userId, document);
   const updatedAt = new Date().toISOString();
-  const serialized = JSON.stringify(document);
   // Both creation and update are conditional, single SQLite statements. A second
   // tab can never silently replace a document saved after its last read.
   const result = revision === 0
@@ -50,4 +62,15 @@ export async function saveWorkspace(db: D1Database, userId: string, document: Wo
 
 export async function findAsset(db: D1Database, userId: string, assetId: string): Promise<StoredAsset | null> {
   return db.prepare('SELECT id, user_id, storage_key, name, mime, size, created_at FROM assets WHERE id = ? AND user_id = ?').bind(assetId, userId).first<StoredAsset>();
+}
+
+/** Sharing grants access only to a currently referenced file in a current room. */
+export async function findReadableAsset(db: D1Database, userId: string, email: string, assetId: string): Promise<StoredAsset | null> {
+  const owned = await findAsset(db, userId, assetId);
+  if (owned) return owned;
+  return db.prepare(`SELECT a.id, a.user_id, a.storage_key, a.name, a.mime, a.size, a.created_at
+    FROM assets a JOIN room_assets ra ON ra.asset_id = a.id JOIN rooms r ON r.id = ra.room_id
+    WHERE a.id = ? AND (r.owner_user_id = ? OR EXISTS (SELECT 1 FROM room_members m WHERE m.room_id = r.id AND m.email = ? AND m.role = 'editor'))
+    AND EXISTS (SELECT 1 FROM json_each(r.document, '$.nodes') node WHERE json_extract(node.value, '$.asset.id') = a.id)
+    LIMIT 1`).bind(assetId, userId, email.trim().toLowerCase()).first<StoredAsset>();
 }

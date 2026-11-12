@@ -3,8 +3,11 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayou
 import { ArrowUpRight, AudioLines, Check, Circle, CircleDot, File as FileIcon, FileText, Image as ImageIcon, Layers, Link2, MessageSquareText, Play, Plus, StickyNote, Video } from 'lucide-react';
 import { fitViewport } from '@/lib/graph';
 import { connectionGeometry, type EdgePoint } from '@/lib/edge-geometry';
+import { DEFAULT_CANVAS_DESIGN, type CanvasDesign, type LayoutGuide } from '@/lib/layouts';
+import type { PresencePeer } from '@/lib/collaboration';
 import type { GraphEdge, GraphNode, Language, NodeKind, Viewport, Workspace } from '@/lib/types';
 import './canvas-flow.css';
+import './canvas-design.css';
 
 export const kindIcons = { note: StickyNote, image: ImageIcon, video: Video, audio: AudioLines, pdf: FileText, file: FileIcon, link: Link2, project: Layers };
 export const kindName = (kind: NodeKind, language: Language) => ({ note: ['یادداشت', 'Note'], image: ['تصویر', 'Image'], video: ['ویدیو', 'Video'], audio: ['صدا', 'Audio'], pdf: ['پی‌دی‌اف', 'PDF'], file: ['فایل', 'File'], link: ['لینک', 'Link'], project: ['پروژه', 'Project'] }[kind][language === 'fa' ? 0 : 1]);
@@ -27,6 +30,10 @@ interface Props {
   language: Language;
   tool: 'select' | 'hand';
   connectFrom: string | null;
+  design?: CanvasDesign;
+  guides?: LayoutGuide[];
+  peers?: PresencePeer[];
+  onPointerPresence?: (point: { x: number; y: number } | null) => void;
   inlineEdit?: InlineEditSession | null;
   onEdit?: (id: string) => void;
   onDetails?: (id: string) => void;
@@ -79,12 +86,20 @@ type EdgeDispatch = {
 };
 const EMPTY_MINIATURE: ProjectMiniature = { nodes: [], edges: [] };
 const EMPTY_RECENT: RecentGraphItems = { nodes: new Set(), edges: new Set() };
+const EMPTY_GUIDES: LayoutGuide[] = [];
+const EMPTY_PEERS: PresencePeer[] = [];
 const INITIAL_VIEW: Viewport = { x: 0, y: 0, zoom: 1 };
 const colors: Record<string, string> = { sage: '#b5ccaf', blue: '#91b7df', amber: '#e5bf82', rose: '#dc9d99', violet: '#bbb0e0', gray: '#9da5a9' };
 const clamp = (value: number, minimum: number, maximum: number) => Math.max(minimum, Math.min(maximum, value));
 const fitPadding = (width: number, height: number) => Math.max(16, Math.min(90, width * .07, height * .12));
 const isTextInput = (target: EventTarget | null) => target instanceof Element && !!target.closest('input,textarea,select,[contenteditable="true"]');
 const isContextKey = (event: React.KeyboardEvent) => event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey);
+function neuronSize(node: GraphNode, degree: number, density: CanvasDesign['density']) { return (density === 'compact' ? 16 : density === 'spacious' ? 24 : 20) + Math.min(8, Math.log2(degree + 1) * 1.6) + (node.childBoardId ? 4 : 0); }
+function neuralAnchor(node: GraphNode, degree: number, density: CanvasDesign['density']): GraphNode {
+  const diameter = neuronSize(node, degree, density);
+  return { ...node, x: node.x + (node.width - diameter) / 2, y: node.y + (node.height - diameter) / 2, width: diameter, height: diameter };
+}
+const peerColor = (value: string) => /^#[0-9a-f]{6}$/i.test(value) ? value : '#91b7df';
 function useCanvasMotion() {
   const [allowed, setAllowed] = useState(false);
   useEffect(() => {
@@ -134,6 +149,8 @@ function revealDelta(start: number, end: number, minimum: number, maximum: numbe
 
 const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   const { document: doc, boardId, language, selectedId, connectFrom, tool } = props;
+  const design = props.design ?? DEFAULT_CANVAS_DESIGN, guides = props.guides ?? EMPTY_GUIDES, peers = props.peers ?? EMPTY_PEERS;
+  const neural = design.nodeStyle === 'neuron';
   const L = (fa: string, en: string) => language === 'fa' ? fa : en;
   const propsRef = useRef(props);
   const boardRef = useRef(boardId);
@@ -165,17 +182,46 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   const pendingView = useRef<Viewport | null>(null);
   const movingDirty = useRef(false);
   const lastNotifiedZoom = useRef(1);
+  const presenceClient = useRef<EdgePoint | null>(null), presenceFrame = useRef<number | null>(null);
 
   const baseNodes = useMemo(() => doc.nodes.filter(node => node.boardId === boardId), [doc.nodes, boardId]);
+  const fitNodes = useMemo(() => !baseNodes.length || !guides.length ? baseNodes : [...baseNodes, ...guides.map(guide => ({ ...baseNodes[0], id: `guide-${guide.id}`, x: guide.x, y: guide.y, width: guide.width, height: guide.height }))], [baseNodes, guides]);
   const baseNodeMap = useMemo(() => new Map(baseNodes.map(node => [node.id, node])), [baseNodes]);
   const nodes = useMemo(() => moving ? baseNodes.map(node => node.id === moving.id ? { ...node, x: moving.x, y: moving.y } : node) : baseNodes, [baseNodes, moving]);
   const nodeMap = useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes]);
   const edges = useMemo(() => doc.edges.filter(edge => edge.boardId === boardId), [doc.edges, boardId]);
   const motionAllowed = useCanvasMotion();
   const recentItems = useRecentGraphItems(baseNodes, edges, boardId);
-  const zoomFloor = useMemo(() => Math.min(.15, fitViewport(baseNodes, size.width, size.height, fitPadding(size.width, size.height)).zoom * .5), [baseNodes, size]);
+  const zoomFloor = useMemo(() => Math.min(.15, fitViewport(fitNodes, size.width, size.height, fitPadding(size.width, size.height)).zoom * .5), [fitNodes, size]);
+  const boardPeers = useMemo(() => peers.filter(peer => peer.boardId === boardId).slice(0, 50), [peers, boardId]);
+  const selectedByPeers = useMemo(() => {
+    const groups = new Map<string, { label: string; color: string; count: number }>();
+    for (const peer of boardPeers) {
+      if (!peer.selectedNodeId) continue;
+      const previous = groups.get(peer.selectedNodeId);
+      groups.set(peer.selectedNodeId, previous ? { ...previous, count: previous.count + 1 } : { label: peer.name, color: peerColor(peer.color), count: 1 });
+    }
+    return groups;
+  }, [boardPeers]);
   const zoomFloorRef = useRef(zoomFloor);
   useLayoutEffect(() => { zoomFloorRef.current = zoomFloor; }, [zoomFloor]);
+  const point = useCallback((clientX: number, clientY: number) => {
+    const rect = surface.current?.getBoundingClientRect();
+    return { x: (clientX - (rect?.left ?? 0) - viewRef.current.x) / viewRef.current.zoom, y: (clientY - (rect?.top ?? 0) - viewRef.current.y) / viewRef.current.zoom };
+  }, []);
+  const reportPresence = useCallback((client: EdgePoint | null) => {
+    presenceClient.current = client;
+    if (!client) {
+      if (presenceFrame.current !== null) { cancelAnimationFrame(presenceFrame.current); presenceFrame.current = null; }
+      propsRef.current.onPointerPresence?.(null); return;
+    }
+    if (presenceFrame.current !== null || !propsRef.current.onPointerPresence) return;
+    presenceFrame.current = requestAnimationFrame(() => {
+      presenceFrame.current = null;
+      const latest = presenceClient.current;
+      if (latest) propsRef.current.onPointerPresence?.(point(latest.x, latest.y));
+    });
+  }, [point]);
 
   const flushFrame = useCallback(() => {
     frame.current = null;
@@ -199,21 +245,18 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   const setView = useCallback((next: Viewport, animate = false, immediate = false) => {
     if (!Number.isFinite(next.x) || !Number.isFinite(next.y) || !Number.isFinite(next.zoom) || next.zoom <= 0) return;
     viewRef.current = next; views.current[boardRef.current] = next; pendingView.current = next;
+    if (presenceClient.current) reportPresence(presenceClient.current);
     if (animate) {
       if (animationTimer.current) clearTimeout(animationTimer.current);
       setAnimating(true);
       animationTimer.current = setTimeout(() => { setAnimating(false); animationTimer.current = null; }, 350);
     } else stopAnimation();
     if (animate || immediate) flushImmediately(); else scheduleFrame();
-  }, [flushImmediately, scheduleFrame, stopAnimation]);
+  }, [flushImmediately, scheduleFrame, stopAnimation, reportPresence]);
   const updateMoving = useCallback((next: MovingNode, immediate = false) => {
     movingRef.current = next; movingDirty.current = true;
     if (immediate) flushImmediately(); else scheduleFrame();
   }, [flushImmediately, scheduleFrame]);
-  const point = useCallback((clientX: number, clientY: number) => {
-    const rect = surface.current?.getBoundingClientRect();
-    return { x: (clientX - (rect?.left ?? 0) - viewRef.current.x) / viewRef.current.zoom, y: (clientY - (rect?.top ?? 0) - viewRef.current.y) / viewRef.current.zoom };
-  }, []);
   const contextMenu = useCallback((event: React.MouseEvent<Element>, kind: CanvasContextMenuPayload['kind'], id?: string) => {
     if (!propsRef.current.onContextMenu || isTextInput(event.target)) return;
     event.preventDefault(); event.stopPropagation();
@@ -232,7 +275,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     const current = viewRef.current, zoom = clamp(nextZoom, zoomFloorRef.current, 2.5);
     setView({ x: cx - (cx - current.x) * zoom / current.zoom, y: cy - (cy - current.y) * zoom / current.zoom, zoom }, animate);
   }, [setView]);
-  const fit = useCallback(() => setView(fitViewport(baseNodes, size.width, size.height, fitPadding(size.width, size.height)), true), [baseNodes, size, setView]);
+  const fit = useCallback(() => setView(fitViewport(fitNodes, size.width, size.height, fitPadding(size.width, size.height)), true), [fitNodes, size, setView]);
   const registerCard = useCallback((id: string, element: HTMLElement | null) => {
     if (element) cardElements.current.set(id, element); else cardElements.current.delete(id);
   }, []);
@@ -244,7 +287,8 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     pendingFocus.current = null;
   }, []);
   const revealNode = useCallback((id: string, focus = true, minimumZoom = 0) => {
-    const node = baseNodeMap.get(id); if (!node) return;
+    const original = baseNodeMap.get(id); if (!original) return;
+    const node = neural ? { ...original, x: original.x + original.width / 2 - 132, y: original.y + original.height / 2 - 30, width: 264, height: propsRef.current.inlineEdit?.nodeId === id ? 160 : 340 } : original;
     const bounds = measuredSize.current ?? size;
     const marginX = Math.min(44, bounds.width * .09), top = Math.min(134, bounds.height * .23), bottom = Math.min(bounds.width <= 650 ? 220 : 195, bounds.height * .35);
     const previous = viewRef.current;
@@ -255,13 +299,15 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
       y: (top + bounds.height - bottom) / 2 - (node.y + node.height / 2) * zoom,
       zoom,
     };
-    const left = node.x * current.zoom + current.x, upper = node.y * current.zoom + current.y;
-    const dx = revealDelta(left, left + node.width * current.zoom, marginX, bounds.width - marginX);
-    const dy = revealDelta(upper, upper + node.height * current.zoom, top, bounds.height - bottom);
+    const labelScale = neural ? Math.max(1, 1 / current.zoom) : 1;
+    const display = neural ? { x: original.x + original.width / 2 - 132 * labelScale, y: original.y + original.height / 2 - 30 * labelScale, width: node.width * labelScale, height: node.height * labelScale } : node;
+    const left = display.x * current.zoom + current.x, upper = display.y * current.zoom + current.y;
+    const dx = revealDelta(left, left + display.width * current.zoom, marginX, bounds.width - marginX);
+    const dy = revealDelta(upper, upper + display.height * current.zoom, top, bounds.height - bottom);
     if (focus) pendingFocus.current = id;
     if (dx || dy || zoom !== previous.zoom) setView({ ...current, x: current.x + dx, y: current.y + dy }, true);
     if (focus) focusCard(id);
-  }, [baseNodeMap, size, setView, focusCard]);
+  }, [baseNodeMap, neural, size, setView, focusCard]);
   useImperativeHandle(ref, () => ({
     fit, revealNode,
     focusSurface: () => { pendingFocus.current = null; setFocusedCard(null); surface.current?.focus({ preventScroll: true }); },
@@ -312,13 +358,14 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   }, [zoomAt, setView]);
   useLayoutEffect(() => {
     if (initialized.current === boardId || !surface.current) return;
-    initialized.current = boardId; cancel(); setFocusedCard(null); pendingFocus.current = null;
+    initialized.current = boardId; cancel(); reportPresence(null); setFocusedCard(null); pendingFocus.current = null;
     const rect = surface.current.getBoundingClientRect();
     let saved = views.current[boardId];
     if (!saved) try { saved = JSON.parse(localStorage.getItem(`nodus:view:${boardId}`) ?? 'null'); } catch { /* Unavailable local preferences. */ }
     if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y) && Number.isFinite(saved.zoom) && saved.zoom > 0 && saved.zoom <= 2.5) setView(saved, false, true);
-    else setView(fitViewport(baseNodes, rect.width, rect.height, fitPadding(rect.width, rect.height)), false, true);
-  }, [boardId, baseNodes, setView, cancel]);
+    else setView(fitViewport(fitNodes, rect.width, rect.height, fitPadding(rect.width, rect.height)), false, true);
+  }, [boardId, fitNodes, setView, cancel, reportPresence]);
+  useEffect(() => () => reportPresence(null), [boardId, reportPresence]);
   useEffect(() => {
     const timer = setTimeout(() => { try { localStorage.setItem(`nodus:view:${boardId}`, JSON.stringify(view)); } catch { /* Preference storage is optional. */ } }, 300);
     return () => clearTimeout(timer);
@@ -476,14 +523,18 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   }, [baseNodes, doc.nodes, doc.edges]);
   // Geometry is independent of the viewport. Dragging recomputes only incident edges.
   const baseEdgeDrawings = useMemo<EdgeDrawing[]>(() => edges.flatMap(edge => {
-    const source = baseNodeMap.get(edge.sourceId), target = baseNodeMap.get(edge.targetId);
+    const sourceNode = baseNodeMap.get(edge.sourceId), targetNode = baseNodeMap.get(edge.targetId);
+    const source = sourceNode && (neural ? neuralAnchor(sourceNode, connectionCounts.get(sourceNode.id) ?? 0, design.density) : sourceNode);
+    const target = targetNode && (neural ? neuralAnchor(targetNode, connectionCounts.get(targetNode.id) ?? 0, design.density) : targetNode);
     return source && target ? [{ edge, source, target, geometry: connectionGeometry(source, target, edge) }] : [];
-  }), [edges, baseNodeMap]);
+  }), [edges, baseNodeMap, neural, design.density, connectionCounts]);
   const edgeDrawings = useMemo(() => !moving ? baseEdgeDrawings : baseEdgeDrawings.map(drawing => {
     if (drawing.edge.sourceId !== moving.id && drawing.edge.targetId !== moving.id) return drawing;
-    const source = nodeMap.get(drawing.edge.sourceId), target = nodeMap.get(drawing.edge.targetId);
+    const sourceNode = nodeMap.get(drawing.edge.sourceId), targetNode = nodeMap.get(drawing.edge.targetId);
+    const source = sourceNode && (neural ? neuralAnchor(sourceNode, connectionCounts.get(sourceNode.id) ?? 0, design.density) : sourceNode);
+    const target = targetNode && (neural ? neuralAnchor(targetNode, connectionCounts.get(targetNode.id) ?? 0, design.density) : targetNode);
     return source && target ? { ...drawing, source, target, geometry: connectionGeometry(source, target, drawing.edge) } : drawing;
-  }), [baseEdgeDrawings, moving, nodeMap]);
+  }), [baseEdgeDrawings, moving, nodeMap, neural, design.density, connectionCounts]);
   const visibleEdges = edgeDrawings.filter(({ edge, geometry }) => {
     if (props.selectedEdgeId === edge.id) return true;
     if (visibleSet.has(edge.sourceId) || visibleSet.has(edge.targetId)) return true;
@@ -501,8 +552,10 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     ]) for (const { edge } of eligible) if (signalIds.size < 24 && matches(edge)) signalIds.add(edge.id);
   }
 
-  return <div data-canvas data-motion={motionAllowed ? 'on' : 'off'} tabIndex={0} className={`canvas ${tool === 'hand' || space ? 'hand-mode' : ''} ${connectFrom ? 'connect-mode' : ''} ${dragOver ? 'is-dragover' : ''}`} ref={surface}
-    onPointerDown={event => start(event)} onPointerMove={move} onPointerUp={end} onPointerCancel={cancel}
+  const gridSize = 28 * (design.density === 'compact' ? .8 : design.density === 'spacious' ? 1.3 : 1);
+  return <div data-canvas data-node-style={design.nodeStyle} data-density={design.density} data-motion={motionAllowed ? 'on' : 'off'} tabIndex={0} className={`canvas ${tool === 'hand' || space ? 'hand-mode' : ''} ${connectFrom ? 'connect-mode' : ''} ${dragOver ? 'is-dragover' : ''}`} ref={surface}
+    onPointerDown={event => start(event)} onPointerMove={move} onPointerMoveCapture={event => { if (event.pointerType !== 'touch' || event.isPrimary) reportPresence({ x: event.clientX, y: event.clientY }); }} onPointerUp={end} onPointerCancel={cancel}
+    onPointerLeave={() => reportPresence(null)}
     onLostPointerCapture={event => { if (pointers.current.has(event.pointerId)) cancel(); }}
     onContextMenu={event => { if (!(event.target as Element).closest('[data-node],[data-edge]')) contextMenu(event, 'canvas'); }}
     onKeyDown={event => { if (!(event.target as Element).closest('[data-node],[data-edge]')) keyboardMenu(event, 'canvas'); }}
@@ -510,15 +563,18 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     onDragOver={event => { if (event.dataTransfer.types.includes('Files')) { event.preventDefault(); setDragOver(true); } }}
     onDragLeave={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setDragOver(false); }}
     onDrop={event => { event.preventDefault(); setDragOver(false); const files = Array.from(event.dataTransfer.files); if (files.length) propsRef.current.onDropFiles(files, point(event.clientX, event.clientY)); }}
-    style={{ backgroundSize: `${28 * view.zoom}px ${28 * view.zoom}px`, backgroundPosition: `${view.x}px ${view.y}px` }}
+    style={{ backgroundImage: design.background === 'none' ? 'none' : design.background === 'grid' ? 'linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px)' : 'radial-gradient(var(--grid) 1px, transparent 1px)', backgroundSize: `${gridSize * view.zoom}px ${gridSize * view.zoom}px`, backgroundPosition: `${view.x}px ${view.y}px`, '--accent': colors[design.accent], '--neuron-label-scale': Math.min(2.5, Math.max(1, 1 / view.zoom)), '--neuron-detail-scale': Math.max(1, 1 / view.zoom) } as React.CSSProperties}
     role="region" aria-label={L('بوم ایده‌ها؛ Enter برای ایدهٔ بعدی، Tab روی گره برای زیرشاخه؛ برای خروج از بوم Escape و سپس Tab بزنید.', 'Idea canvas; Enter for the next idea, Tab on a node for a child; press Escape then Tab to leave the canvas.')}>
     <div className="canvas-atmosphere" aria-hidden="true" />
     <div className={`canvas-world ${animating ? 'is-animating' : ''}`} style={{ transform: `translate3d(${view.x}px,${view.y}px,0) scale(${view.zoom})` }}>
-      <svg className="connections" aria-label={L('ارتباط‌ها', 'Connections')}>{visibleEdges.map(drawing => <Connection key={drawing.edge.id} drawing={drawing} selected={props.selectedEdgeId === drawing.edge.id} dispatch={edgeDispatch} language={language} signal={signalIds.has(drawing.edge.id)} handleScale={props.selectedEdgeId === drawing.edge.id ? 1 / view.zoom : 1} canBend={!!props.onEdgeBend} canDelete={!!props.onDeleteEdge} />)}</svg>
+      {guides.filter(guide => guide.x * view.zoom + view.x < size.width + 200 && (guide.x + guide.width) * view.zoom + view.x > -200 && guide.y * view.zoom + view.y < size.height + 200 && (guide.y + guide.height) * view.zoom + view.y > -200).map(guide => <div key={guide.id} className={`layout-guide layout-guide-${guide.kind}`} style={{ left: guide.x, top: guide.y, width: guide.width, height: guide.height, '--guide-color': colors[guide.color ?? design.accent] } as React.CSSProperties} aria-hidden="true"><span className="layout-guide-title">{guide.title}<small>{guide.subtitle}</small></span></div>)}
+      <svg className="connections" aria-label={L('ارتباط‌ها', 'Connections')}>{visibleEdges.map(drawing => <Connection key={drawing.edge.id} drawing={drawing} selected={props.selectedEdgeId === drawing.edge.id} dispatch={edgeDispatch} language={language} signal={signalIds.has(drawing.edge.id)} handleScale={props.selectedEdgeId === drawing.edge.id ? 1 / view.zoom : 1} canBend={!!props.onEdgeBend} canDelete={!!props.onDeleteEdge} showLabel={design.connectionLabels} />)}</svg>
       {visibleNodes.map(node => <NodeCard key={node.id} node={node} selected={selectedId === node.id} connecting={connectFrom === node.id} detail={detail} miniature={miniature} language={language} tabStop={rovingId === node.id}
         edit={props.inlineEdit?.nodeId === node.id ? props.inlineEdit : null} dispatch={cardDispatch} register={registerCard}
+        neural={neural} density={design.density} dragging={moving?.id === node.id} presenceLabel={selectedByPeers.has(node.id) ? `${selectedByPeers.get(node.id)!.label}${selectedByPeers.get(node.id)!.count > 1 ? ` +${selectedByPeers.get(node.id)!.count - 1}` : ''}` : undefined} presenceColor={selectedByPeers.get(node.id)?.color}
         entering={motionAllowed && recentItems.nodes.has(node.id)} canToggleTask={!!props.onToggleTask} taskDone={taskProgress.get(node.id)?.done ?? 0} taskTotal={taskProgress.get(node.id)?.total ?? 0}
         connectionCount={connectionCounts.get(node.id) ?? 0} projectCount={node.childBoardId ? childCount.get(node.childBoardId) ?? 0 : 0} projectMiniature={node.childBoardId ? projectMiniatures.get(node.childBoardId) ?? EMPTY_MINIATURE : EMPTY_MINIATURE} />)}
+      {boardPeers.filter(peer => peer.x !== null && peer.y !== null && Number.isFinite(peer.x) && Number.isFinite(peer.y) && peer.x * view.zoom + view.x > -50 && peer.x * view.zoom + view.x < size.width + 50 && peer.y * view.zoom + view.y > -50 && peer.y * view.zoom + view.y < size.height + 50).map(peer => <div key={peer.sessionId} className="remote-cursor" style={{ left: peer.x!, top: peer.y!, transform: `scale(${1 / view.zoom})`, '--peer-color': peerColor(peer.color) } as React.CSSProperties} aria-hidden="true"><svg viewBox="0 0 20 24" width="16" height="20"><path d="M2 2 L3 19 L8 14 L12 22 L16 20 L12 12 L19 11 Z" /></svg><span>{peer.name}</span></div>)}
     </div>
     {nodes.length === 0 && <div className="canvas-empty"><div className="empty-orbit"><span /><span /><Plus size={26} /></div><h2>{L('این‌جا جای فکر بعدی توست.', 'Room for your next thought.')}</h2><p>{L('Enter بزن و فکرت را بنویس، یا اولین فایل را این‌جا رها کن.', 'Press Enter to write your thought, or drop your first file here.')}</p><button className="primary-button" onClick={() => propsRef.current.onCreate((size.width / 2 - view.x) / view.zoom, (size.height / 2 - view.y) / view.zoom)}><Plus size={17} />{L('اولین ایده', 'First idea')}</button></div>}
     {dragOver && <div className="drop-overlay"><div><Plus size={35} /><h2>{L('رها کن تا بخشی از فکرهایت شود', 'Drop it into your thinking')}</h2><p>{L('تصویر، ویدیو، صدا، PDF یا هر فایل دیگر', 'Images, videos, audio, PDFs, and other files')}</p></div></div>}
@@ -531,8 +587,10 @@ interface NodeCardProps {
   edit: InlineEditSession | null; dispatch: CardDispatch; register: (id: string, element: HTMLElement | null) => void;
   connectionCount: number; projectCount: number; projectMiniature: ProjectMiniature;
   entering: boolean; canToggleTask: boolean; taskDone: number; taskTotal: number;
+  neural: boolean; density: CanvasDesign['density']; dragging: boolean; presenceLabel?: string; presenceColor?: string;
 }
-const NodeCard = memo(function NodeCard({ node, selected, connecting, detail, miniature, language, tabStop, edit, dispatch, register, connectionCount, projectCount, projectMiniature, entering, canToggleTask, taskDone, taskTotal }: NodeCardProps) {
+const NodeCard = memo(function NodeCard(props: NodeCardProps) {
+  const { node, selected, connecting, detail, miniature, language, tabStop, edit, dispatch, register, connectionCount, projectCount, projectMiniature, entering, canToggleTask, taskDone, taskTotal, neural, dragging, presenceLabel, presenceColor } = props;
   const L = (fa: string, en: string) => language === 'fa' ? fa : en;
   const Icon = kindIcons[node.kind], isProject = !!node.childBoardId;
   const status = node.task?.status, annotations = node.annotations?.length ?? 0;
@@ -540,8 +598,9 @@ const NodeCard = memo(function NodeCard({ node, selected, connecting, detail, mi
   const statusLabel = status === 'done' ? L('انجام شد', 'Done') : status === 'doing' ? L('در حال انجام', 'Doing') : L('انجام‌نشده', 'To do');
   const nextStatusLabel = status === 'todo' ? L('در حال انجام', 'Doing') : status === 'doing' ? L('انجام شد', 'Done') : L('انجام‌نشده', 'To do');
   const registerElement = useCallback((element: HTMLElement | null) => register(node.id, element), [node.id, register]);
-  return <article data-node={node.id} ref={registerElement} className={`thought-node tone-${node.color} kind-${node.kind} appearance-${node.appearance ?? 'card'} ${selected ? 'selected' : ''} ${connecting ? 'connecting' : ''} ${detail ? 'detailed' : 'compact'} ${miniature ? 'miniature' : ''} ${isProject ? 'contains-project' : ''} ${edit ? 'is-inline-editing' : ''} ${status ? `has-task task-${status}` : ''} ${taskTotal ? 'has-task-progress' : ''} ${entering ? 'is-entering' : ''}`}
-    style={{ left: node.x, top: node.y, width: node.width, height: node.height, '--node-accent': colors[node.color] } as React.CSSProperties}
+  if (neural) return <NeuronNode {...props} />;
+  return <article data-node={node.id} ref={registerElement} className={`thought-node tone-${node.color} kind-${node.kind} appearance-${node.appearance ?? 'card'} ${selected ? 'selected' : ''} ${connecting ? 'connecting' : ''} ${detail ? 'detailed' : 'compact'} ${miniature ? 'miniature' : ''} ${isProject ? 'contains-project' : ''} ${edit ? 'is-inline-editing' : ''} ${status ? `has-task task-${status}` : ''} ${taskTotal ? 'has-task-progress' : ''} ${entering ? 'is-entering' : ''} ${dragging ? 'is-node-dragging' : ''} ${presenceLabel ? 'has-peer-selection' : ''}`}
+    style={{ left: node.x, top: node.y, width: node.width, height: node.height, '--node-accent': colors[node.color], '--peer-color': presenceColor } as React.CSSProperties}
     tabIndex={tabStop && !edit ? 0 : -1} role="button" aria-label={`${node.title || L('بدون عنوان', 'Untitled')} · ${kindLabel}${status ? ` · ${statusLabel}` : ''}`} aria-pressed={selected}
     onFocus={event => { if (event.target === event.currentTarget) dispatch.focus(node.id); }}
     onPointerDown={event => dispatch.pointerDown(event, node.id)} onDoubleClick={event => dispatch.doubleClick(event, node)} onKeyDown={event => dispatch.keyDown(node.id, event)} onContextMenu={event => dispatch.contextMenu(event, node.id)}>
@@ -564,6 +623,40 @@ const NodeCard = memo(function NodeCard({ node, selected, connecting, detail, mi
     {(edit || (selected && tabStop)) && <div className="node-key-hint" aria-hidden="true"><span><kbd>Enter</kbd>{L('بعدی', 'next')}</span><span><kbd>Tab</kbd>{L('زیرشاخه', 'child')}</span>{edit && <span><kbd>Esc</kbd>{L('پایان', 'finish')}</span>}</div>}
     <button className="node-port port-right" tabIndex={tabStop ? 0 : -1} aria-label={L(`اتصال از ${node.title}`, `Connect from ${node.title}`)} title={L('اتصال به یک گره دیگر', 'Connect to another node')} onClick={event => { event.stopPropagation(); dispatch.port(node.id, false); }} />
     <button className="node-port port-left" tabIndex={tabStop ? 0 : -1} aria-label={L(`اتصال به ${node.title}`, `Connect to ${node.title}`)} onClick={event => { event.stopPropagation(); dispatch.port(node.id, true); }} />
+    {presenceLabel && <span className="node-presence-badge">{presenceLabel}</span>}
+  </article>;
+});
+
+const NeuronNode = memo(function NeuronNode({ node, selected, connecting, miniature, language, tabStop, edit, dispatch, register, connectionCount, projectCount, projectMiniature, entering, canToggleTask, taskDone, taskTotal, density, dragging, presenceLabel, presenceColor }: NodeCardProps) {
+  const L = (fa: string, en: string) => language === 'fa' ? fa : en;
+  const Icon = kindIcons[node.kind], status = node.task?.status, annotations = node.annotations?.length ?? 0;
+  const kindLabel = node.task ? node.task.parentId ? L('ساب‌تسک', 'Subtask') : L('تسک', 'Task') : kindName(node.kind, language);
+  const statusLabel = status === 'done' ? L('انجام شد', 'Done') : status === 'doing' ? L('در حال انجام', 'Doing') : L('انجام‌نشده', 'To do');
+  const nextStatusLabel = status === 'todo' ? L('در حال انجام', 'Doing') : status === 'doing' ? L('انجام شد', 'Done') : L('انجام‌نشده', 'To do');
+  const registerElement = useCallback((element: HTMLElement | null) => register(node.id, element), [node.id, register]);
+  const size = neuronSize(node, connectionCount, density);
+  return <article data-node={node.id} ref={registerElement} className={`thought-node node-neuron tone-${node.color} kind-${node.kind} appearance-${node.appearance ?? 'card'} ${selected ? 'selected' : ''} ${connecting ? 'connecting' : ''} ${miniature ? 'miniature' : ''} ${edit ? 'is-inline-editing' : ''} ${status ? `task-${status}` : ''} ${entering ? 'is-entering' : ''} ${dragging ? 'is-node-dragging' : ''} ${presenceLabel ? 'has-peer-selection' : ''}`}
+    style={{ left: node.x, top: node.y, width: node.width, height: node.height, '--node-accent': colors[node.color], '--neuron-size': `${size}px`, '--peer-color': presenceColor } as React.CSSProperties}
+    tabIndex={tabStop && !edit ? 0 : -1} role="button" aria-label={`${node.title || L('بدون عنوان', 'Untitled')} · ${kindLabel}${status ? ` · ${statusLabel}` : ''}`} aria-pressed={selected}
+    onFocus={event => { if (event.target === event.currentTarget) dispatch.focus(node.id); }}
+    onPointerDown={event => dispatch.pointerDown(event, node.id)} onDoubleClick={event => dispatch.doubleClick(event, node)} onKeyDown={event => dispatch.keyDown(node.id, event)} onContextMenu={event => dispatch.contextMenu(event, node.id)}>
+    <span className={`neuron-core ${node.childBoardId ? 'neuron-project' : ''}`} aria-hidden="true">{status === 'done' ? <Check size={13} /> : node.kind !== 'note' || node.childBoardId ? <Icon size={13} /> : <i />}</span>
+    {edit ? <InlineTitleEditor key={`${node.id}:${edit.session}`} nodeId={node.id} savedTitle={node.title} edit={edit} language={language} dispatch={dispatch} /> : <h3 dir="auto" data-node-title className="neuron-label">{node.title || L('بدون عنوان', 'Untitled')}</h3>}
+    {annotations > 0 && !edit && <button className="neuron-annotation" tabIndex={tabStop ? 0 : -1} aria-label={L(`${annotations} یادداشت حاشیه‌ای`, `${annotations} annotations`)} onClick={event => { event.stopPropagation(); dispatch.details(node.id); }}><MessageSquareText size={10} /><span>{annotations}</span></button>}
+    {!edit && <div className="neuron-peek">
+      <div className="neuron-peek-heading"><span><Icon size={13} />{kindLabel}</span>{status && <button type="button" className={`node-task-toggle status-${status}`} data-task-toggle={node.id} tabIndex={tabStop ? 0 : -1} disabled={!canToggleTask} aria-label={L(`وضعیت: ${statusLabel}؛ تغییر به ${nextStatusLabel}`, `Status: ${statusLabel}; change to ${nextStatusLabel}`)} aria-pressed={status === 'done' ? true : status === 'doing' ? 'mixed' : false} onClick={event => { event.stopPropagation(); dispatch.toggleTask(node.id); }}>{status === 'done' ? <Check size={12} /> : status === 'doing' ? <CircleDot size={12} /> : <Circle size={12} />}{statusLabel}</button>}</div>
+      {selected && node.kind === 'image' && node.asset && <img className="neuron-image-preview" src={node.asset.url} alt={node.title} loading="lazy" draggable={false} />}
+      {selected && node.kind === 'video' && node.asset && <video className="neuron-image-preview" src={node.asset.url} muted playsInline preload="metadata" />}
+      {selected && node.childBoardId && <ProjectPreview boardId={node.childBoardId} miniature={projectMiniature} total={projectCount} language={language} />}
+      <p dir="auto">{node.text || node.asset?.name || node.url || (node.childBoardId ? L(`${projectCount} گره درون این پروژه`, `${projectCount} thoughts inside this project`) : L('یک فکر تازه. بازش کن و ادامه بده.', 'A new thought. Open it and keep going.'))}</p>
+      {status && taskTotal > 0 && <div className="node-task-progress"><progress max={taskTotal} value={taskDone} aria-label={L(`${taskDone} از ${taskTotal} زیرکار انجام شده`, `${taskDone} of ${taskTotal} subtasks done`)} /><span>{taskDone}/{taskTotal}</span></div>}
+      {node.scheduledAt && <time dateTime={node.scheduledAt} className="neuron-date">{node.scheduledAt}</time>}
+      <footer><button tabIndex={tabStop ? 0 : -1} onClick={event => { event.stopPropagation(); dispatch.details(node.id); }}>{L('جزئیات', 'Details')}<span>⇧↵</span></button>{node.childBoardId && <button tabIndex={tabStop ? 0 : -1} onClick={event => { event.stopPropagation(); dispatch.open(node.id); }}>{L('ورود', 'Open')}<ArrowUpRight size={13} /></button>}<button tabIndex={tabStop ? 0 : -1} title="Tab" aria-label={L(`افزودن زیرشاخه به ${node.title}`, `Add child to ${node.title}`)} onClick={event => { event.stopPropagation(); dispatch.branch(node.id); }}><Plus size={14} />{L('شاخه', 'Branch')}</button></footer>
+    </div>}
+    {edit && <div className="node-key-hint" aria-hidden="true"><span><kbd>Enter</kbd>{L('بعدی', 'next')}</span><span><kbd>Tab</kbd>{L('زیرشاخه', 'child')}</span><span><kbd>Esc</kbd>{L('پایان', 'finish')}</span></div>}
+    <button className="node-port port-right" tabIndex={tabStop ? 0 : -1} aria-label={L(`اتصال از ${node.title}`, `Connect from ${node.title}`)} onClick={event => { event.stopPropagation(); dispatch.port(node.id, false); }} />
+    <button className="node-port port-left" tabIndex={tabStop ? 0 : -1} aria-label={L(`اتصال به ${node.title}`, `Connect to ${node.title}`)} onClick={event => { event.stopPropagation(); dispatch.port(node.id, true); }} />
+    {presenceLabel && <span className="node-presence-badge">{presenceLabel}</span>}
   </article>;
 });
 
@@ -642,9 +735,9 @@ const ProjectPreview = memo(function ProjectPreview({ boardId, miniature, total,
     {miniature.nodes.map(node => <rect key={node.id} data-preview-node={node.id} x={node.x} y={node.y} width={node.width} height={node.height} rx={Math.min(18, node.width / 8, node.height / 8)} fill={colors[node.color]} fillOpacity={node.childBoardId ? .32 : .17} stroke={colors[node.color]} strokeWidth={node.childBoardId ? 1 : .7} vectorEffect="non-scaling-stroke" />)}
   </g> : <g><rect x="80" y="16" width="40" height="28" rx="7" fill="none" strokeDasharray="3 3" opacity=".55" /><path d="M95 30 H105 M100 25 V35" /></g>}</svg></div>;
 });
-interface ConnectionProps { drawing: EdgeDrawing; selected: boolean; dispatch: EdgeDispatch; language: Language; signal: boolean; handleScale: number; canBend: boolean; canDelete: boolean; }
+interface ConnectionProps { drawing: EdgeDrawing; selected: boolean; dispatch: EdgeDispatch; language: Language; signal: boolean; handleScale: number; canBend: boolean; canDelete: boolean; showLabel: boolean; }
 type BendGesture = { pointerId: number; element: SVGElement; origin: EdgePoint; handle: EdgePoint; clientX: number; clientY: number; moved: boolean };
-const Connection = memo(function Connection({ drawing, selected, dispatch, language, signal, handleScale, canBend, canDelete }: ConnectionProps) {
+const Connection = memo(function Connection({ drawing, selected, dispatch, language, signal, handleScale, canBend, canDelete, showLabel }: ConnectionProps) {
   const L = (fa: string, en: string) => language === 'fa' ? fa : en;
   const { edge, source, target } = drawing;
   const [preview, setPreview] = useState<EdgePoint | null>(null);
@@ -703,7 +796,7 @@ const Connection = memo(function Connection({ drawing, selected, dispatch, langu
       <animateMotion path={d} dur="4.5s" begin={`-${phase}s`} repeatCount="indefinite" />
       <animate attributeName="opacity" values="0;.7;.7;0" keyTimes="0;.12;.82;1" dur="4.5s" begin={`-${phase}s`} repeatCount="indefinite" />
     </circle>}
-    {edge.label && <g className="connection-caption" transform={`translate(${midpoint.x},${midpoint.y - (selected && canBend ? 24 * handleScale : 0)})`}><rect x={-Math.min(100, edge.label.length * 4 + 12)} y="-13" width={Math.min(200, edge.label.length * 8 + 24)} height="26" rx="13" /><text textAnchor="middle" dominantBaseline="central">{edge.label.slice(0, 26)}</text></g>}
+    {showLabel && edge.label && <g className="connection-caption" transform={`translate(${midpoint.x},${midpoint.y - (selected && canBend ? 24 * handleScale : 0)})`}><rect x={-Math.min(100, edge.label.length * 4 + 12)} y="-13" width={Math.min(200, edge.label.length * 8 + 24)} height="26" rx="13" /><text textAnchor="middle" dominantBaseline="central">{edge.label.slice(0, 26)}</text></g>}
     {selected && canBend && <g data-edge-bend={edge.id} className="connection-bend-handle" transform={`translate(${midpoint.x} ${midpoint.y}) scale(${handleScale})`} role="button" tabIndex={0}
       aria-label={L('تغییر مسیر ارتباط؛ بکشید یا از کلیدهای جهت استفاده کنید؛ Delete مسیر را بازنشانی می‌کند.', 'Bend connection; drag or use arrow keys; Delete resets its path.')} aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Delete Backspace"
       onClick={event => { event.preventDefault(); event.stopPropagation(); }}

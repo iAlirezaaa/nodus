@@ -66,6 +66,15 @@ export function validateWorkspace(input: unknown): Workspace {
     id(board.id, 'board.id'); str(board.title, 'board.title', 500);
     str(board.description, 'board.description', 5000);
     nullableId(board.parentNodeId, 'board.parentNodeId'); date(board.createdAt, 'board.createdAt');
+    if (board.layout !== undefined) {
+      const layout = record(board.layout, 'board.layout');
+      if (!['neural','tree','orbit','grid','timeline','kanban'].includes(layout.kind as string)) fail('board.layout.kind is not supported.');
+      if (!['created','title','kind','color','status'].includes(layout.sort as string)) fail('board.layout.sort is not supported.');
+      if (!['asc','desc'].includes(layout.direction as string)) fail('board.layout.direction is not supported.');
+      if (!['fa','en'].includes(layout.language as string)) fail('board.layout.language is not supported.');
+      number(layout.spacing, 'board.layout.spacing', 24, 240);
+      if (layout.columnStep !== undefined) number(layout.columnStep, 'board.layout.columnStep', 32, 10000);
+    }
   }
   for (const value of doc.nodes) {
     const node = record(value, 'node');

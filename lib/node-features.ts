@@ -1,4 +1,5 @@
 import type { GraphNode, NodeAnnotation, TaskStatus, Workspace } from './types';
+import { isCalendarDate } from './calendar';
 
 const ID = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 const STATUSES = new Set(['todo', 'doing', 'done']);
@@ -14,7 +15,8 @@ function validDate(value: unknown): boolean {
 }
 
 /** Shared by incremental client mutations and the authoritative save validator. */
-export function assertNodeFeatureMetadata(node: Pick<GraphNode, 'title' | 'text' | 'task' | 'appearance' | 'annotations'>): void {
+export function assertNodeFeatureMetadata(node: Pick<GraphNode, 'title' | 'text' | 'task' | 'appearance' | 'annotations' | 'scheduledAt'>): void {
+  if (node.scheduledAt !== undefined && !isCalendarDate(node.scheduledAt)) throw new Error('The timeline date must be a valid calendar date (YYYY-MM-DD).');
   if (node.appearance !== undefined && !APPEARANCES.has(node.appearance)) throw new Error('The node appearance is not supported.');
   if (node.task !== undefined) {
     if (!object(node.task) || !STATUSES.has(node.task.status as string)
@@ -129,6 +131,7 @@ export function patchNode(document: Workspace, id: string, patch: Partial<GraphN
   }
   if (next.task === undefined) delete next.task;
   if (next.appearance === undefined) delete next.appearance;
+  if (next.scheduledAt === undefined) delete next.scheduledAt;
   if (next.annotations === undefined) delete next.annotations;
   assertNodeFeatureMetadata(next);
   if (next.task?.parentId !== original.task?.parentId) assertTaskParent(document, next);
