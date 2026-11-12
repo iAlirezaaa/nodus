@@ -394,3 +394,8 @@ Content remains user-authored. There are no model credentials, AI generation, PD
 ### Search clarity (ND-001, feature branch)
 
 The search dialog scans the full authorized workspace graph for title, note and attachment-filename matches, while rendering results in pages of 70. The summary distinguishes total matches from visible results; the next-page control exposes later hits without rendering the entire 5,000-node limit at once. Search is read-only and keeps existing graph IDs. A local root-to-board path index follows board containment through its parent node, not arbitrary edges or task relationships, and guards missing/cyclic pointers. The full location is visible beneath each result and remains available as a title on narrow screens. This branch change is not a production release until full typecheck, build and browser verification finish.
+
+
+### ND-001 search navigation (feature branch, not released)
+
+`lib/thought-search.ts` indexes full board ancestry and counts all matches across nested boards. Search rendering in `components/NodusApp.tsx` is a transient 70-result window with a page offset and a current/total range; it does not store cursor state in the workspace or alter graph records. Previous/next navigation and the current-page indicator live inside the search dialog. If a document shrinks, an offset beyond the new total resolves to the last non-empty page. This implementation remains feature-only pending full runtime/browser and production verification.

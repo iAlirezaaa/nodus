@@ -16,6 +16,7 @@ The [living roadmap](docs/ROADMAP.md) prioritizes usability, capabilities, visua
 - Open **Magnetic mode**, then press **Start** or choose a preset to let linked thoughts pull together. The four force sliders are available under **Fine-tune forces and spacing**; merely opening the panel does not move the graph. **Apply layout** commits the resulting arrangement as one undoable change.
 - Connect existing nodes, or create multiple connected branches from a list of titles.
 - Open a node's internal project to work on its own board; the breadcrumb trail leads back out.
+- **Search** (Ctrl/Cmd+K) checks all nested boards. Results show the complete project path and true total; use **Previous/Next** for bounded pages of 70 instead of loading thousands of result buttons at once. (Work in progress on the ND-001 feature branch; not yet on the live site.)
 - Drop files onto the canvas or use the upload action. Images, supported video/audio formats and PDFs have previews; other formats retain their original download.
 - Use undo and redo for document changes. Personal workspaces retain up to 60 in-session snapshots; shared rooms retain guarded operations belonging to this session so undo cannot replace a colleague's newer work.
 - The interface supports Persian and English. Content can contain either language independently of the interface language.
