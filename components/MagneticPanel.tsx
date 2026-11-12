@@ -77,6 +77,8 @@ export default function MagneticPanel({ settings, onChange, language, status, pi
       })}
     </div>
 
+    <details className="magnetic-advanced">
+    <summary>{L('تنظیم دقیق کشش و فاصله', 'Fine-tune forces and spacing')}</summary>
     <div className="magnetic-forces">
       {forceKeys.map(key => <div className="magnetic-force" key={key}>
         <div><label htmlFor={`${id}-${key}`}>{labels[key][language === 'fa' ? 0 : 1]}</label><output htmlFor={`${id}-${key}`}>{displayValue(key)}</output></div>
@@ -84,6 +86,7 @@ export default function MagneticPanel({ settings, onChange, language, status, pi
         <p id={`${id}-${key}-hint`}>{hints[key][language === 'fa' ? 0 : 1]}</p>
       </div>)}
     </div>
+    </details>
 
     <div className="magnetic-secondary-row">
       <span className="magnetic-pin-count"><Pin size={12} />{Math.max(0, pinnedCount).toLocaleString(locale)} {L('گره ثابت', 'pinned')}</span>

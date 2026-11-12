@@ -9,6 +9,9 @@ import DesignPanel, { layoutName } from './DesignPanel';
 import CollaborationPanel from './CollaborationPanel';
 import Modal, { type ModalOrigin } from './Modal';
 import MagneticPanel from './MagneticPanel';
+import CanvasDock from './CanvasDock';
+import ShortcutGuide from './ShortcutGuide';
+import './shortcut-guide.css';
 import type { MagneticViewState } from '@/hooks/use-magnetic-canvas';
 import { applyMagneticView } from '@/lib/magnetic-view';
 import { useWorkspace } from '@/hooks/use-workspace';
@@ -16,6 +19,7 @@ import { useCollaborationPresence } from '@/hooks/use-collaboration-presence';
 import { useCanvasPreferences } from '@/hooks/use-canvas-preferences';
 import { useThoughtFlow } from '@/hooks/use-thought-flow';
 import { findDirectionalNode, getThoughtParent } from '@/lib/flow';
+import { graphShortcutScope, isEditableTarget, resolveGraphShortcut } from '@/lib/keyboard';
 import { patchNode, convertToTask, removeTask, setTaskStatus } from '@/lib/node-features';
 import { copyWorkspaceAsRoots } from '@/hooks/workspace-store';
 import { addBranches, addEdge, addNode, boardTrail, deleteNode, ensureChildBoard, makeNode, uid } from '@/lib/graph';
@@ -77,7 +81,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
   const startFlow=useCallback(()=>{ws.setRemotePaused(true);if(navigationFrame.current!==null){cancelAnimationFrame(navigationFrame.current);navigationFrame.current=null;}setContextMenu(null);setInspectorOpen(false);setSelectedEdge(null);setConnectFrom(null);setAddMenu(false);setTool('select');},[ws.setRemotePaused]);
   const flow=useThoughtFlow({document:doc,boardId,language,canvas,getDocument:ws.exportDraft,getUserId:ws.getUserId,update:ws.update,select:selectNode,onStart:startFlow,onDetails:showDetails,notice});
   const closeMagnet=useCallback(()=>{setMagnetOpen(false);requestAnimationFrame(()=>magnetButton.current?.focus({preventScroll:true}));},[]);
-  const toggleMagnet=()=>{if(!flow.finish())return;if(!magnetOpen&&!preferences.magnetic.enabled&&!magneticState.dirty)preferences.setMagnetic({...preferences.magnetic,enabled:true});setMagnetOpen(!magnetOpen);setAddMenu(false);};
+  const toggleMagnet=()=>{if(!flow.finish())return;setMagnetOpen(!magnetOpen);setAddMenu(false);};
   const restoreMagnet=()=>{preferences.setMagnetic({...preferences.magnetic,enabled:false});canvas.current?.resetMagnetic();};
   const applyMagnet=()=>{
     if(ws.readOnly||flow.editing)return;
@@ -168,54 +172,69 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
   const moveNode=useCallback((id:string,x:number,y:number)=>ws.update(current=>{const n=current.nodes.find(n=>n.id===id);return !n||(n.x===x&&n.y===y)?current:{...current,nodes:current.nodes.map(n=>n.id===id?{...n,x,y}:n)};}),[ws.update]);
   const uploadRef=useRef(uploadFiles);uploadRef.current=uploadFiles;
   const dropFiles=useCallback((files:File[],point:{x:number;y:number})=>{void uploadRef.current(files,point);},[]);
-  const cardKey=useCallback((id:string,e:React.KeyboardEvent<HTMLElement>)=>{
-    if(e.defaultPrevented||e.target!==e.currentTarget||e.nativeEvent.isComposing||e.nativeEvent.keyCode===229||dialog||inspectorOpen||contextMenu)return;
-    const handled=()=>{e.preventDefault();e.stopPropagation();};
-    if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){handled();openNode(id);return;}
-    if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key==='Delete'){handled();requestDeleteNode(id);return;}
-    if(e.metaKey||e.ctrlKey||e.altKey)return;
-    if(e.repeat&&(e.key==='Enter'||e.key==='Tab')){handled();return;}
-    const current=ws.exportDraft();if(!current)return;
-    if(e.key==='Enter'){handled();if(e.shiftKey)showDetails(id,true);else flow.begin(id,'sibling');return;}
-    if(e.key==='Tab'){
-      if(e.shiftKey){const parent=getThoughtParent(current,id);if(parent){handled();selectNode(parent.id);setInspectorOpen(false);canvas.current?.revealNode(parent.id);}}
-      else{handled();flow.begin(id,'child');}return;
-    }
-    if(e.key.startsWith('Arrow')){const positioned=canvas.current?.positionDocument(current)??current;const direction={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'}[e.key] as 'left'|'right'|'up'|'down'|undefined;if(direction){handled();const next=findDirectionalNode(positioned.nodes,id,direction);if(next){selectNode(next);setInspectorOpen(false);canvas.current?.revealNode(next);}}return;}
-    if(e.key==='F2'){handled();flow.edit(id);return;}
-    if(e.key==='Escape'){handled();setSelected(null);setSelectedEdge(null);setInspectorOpen(false);setConnectFrom(null);setAddMenu(false);canvas.current?.focusSurface();return;}
-    if(e.key==='Delete'||e.key==='Backspace'){handled();requestDeleteNode(id);return;}
-    if(e.key.length===1&&e.key!==' '){handled();flow.edit(id,e.key);}
-  },[dialog,inspectorOpen,contextMenu,openNode,ws.exportDraft,showDetails,flow.begin,flow.edit,selectNode,requestDeleteNode]);
   const keyboardRef=useRef<(e:KeyboardEvent)=>void>(()=>{});
   const pasteRef=useRef<(e:ClipboardEvent)=>void>(()=>{});
-  keyboardRef.current=(e:KeyboardEvent)=>{
-    if(e.defaultPrevented||e.isComposing||e.keyCode===229)return;
-    const target=e.target instanceof Element?e.target:null;
-    const input=target?.closest('input,textarea,select,[contenteditable="true"]');
-    if(dialog||inspectorOpen||contextMenu)return;
-    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();if(flow.finish()){setDialog('search');setQuery('');}return;}
-    if(input){if(e.key==='Escape'&&target?.closest('.edge-inspector')){e.preventDefault();setSelectedEdge(null);canvas.current?.focusSurface();}return;}
-    if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key==='Delete'&&(target?.matches('[data-canvas]')||target===window.document.body)&&(node||edge)){e.preventDefault();if(node)requestDeleteNode(node.id);else if(edge)deleteEdge(edge.id);return;}
-    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();flow.clear();if(e.shiftKey)ws.redo();else ws.undo();return;}
-    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='y'){e.preventDefault();flow.clear();ws.redo();return;}
-    if(e.metaKey||e.ctrlKey||e.altKey)return;
-    if(e.key==='Escape'){setSelected(null);setSelectedEdge(null);setConnectFrom(null);setInspectorOpen(false);setAddMenu(false);canvas.current?.focusSurface();return;}
-    if(target?.closest('button,a,summary,[role="button"],[data-edge]'))return;
-    const onCanvas=!!target?.closest('[data-canvas]')||target===window.document.body;
-    if(!onCanvas)return;
-    if(e.repeat&&(e.key==='Enter'||e.key==='Tab'||e.key.toLowerCase()==='n')){e.preventDefault();return;}
-    if(e.key==='Enter'){e.preventDefault();if(e.shiftKey&&node)showDetails(node.id,true);else flow.begin(node?.id??null,'sibling');return;}
-    if(e.key==='Tab'&&node&&!e.shiftKey){e.preventDefault();flow.begin(node.id,'child');return;}
-    if(e.key.startsWith('Arrow')&&nodes.length){e.preventDefault();const viewNodes=doc?(canvas.current?.positionDocument(doc)??doc).nodes.filter(n=>n.boardId===boardId):nodes;let next:string|null=null;if(node){const direction={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'}[e.key] as 'left'|'right'|'up'|'down'|undefined;if(direction)next=findDirectionalNode(viewNodes,node.id,direction);}else{const center=canvas.current?.getCenter()??{x:0,y:0};let best=Infinity;for(const item of viewNodes){const distance=(item.x+item.width/2-center.x)**2+(item.y+item.height/2-center.y)**2;if(distance<best){best=distance;next=item.id;}}}if(next){selectNode(next);setInspectorOpen(false);canvas.current?.revealNode(next);}return;}
-    if(e.key==='F2'&&node){e.preventDefault();flow.edit(node.id);return;}
-    if(e.key.toLowerCase()==='n'){e.preventDefault();flow.begin();return;}
-    if(e.key.toLowerCase()==='t'){e.preventDefault();flow.beginTask();return;}
-    if(e.key.toLowerCase()==='f'){e.preventDefault();canvas.current?.fit();return;}
-    if(e.key.toLowerCase()==='h')setTool('hand');if(e.key.toLowerCase()==='v')setTool('select');
-    if((e.key==='Delete'||e.key==='Backspace')&&(node||edge)){e.preventDefault();if(node)requestDeleteNode(node.id);else if(edge)deleteEdge(edge.id);}
+  // React's node handler and the window listener share exactly one dispatcher.
+  // A consumed native event cannot run again when it reaches the window.
+  const cardKey=useCallback((_id:string,event:React.KeyboardEvent<HTMLElement>)=>{
+    if(event.target===event.currentTarget)keyboardRef.current(event.nativeEvent);
+  },[]);
+  keyboardRef.current=(event:KeyboardEvent)=>{
+    if(event.defaultPrevented||event.isComposing||event.keyCode===229||dialog||inspectorOpen||contextMenu)return;
+    const target=event.target instanceof Element?event.target:null;
+    const plainEscape=event.key==='Escape'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.shiftKey;
+    if(addMenu){
+      if(plainEscape){event.preventDefault();event.stopPropagation();setAddMenu(false);window.document.querySelector<HTMLButtonElement>('.dock-more-wrap > button')?.focus({preventScroll:true});}
+      return;
+    }
+    if(target?.closest('.edge-inspector')){
+      if(plainEscape){event.preventDefault();event.stopPropagation();setSelectedEdge(null);canvas.current?.focusSurface();}
+      return;
+    }
+    const scope=graphShortcutScope(target);
+    if(scope==='text'||scope==='control'||scope==='outside')return;
+    const current=ws.exportDraft();
+    const focusedNodeId=scope==='node'?target?.getAttribute('data-node'):scope==='canvas'?node?.id:null;
+    const focusedNode=focusedNodeId?current?.nodes.find(item=>item.id===focusedNodeId&&item.boardId===boardId):undefined;
+    const focusedEdgeId=scope==='edge'?target?.getAttribute('data-edge'):scope==='canvas'?edge?.id:null;
+    const focusedEdge=focusedEdgeId?current?.edges.find(item=>item.id===focusedEdgeId&&item.boardId===boardId):undefined;
+    const parent=current&&focusedNode?getThoughtParent(current,focusedNode.id):null;
+    const action=resolveGraphShortcut(event,{scope,hasNode:!!focusedNode,hasEdge:!!focusedEdge,hasParent:!!parent});
+    if(!action||action==='pan')return;
+    event.preventDefault();event.stopPropagation();
+    switch(action){
+      case 'ignore':return;
+      case 'search':if(flow.finish()){setDialog('search');setQuery('');}return;
+      case 'undo':flow.clear();ws.undo();canvas.current?.focusSurface();return;
+      case 'redo':flow.clear();ws.redo();canvas.current?.focusSurface();return;
+      case 'sibling':flow.begin(focusedNode?.id??null,'sibling');return;
+      case 'child':if(focusedNode)flow.begin(focusedNode.id,'child');return;
+      case 'parent':if(parent){selectNode(parent.id);canvas.current?.revealNode(parent.id);}return;
+      case 'details':if(focusedNode)showDetails(focusedNode.id,event.key!==' ');return;
+      case 'project':if(focusedNode)openNode(focusedNode.id);return;
+      case 'edit':if(focusedNode)flow.edit(focusedNode.id);return;
+      case 'clear':setSelected(null);setSelectedEdge(null);setConnectFrom(null);setAddMenu(false);canvas.current?.focusSurface();return;
+      case 'delete':if(focusedNode)requestDeleteNode(focusedNode.id);else if(focusedEdge)deleteEdge(focusedEdge.id);return;
+      case 'new-thought':flow.begin();return;
+      case 'new-task':flow.beginTask();return;
+      case 'fit':canvas.current?.fit();return;
+      case 'hand':setTool('hand');return;
+      case 'select':setTool('select');return;
+      case 'left':case 'right':case 'up':case 'down':{
+        if(!current)return;
+        const viewNodes=(canvas.current?.positionDocument(current)??current).nodes.filter(item=>item.boardId===boardId);
+        let next:string|null=null;
+        if(focusedNode)next=findDirectionalNode(viewNodes,focusedNode.id,action);
+        else{
+          const center=canvas.current?.getCenter()??{x:0,y:0};let best=Infinity;
+          for(const item of viewNodes){const distance=(item.x+item.width/2-center.x)**2+(item.y+item.height/2-center.y)**2;if(distance<best){best=distance;next=item.id;}}
+        }
+        if(next){selectNode(next);canvas.current?.revealNode(next);}
+        return;
+      }
+    }
   };
-  pasteRef.current=(e:ClipboardEvent)=>{if((e.target as HTMLElement)?.closest('input,textarea,[contenteditable="true"]')||dialog||inspectorOpen)return;const fs=Array.from(e.clipboardData?.files??[]);if(fs.length){e.preventDefault();void uploadFiles(fs);return;}const text=e.clipboardData?.getData('text/plain');if(text&&doc){e.preventDefault();if(text.length>100000){notice(L('این متن طولانی است؛ آن را به صورت فایل اضافه کن.','This text is too long; add it as a file.'));return;}let url='';try{const u=new URL(text.trim());if(['http:','https:'].includes(u.protocol)&&!u.username&&!u.password)url=u.href;}catch{}add(url?'link':'note',undefined,{title:bookTitle(text),text:url?'':text,url});}};
+  pasteRef.current=(e:ClipboardEvent)=>{if(e.defaultPrevented||isEditableTarget(e.target)||!['canvas','node','edge'].includes(graphShortcutScope(e.target))||dialog||inspectorOpen||contextMenu||addMenu)return;const fs=Array.from(e.clipboardData?.files??[]);if(fs.length){e.preventDefault();void uploadFiles(fs);return;}const text=e.clipboardData?.getData('text/plain');if(text&&doc){e.preventDefault();if(text.length>100000){notice(L('این متن طولانی است؛ آن را به صورت فایل اضافه کن.','This text is too long; add it as a file.'));return;}let url='';try{const u=new URL(text.trim());if(['http:','https:'].includes(u.protocol)&&!u.username&&!u.password)url=u.href;}catch{}add(url?'link':'note',undefined,{title:bookTitle(text),text:url?'':text,url});}};
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>keyboardRef.current(e);const paste=(e:ClipboardEvent)=>pasteRef.current(e);
     window.addEventListener('keydown',key);window.addEventListener('paste',paste);
@@ -282,7 +301,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
       {doc&&(ws.saveState==='offline'||ws.saveState==='conflict'||ws.hasRecovery||ws.draftWarning)&&<div className="status-banner" role="status"><div><strong>{ws.readOnly?L('دسترسی ویرایش این فضا در دسترس نیست؛ نسخهٔ بازشده در این صفحه حفظ شده است.','This space is no longer editable; the copy open on this page is preserved.'):ws.saveState==='conflict'?L('این بخش توسط شخص یا پنجرهٔ دیگری هم تغییر کرده است.','This content was also changed by another person or tab.'):ws.saveState==='offline'?L('تغییرات هنوز روی سرور ذخیره نشده‌اند.','Your changes have not reached the server yet.'):ws.hasRecovery?L('یک پیش‌نویس قابل بازیابی روی این دستگاه وجود دارد.','A recoverable draft is available on this device.'):L('ذخیرهٔ پشتیبان روی این دستگاه در دسترس نیست.','Device recovery storage is unavailable.')}</strong>{ws.error&&<small dir="auto">{ws.error}</small>}{ws.draftWarning&&<small>{ws.draftWarning}</small>}</div><div className="banner-actions">{ws.saveState==='conflict'?<><button onClick={()=>void ws.resolveConflict()}>{L('هر دو نسخه بمانند','Keep both versions')}</button><button onClick={()=>void ws.reload()}>{L('نسخهٔ سرور','Load server version')}</button></>:ws.saveState==='offline'?<><button onClick={()=>void ws.retry()}>{L('تلاش دوباره','Retry save')}</button><button onClick={()=>void ws.reload()}>{L('بارگذاری دوباره','Reload workspace')}</button></>:null}{ws.hasRecovery&&<><button onClick={()=>void ws.recoverDraft()}>{L('بازیابی پیش‌نویس','Recover draft')}</button><button onClick={()=>ws.discardDraft()}>{L('نادیده گرفتن','Dismiss')}</button></>}<button onClick={exportStructure}>{L('دریافت JSON','Download JSON')}</button></div></div>}
       <div className="workspace-body">
         <section className="canvas-section">
-          {doc&&board?<><div className="canvas-heading"><div><span className="eyebrow">{trail.length>1?L('درون یک ایده','INSIDE AN IDEA'):L('بومِ زندهٔ تو','YOUR LIVING CANVAS')}</span><div className="canvas-title-row"><h1 dir="auto">{title}</h1><button className="icon-button small" onClick={()=>{setBoardName(title);setDialog('rename');}} aria-label={L('تغییر نام فضا','Rename space')}><Pencil size={13}/></button></div><p>{nodes.length} {L('گره','nodes')}<span>·</span>{edges.length} {L('ارتباط','connections')}<span>·</span>{boardTasks.total?<span className="task-board-count">{boardTasks.done}/{boardTasks.total} {L('تسک انجام‌شده','tasks done')}</span>:L('امکان‌های تازه','room to grow')}{activeLayout&&<span className="canvas-view-caption">{layoutName(activeLayout.kind,language)}</span>}</p></div><button className="icon-button arrange-button" onClick={()=>{if(flow.finish())setDialog('design');}} title={L('چیدمان و ظاهر بوم','Canvas layout and style')} aria-label={L('چیدمان و ظاهر بوم','Canvas layout and style')}><Settings2 size={18}/></button></div>
+          {doc&&board?<><div className="canvas-heading"><div><span className="eyebrow">{trail.length>1?L('درون یک ایده','INSIDE AN IDEA'):L('بومِ زندهٔ تو','YOUR LIVING CANVAS')}</span><div className="canvas-title-row"><h1 dir="auto">{title}</h1><button className="icon-button small" onClick={()=>{setBoardName(title);setDialog('rename');}} aria-label={L('تغییر نام فضا','Rename space')}><Pencil size={13}/></button></div><p>{nodes.length} {L('گره','nodes')}<span>·</span>{edges.length} {L('ارتباط','connections')}<span>·</span>{boardTasks.total?<span className="task-board-count">{boardTasks.done}/{boardTasks.total} {L('تسک انجام‌شده','tasks done')}</span>:L('امکان‌های تازه','room to grow')}{activeLayout&&<span className="canvas-view-caption">{layoutName(activeLayout.kind,language)}</span>}</p></div><button className="icon-button arrange-button" onClick={()=>{if(flow.finish())setDialog('design');}} title={L('چیدمان و ظاهر بوم','Canvas layout and style')} aria-label={L('چیدمان و ظاهر بوم','Canvas layout and style')}><Settings2 size={17}/><span>{L('چیدمان','Layout')}</span></button></div>
           <Canvas ref={canvas} document={flow.canvasDocument??doc} boardId={boardId} selectedId={selected} selectedEdgeId={selectedEdge} language={language} tool={tool} connectFrom={connectFrom} onSelect={selectNode} onSelectEdge={selectEdge} onOpen={openNode} onMove={moveNode} onConnect={connect} onStartConnect={beginConnect} onBranch={quickChild} onCreate={createAt} onDropFiles={dropFiles} onZoomChange={setZoom} inlineEdit={flow.inlineEdit} onEdit={flow.edit} onEditCommit={flow.commit} onEditDirtyChange={flow.onDirtyChange} onNodeKeyDown={cardKey} onDetails={showDetails} onToggleTask={cycleTask} onContextMenu={openContext} onEdgeBend={bendEdge} onDeleteEdge={deleteEdge} design={preferences.design} guides={preferences.magnetic.enabled||magneticState.dirty?[]:guides} peers={presence.peers} onPointerPresence={presence.reportPointer} magnetic={preferences.magnetic} magneticScope={canvasScope} interactionsPaused={!!dialog||inspectorOpen||!!contextMenu} onMagneticState={receiveMagneticState}/>
           {connectFrom&&<div className="connect-banner"><Link2 size={15}/><span>{L('حالا روی گره مقصد بزن.','Now choose the destination node.')}</span><button className="icon-button small" onClick={()=>setConnectFrom(null)} aria-label={L('لغو اتصال','Cancel connection')}><X size={16}/></button></div>}
           {edge&&<EdgeInspector edge={edge} nodes={nodes} language={language} onChange={patch=>changeEdge(edge.id,patch)} onDelete={()=>deleteEdge(edge.id)} onClose={()=>{setSelectedEdge(null);canvas.current?.focusSurface();}}/>}
@@ -290,21 +309,13 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
             <button ref={magnetButton} type="button" className={`magnet-launch ${preferences.magnetic.enabled?'is-enabled':''}`} onClick={toggleMagnet} aria-label={L('حالت مگنتی','Magnetic mode')} aria-expanded={magnetOpen} title={L('مگنتِ فکرها؛ جذب و فاصله‌گیری زنده','Thought magnets; live attraction and repulsion')}><Magnet size={17}/><span>{L('مگنت','Magnets')}</span><i data-status={magneticState.status}/></button>
             {magnetOpen&&!flow.editing&&!inspectorOpen&&!dialog&&!contextMenu&&!selectedEdge&&<MagneticPanel settings={preferences.magnetic} onChange={preferences.setMagnetic} language={language} status={magneticState.status} pinnedCount={magneticState.pinnedCount} onReheat={()=>canvas.current?.reheatMagnetic()} onApply={applyMagnet} onReset={restoreMagnet} onClose={closeMagnet} canApply={!ws.readOnly&&!flow.editing} dirty={magneticState.dirty} persistenceError={magneticState.persistenceError||preferences.persistenceError}/>}
           </div>
-          {node&&!flow.editing&&!connectFrom&&!inspectorOpen&&<div className="flow-actions" role="toolbar" aria-label={L('ادامهٔ این فکر','Continue this thought')}>
-            <span className="flow-selection" dir="auto">{node.title||L('بدون عنوان','Untitled')}</span>
-            <button onClick={()=>flow.begin(node.id,'sibling')} title={L('یک فکر هم‌سطح · Enter','Create a sibling thought · Enter')}><Plus size={15}/><span>{L('فکر بعدی','Next thought')}</span><kbd>Enter</kbd></button>
-            <button onClick={()=>flow.begin(node.id,'child')} title={L('یک شاخه از این فکر · Tab','Create a child thought · Tab')}><GitBranch size={15}/><span>{node.task?L('ساب‌تسک','Subtask'):L('زیرشاخه','Branch')}</span><kbd>Tab</kbd></button>
-            <span className="flow-action-divider"/>
-            <button className="flow-icon-action" onClick={()=>flow.edit(node.id)} aria-label={L('ویرایش عنوان روی کارت','Edit title on card')} title={L('ویرایش عنوان · F2','Edit title · F2')}><Pencil size={15}/></button>
-            <button onClick={()=>showDetails(node.id)} title={L('متن، فایل و جزئیات · Shift + Enter','Notes, files and details · Shift + Enter')}><PanelLeftOpen size={15}/><span>{L('جزئیات','Details')}</span></button>
-          </div>}
-          <div className="canvas-toolbar" role="toolbar" aria-label={L('ابزارهای بوم','Canvas tools')}>
-            <button className={`tool-button ${tool==='select'?'active':''}`} onClick={()=>setTool('select')} aria-label={L('انتخاب گره','Select nodes')} title={L('انتخاب · V','Select · V')} aria-pressed={tool==='select'}><MousePointer2 size={19}/></button><button className={`tool-button ${tool==='hand'?'active':''}`} onClick={()=>setTool('hand')} aria-label={L('حرکت بوم','Pan canvas')} title={L('حرکت · H یا Space','Pan · H or Space')} aria-pressed={tool==='hand'}><Hand size={19}/></button><span className="toolbar-divider"/>
-            <div className="add-control"><div className="add-split"><button className="add-button" onClick={()=>flow.begin()} title={L('یک فکر تازه · N','New thought · N')}><Plus size={19}/><span>{L('فکر تازه','New thought')}</span></button><button className="add-options" onClick={()=>setAddMenu(!addMenu)} aria-expanded={addMenu} aria-label={L('نوع‌های دیگر گره و فایل','More node types and files')}><ChevronDown size={15}/></button></div>{addMenu&&<div className="add-menu"><button onClick={()=>flow.beginTask()}><CheckSquare2 size={17}/><span>{L('تسک تازه','New task')}</span><small>T</small></button>{(['note','project','link'] as NodeKind[]).map(kind=>{const Icon=kindIcons[kind];return <button key={kind} onClick={()=>add(kind)}><Icon size={17}/><span>{kindName(kind,language)}</span><small>{kind==='note'?'N':''}</small></button>;})}<div className="menu-divider"/><button onClick={()=>pickFiles()}><Upload size={17}/><span>{L('تصویر، ویدیو، فایل…','Image, video, file…')}</span></button><small className="menu-hint">{L('یا مستقیم روی بوم رها کن','Or drop it directly on the canvas')}</small></div>}</div>
-            <button className="tool-button upload-tool" onClick={()=>pickFiles()} aria-label={L('بارگذاری فایل','Upload a file')} title={L('بارگذاری فایل','Upload file')}><ImageIcon size={19}/></button><span className="toolbar-divider"/><button className="tool-button" onClick={()=>ws.undo()} disabled={!ws.canUndo} aria-label={L('بازگردانی','Undo')} title={L('بازگردانی · ⌘Z','Undo · ⌘Z')}><Undo2 size={18}/></button><button className="tool-button" onClick={()=>ws.redo()} disabled={!ws.canRedo} aria-label={L('انجام دوباره','Redo')} title={L('انجام دوباره · ⌘⇧Z','Redo · ⌘⇧Z')}><Redo2 size={18}/></button>
-          </div>
+          {!connectFrom&&!inspectorOpen&&<CanvasDock language={language} selectedTitle={node?.title} isTask={!!node?.task} editing={flow.editing} tool={tool} menuOpen={addMenu} setMenuOpen={setAddMenu}
+            canUndo={ws.canUndo} canRedo={ws.canRedo} onUndo={()=>ws.undo()} onRedo={()=>ws.redo()} onToolChange={next=>{setTool(next);canvas.current?.focusSurface();}}
+            onNewThought={()=>flow.begin()} onNewTask={()=>flow.beginTask()} onNewProject={()=>add('project')} onNewLink={()=>add('link')} onUpload={()=>pickFiles()}
+            onSibling={()=>{if(node)flow.begin(node.id,'sibling');}} onChild={()=>{if(node)flow.begin(node.id,'child');}} onEdit={()=>{if(node)flow.edit(node.id);}}
+            onDetails={()=>{if(node)showDetails(node.id);}} onDeselect={()=>{selectNode(null);canvas.current?.focusSurface();}} onHelp={()=>setDialog('help')}/>}
           <div className="zoom-controls"><button className="icon-button" onClick={()=>canvas.current?.zoomBy(.8)} aria-label={L('کوچک‌نمایی','Zoom out')}><ZoomOut size={17}/></button><button className="zoom-value" onClick={()=>canvas.current?.fit()} title={L('دیدن همهٔ گره‌ها','Fit all nodes')}>{Math.round(zoom*100)}%</button><button className="icon-button" onClick={()=>canvas.current?.zoomBy(1.25)} aria-label={L('بزرگ‌نمایی','Zoom in')}><ZoomIn size={17}/></button><span/><button className="icon-button" onClick={()=>canvas.current?.fit()} aria-label={L('نمایش تمام بوم','Fit canvas')} title={L('تمام بوم · F','Fit canvas · F')}><Maximize size={16}/></button></div>
-          <div className="canvas-hint keyboard-hint"><span><kbd>Enter</kbd>{L('فکر بعدی','Next thought')}</span><i/><span><kbd>Tab</kbd>{L('زیرشاخه','Branch')}</span><i/><span><kbd>Shift + Enter</kbd>{L('جزئیات','Details')}</span></div>
+
           </>:<div className="loading-state"><span className="brand-symbol"><BrandMark/></span><h1>Nodus</h1>{ws.loading?<><LoaderCircle className="spin" size={23}/><p>{L('فضای فکرهایت در حال بازشدن است…','Opening your thinking space…')}</p></>:<><h2>{L('فضایت هنوز بارگذاری نشده است','Your workspace could not be loaded')}</h2><p dir="auto">{ws.error}</p><div><button className="primary-button" onClick={()=>void ws.retry()}>{L('تلاش دوباره','Try again')}</button><a className="secondary-button" href="/signin-with-chatgpt?return_to=%2F" target="_top">{L('ورود با ChatGPT','Sign in with ChatGPT')}</a></div></>}</div>}
         </section>
       </div>
@@ -323,7 +334,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
     {(dialog==='new-board'||dialog==='rename')&&<Modal title={dialog==='new-board'?L('فضایی برای یک شروع تازه','A space for a new beginning'):L('نام این فضا','Name this space')} onClose={()=>setDialog(null)}><form className="modal-body" onSubmit={e=>{e.preventDefault();dialog==='new-board'?makeBoard():rename();}}><label className="field-label">{L('نام فضا','Space name')}<input className="text-input large-input" autoFocus value={boardName} maxLength={250} onChange={e=>setBoardName(e.target.value)} placeholder={L('مثلاً: فیلم بعدی، ایده‌های من…','e.g. My next film, open questions…')} dir="auto"/></label><p className="dialog-description">{L('یک بوم مستقل برای فکرها، فایل‌ها و پروژه‌هایی که به هم مربوط‌اند.','An independent canvas for related thoughts, files, and projects.')}</p><div className="dialog-footer"><button type="button" className="secondary-button" onClick={()=>setDialog(null)}>{L('انصراف','Cancel')}</button><button type="submit" className="primary-button" disabled={!boardName.trim()}>{dialog==='new-board'?L('ساخت فضا','Create space'):L('ذخیرهٔ نام','Save name')}</button></div></form></Modal>}
     {dialog==='delete-node'&&node&&<Modal title={L('این گره حذف شود؟','Delete this thought?')} onClose={()=>setDialog(null)}><div className="modal-body"><p className="delete-title" dir="auto">{node.title}</p><p className="dialog-description">{descendants?L(`این گره یک پروژه با ${descendants} گره داخلی است؛ آن‌ها هم حذف می‌شوند.`, `This project contains ${descendants} nested nodes. They will also be removed.`):L('ارتباط‌های این گره هم برداشته می‌شوند.','Its connections will also be removed.')}{' '}{L('پس از حذف می‌توانی از بازگردانی استفاده کنی.','You can undo this action afterward.')}</p><div className="dialog-footer"><button className="secondary-button" onClick={()=>setDialog(null)}>{L('نگهش دار','Keep it')}</button><button className="danger-button" onClick={remove}><Trash2 size={16}/>{L('حذف گره','Delete thought')}</button></div></div></Modal>}
     {dialog==='export'&&<Modal title={L('فکرهایت در اختیار توست','Your thoughts, in your hands')} onClose={()=>setDialog(null)}><div className="modal-body"><p className="dialog-description">{L('پروژه‌ها، یادداشت‌ها، مختصات و ارتباط‌ها را به صورت JSON دریافت یا دوباره وارد کن. فایل‌های اصلی رسانه داخل این خروجی نیستند؛ از پنل هر گره جدا دانلودشان کن.','Export or import your projects, notes, positions, and connections as JSON. Original media bytes are not included; download them from each node’s editor.')}</p><button className="export-option" onClick={exportStructure} disabled={!doc}><Download size={23}/><span><strong>{L('دریافت ساختار JSON','Export graph structure')}</strong><small>{L('همهٔ پروژه‌ها و ارجاع فایل‌ها','All projects and attachment references')}</small></span><ArrowUpRight size={17}/></button><button className="export-option" disabled={busy||!doc} onClick={()=>importInput.current?.click()}><Upload size={23}/><span><strong>{busy?L('در حال بررسی…','Checking…'):L('ورود یک خروجی قبلی','Import an earlier export')}</strong><small>{L('به صورت پروژه‌های جدا، کنار محتوای فعلی','Adds separate projects alongside your current work')}</small></span></button><p className="fine-print">{L('ارجاع فایل‌های واردشده باید متعلق به همین حساب و این اپ باشند.','Imported attachments must already belong to this account in this app.')}</p></div></Modal>}
-    {dialog==='help'&&<Modal title={L('از یک نقطه، به یک جهان','From a thought to a whole world')} onClose={()=>setDialog(null)} wide><div className="modal-body"><div className="help-grid"><section><span className="help-number">01</span><h3>{L('بنویس و ادامه بده','Write, then keep going')}</h3><p>{L('روی بوم Enter بزن و عنوان را بنویس. Enter بعدی یک فکر هم‌سطح می‌سازد و نوشتن را همان‌جا ادامه می‌دهی. عنوان را با F2 ویرایش کن. نشانگر را روی فکر نگه دار تا محتوا باز شود؛ با کلیک، پنجرهٔ کامل آن را می‌بینی.','Press Enter on the canvas and write a title. Enter again creates a sibling and keeps you writing. Use F2 to edit a title. Hover to preview a thought; click to open its full content.')}</p></section><section><span className="help-number">02</span><h3>{L('رابطه‌ها را بساز','Connect the dots')}</h3><p>{L('Tab یک زیرشاخه می‌سازد. Shift + Tab به فکرِ والد برمی‌گردد. کلیدهای جهت بین کارت‌ها حرکت می‌کنند. برای ساخت چند شاخه با هم، «رشد شاخه‌ها» در جزئیات در دسترس است.','Tab creates a child. Shift + Tab returns to the parent. Arrow keys move between cards. Grow branches in Details still creates several thoughts at once.')}</p></section><section><span className="help-number">03</span><h3>{L('یک لایه عمیق‌تر برو','Go a layer deeper')}</h3><p>{L('Shift + Enter متن، فایل و جزئیات را باز می‌کند. Ctrl / ⌘ + Enter وارد بوم داخلیِ فکر می‌شود. مسیر بالای صفحه راه برگشت است؛ Esc از نوشتن روی کارت خارج می‌شود.','Shift + Enter opens notes, files and details. Ctrl / ⌘ + Enter opens the thought’s inner canvas. Follow the breadcrumb back. Esc finishes inline writing.')}</p></section></div><p className="dialog-description">{L('از دکمهٔ «مگنت» کشش و فاصلهٔ فکرها را تنظیم کن. با کلیک راست، یک گره را ثابت نگه دار. حرکت هنگام خواندن یا نوشتن مکث می‌کند؛ برای ذخیرهٔ جای همهٔ نودها «ثبت چیدمان» را بزن.','Use Magnets to adjust attraction and spacing. Right-click to pin a thought. Motion pauses while you read or write; Apply layout saves all positions.')}</p><div className="shortcuts">{[[L('فکر هم‌سطح بعدی','Next sibling thought'),'Enter'],[L('ساخت زیرشاخه','Create a child'),'Tab'],[L('برگشت به والد','Return to parent'),'Shift + Tab'],[L('متن و جزئیات','Notes & details'),'Shift + Enter'],[L('ویرایش عنوان','Edit title'),'F2'],[L('حرکت بین کارت‌ها','Move between cards'),'← ↑ ↓ →'],[L('ورود به پروژهٔ داخلی','Enter nested project'),'⌘ / Ctrl + Enter'],[L('ثبت و خروج از نوشتن','Finish inline writing'),'Esc'],[L('یک فکر مستقل تازه','New independent thought'),'N'],[L('تسک تازه','New task'),'T'],[L('دیدن تمام بوم','Fit canvas'),'F'],[L('جست‌وجو','Search'),'⌘ / Ctrl + K'],[L('حذف گره یا اتصال','Delete thought or connection'),'Delete'],[L('منوی عملیات','Context menu'),'Shift + F10'],[L('بازگردانی','Undo'),'⌘ / Ctrl + Z']].map(([text,key])=><div key={key}><span>{text}</span><kbd>{key}</kbd></div>)}</div><div className="help-footnote"><ShieldCheck size={17}/><p>{L('ذخیرهٔ خودکار در حساب خصوصی تو. برای هر فایل تا ۲۵ مگابایت. شاخه‌ها را خودت تعریف می‌کنی یا از سطرهای یادداشت می‌سازی.','Autosaved in your private account. Up to 25 MiB per file. Define branches yourself or derive them from your note’s lines.')}</p></div></div></Modal>}
+    {dialog==='help'&&<Modal title={L('راهنمای کوتاه نودوس','A quick guide to Nodus')} onClose={()=>setDialog(null)} wide><ShortcutGuide language={language}/></Modal>}
   </div>;
 }
 function bookTitle(text:string){return text.trim().split('\n')[0].slice(0,100)||'Untitled';}

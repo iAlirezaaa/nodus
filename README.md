@@ -9,7 +9,7 @@ The application has a React interface, a server API, a persistent SQL database a
 - Hover over a node for a readable content preview. Click it to open its full content and attachments in a popup; **Shift+Enter** opens the notes editor directly.
 - Write titles directly beside neurons or on cards. **Enter** commits a thought and starts its next sibling; **Tab** commits it and starts a connected child. Focus follows the new thought without a modal or a fit-to-canvas jump.
 - Drag a node to move it. Drag the background to pan, and use the zoom controls, wheel or touch pinch to change scale.
-- Open **Magnetic mode** to let linked thoughts pull together, adjust the forces, and pin nodes. **Apply layout** commits the resulting arrangement as one undoable change.
+- Open **Magnetic mode**, then press **Start** or choose a preset to let linked thoughts pull together. The four force sliders are available under **Fine-tune forces and spacing**; merely opening the panel does not move the graph. **Apply layout** commits the resulting arrangement as one undoable change.
 - Connect existing nodes, or create multiple connected branches from a list of titles.
 - Open a node's internal project to work on its own board; the breadcrumb trail leads back out.
 - Drop files onto the canvas or use the upload action. Images, supported video/audio formats and PDFs have previews; other formats retain their original download.
@@ -20,7 +20,7 @@ Graph connections and containment are different relationships. Connections may f
 
 ### Keep thinking with the keyboard
 
-The following shortcuts apply while the canvas or a thought card has focus. Ordinary fields, dialogs, link controls, and the notes textarea keep their normal keyboard behavior.
+The following shortcuts apply while the canvas or a thought card has focus. Ordinary fields, dialogs, buttons, link controls, and the notes textarea keep their normal keyboard behavior. Focus must be on the graph itself: a selection does not activate graph commands while a sidebar or toolbar control has focus.
 
 | Key | Action |
 | --- | --- |
@@ -28,7 +28,7 @@ The following shortcuts apply while the canvas or a thought card has focus. Ordi
 | Tab | Start a connected child of the current thought. |
 | Shift+Tab | Finish the title and return to its graph parent; without a parent, normal backward focus remains available on a card. |
 | Arrow keys | Move to a card in that physical direction. From the empty canvas selection, enter at the closest thought. |
-| F2 | Edit the focused node's title in place. Typing on a focused card also starts a replacement title. |
+| F2 | Edit the focused node's title in place. Letter keys never silently replace an existing title. |
 | Shift+Enter | Finish the title and open notes and details. |
 | Ctrl / Cmd+Enter | Open the focused card's nested project. |
 | Escape | Finish inline writing, or discard an empty new draft. On a card, clear selection and focus the canvas; Tab can then leave the canvas. |
@@ -37,12 +37,18 @@ The following shortcuts apply while the canvas or a thought card has focus. Ordi
 | Ctrl / Cmd+Delete | Remove the focused node or connection. Text fields retain their native deletion shortcuts. |
 | Shift+F10 | Open the context menu for the focused node, connection or canvas. |
 | Ctrl / Cmd+Z | Undo a committed graph change. Text fields retain native text undo. |
+| Ctrl / Cmd+K | Search while a graph surface has focus. The sidebar Search button is always available. |
+| Space | Open a focused thought; temporarily pan when the canvas itself has focus. Native buttons still activate normally. |
 
 Enter on a root thought creates another independent root. A sibling shares the source's first valid incoming connection; this does not turn an arbitrary graph into a strict tree. Children start on the left in Persian and on the right in English. Placement accounts for growth-expanded cards, including the parent after its new branch, without moving earlier thoughts.
 
 An empty new card is only a view draft: repeated Enter or Tab does not save empty notes. Its title and connection enter undo history together when committed. Persian text, input-method composition, paste, and native text shortcuts are handled within the inline editor.
 
 Starting a title from a zoomed-out overview raises the scale to 100%, bounded by the available width of the card. Subsequent Enter and Tab keep that scale and pan only as needed. Reveal margins keep the active card above the floating toolbar.
+
+### A quieter canvas
+
+A single contextual dock replaces the stacked creation toolbar, selection toolbar and repeated shortcut footer. With no selection, **New thought** is the primary action. With a selected thought, **Branch**, **Sibling** and **Open** continue it; **More actions** holds title editing, other content types, uploads and pan/selection tools. The hint row advertises graph shortcuts only when the canvas or a thought actually has keyboard focus. While writing a title, the dock disappears and Enter/Tab/Escape instructions stay beside the input. **Shortcut guide** separates canvas actions, inline title flow and ordinary text/dialog behavior, with advanced commands collapsed by default.
 
 ### Tasks, comments and connection editing
 
@@ -266,7 +272,7 @@ The previous living-node release browser pass confirmed:
 | Mobile popup | At 390 × 844, the popup is 362 px wide with no horizontal overflow; its title is 25 px and text is 16 px. Ctrl+End reaches character 1,515, keyboard focus reaches the lower actions/colors/date, and the header close control remains visible and dismisses successfully. |
 | Per-edge motion | Disabling one edge's animation through its context controls reduces flow paths and particles from three to two while all six card frames remain animated. Re-enabling restores both counts to three. |
 
-The current magnetic-release pass used the real app in the same isolated living fixture:
+The previous magnetic-release pass used the real app in the same isolated living fixture:
 
 | Interaction | Observed result |
 | --- | --- |
@@ -283,6 +289,23 @@ The current magnetic-release pass used the real app in the same isolated living 
 | Restore | Restore cleared the personal positions, pins and pending-layout state, and paused the mode without saving the workspace. |
 
 Reduced-motion behavior was reviewed in code but was not verified at runtime. The earlier hidden-page check was inconclusive: switching Chrome tabs through desktop automation left the inspected canvas at `data-motion="on"`, so that check did not establish whether hidden-page pausing works; it is not counted as a pass for this release. These are browser checks against synthetic persistence, not a deployed authenticated UI test or a test with two real signed-in users. Physical touch devices, native IME sessions and production signed-in behavior were not verified in these passes.
+
+### Clarity and keyboard regression pass
+
+The clarity fixture at `/tests/browser/clarity-fixture` renders the real application with an isolated synthetic identity, eight named thoughts on the home canvas, two nested thoughts, and revision-checked synthetic persistence. It is DEV-only and is excluded from the production Worker bundle. Its screen content is illustrative, not a capture of an authenticated personal workspace.
+
+- **Creation and keyboard scope:** Enter on the New thought button opened one draft. Title → Tab → child title → Enter → sibling title → Escape committed exactly three new nodes and two connections. Empty drafts were discarded. F2 allowed N/T/F to remain text; N on a focused node created an independent draft without replacing the source title.
+- **Native controls:** Ctrl+Z, Delete and N on a sidebar button caused no graph mutation. Space activated the More actions button without panning the canvas; Escape closed only its menu. The menu stayed within the 390 px frame.
+- **Notes:** Enter inserted a newline, native Ctrl+Z removed a typed character, Delete edited the text, and Tab moved to the next dialog control. No inline graph draft was created and the node count stayed unchanged.
+- **Undo focus:** Native keyboard Ctrl+Z removed the focused newly created node and returned focus to the canvas. Ctrl+Shift+Z restored it, then Enter immediately opened another draft without a mouse click.
+- **Small screens:** The selected dock measured about 352 px inside a 390 px viewport with equal client/scroll widths. Sparse neuron boards retain screen-readable labels below 28% zoom; all eight sample labels were visible at 23%. The popup measured 362 × 828 px with no horizontal overflow.
+- **Magnetic settings:** Opening the panel left motion paused. Its four sliders were behind a native disclosure; ArrowLeft changed the RTL distance slider from 180 to 190 and Escape closed the panel. These view adjustments produced zero workspace writes.
+
+The complete automated suite passed **165 tests**, including eight new shortcut resolver regressions; TypeScript checking passed. Browser checks used desktop Chrome with a mobile-sized iframe, not a physical touchscreen or an authenticated production session. Native Persian IME composition was not exercised; composition guards are covered by the shortcut tests.
+
+![Simplified contextual dock on the real app with illustrative Persian thoughts](docs/screenshots/nodus-clarity-canvas.jpg)
+
+![Inline thought entry with local Enter, Tab and Escape guidance](docs/screenshots/nodus-clarity-writing.jpg)
 
 ![Magnetic network and personal layout controls in the isolated browser verification workspace](docs/screenshots/nodus-magnetic-network.jpg)
 

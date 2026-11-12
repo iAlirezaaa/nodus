@@ -2,6 +2,7 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, AudioLines, Check, Circle, CircleDot, File as FileIcon, FileText, GitBranch, Image as ImageIcon, Layers, Link2, MessageSquareText, Pencil, Pin, Play, Plus, StickyNote, Video } from 'lucide-react';
 import { fitViewport } from '@/lib/graph';
+import { graphShortcutScope, isEditableTarget, resolveGraphShortcut } from '@/lib/keyboard';
 import { connectionGeometry, connectionMayIntersectViewport, type EdgePoint, type EdgeRectangle } from '@/lib/edge-geometry';
 import { DEFAULT_CANVAS_DESIGN, type CanvasDesign, type LayoutGuide } from '@/lib/layouts';
 import { buildNodeGrowth, defaultNodeGrowth, projectCardNode, type NodeGrowth } from '@/lib/node-growth';
@@ -111,7 +112,7 @@ const colors: Record<string, string> = { sage: '#b5ccaf', blue: '#91b7df', amber
 const clamp = (value: number, minimum: number, maximum: number) => Math.max(minimum, Math.min(maximum, value));
 const sameRectangle = (a: EdgeRectangle, b: EdgeRectangle) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 const fitPadding = (width: number, height: number) => Math.max(16, Math.min(90, width * .07, height * .12));
-const isTextInput = (target: EventTarget | null) => target instanceof Element && !!target.closest('input,textarea,select,[contenteditable="true"]');
+const isTextInput = isEditableTarget;
 const isContextKey = (event: React.KeyboardEvent) => event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey);
 function projectNode(node: GraphNode, growth: NodeGrowth, neural: boolean, density: CanvasDesign['density'], hovered = false): GraphNode {
   const hoverScale = hovered ? neural ? 1.28 : 1.065 : 1;
@@ -330,8 +331,10 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     propsRef.current.onContextMenu({ kind, id, clientX: event.clientX, clientY: event.clientY, world: point(event.clientX, event.clientY) });
   }, [point, clearHover]);
   const keyboardMenu = useCallback((event: React.KeyboardEvent<Element>, kind: CanvasContextMenuPayload['kind'], id?: string) => {
-    if (!isContextKey(event) || !propsRef.current.onContextMenu || isTextInput(event.target)) return false;
+    if (event.defaultPrevented || event.target !== event.currentTarget || event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229
+      || event.ctrlKey || event.metaKey || event.altKey || !isContextKey(event) || !propsRef.current.onContextMenu || isTextInput(event.target)) return false;
     event.preventDefault(); event.stopPropagation();
+    if (event.repeat) return true;
     const bounds = event.currentTarget.getBoundingClientRect(), canvasBounds = surface.current?.getBoundingClientRect();
     const clientX = clamp(bounds.left + bounds.width / 2, (canvasBounds?.left ?? 0) + 20, (canvasBounds?.right ?? window.innerWidth) - 20);
     const clientY = clamp(bounds.top + bounds.height / 2, (canvasBounds?.top ?? 0) + 20, (canvasBounds?.bottom ?? window.innerHeight) - 20);
@@ -450,15 +453,18 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   }, [view, boardId]);
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
-      if (event.code !== 'Space') return;
+      if (event.code !== 'Space' && event.key !== ' ') return;
       if (event.type === 'keyup') { setSpace(false); return; }
-      if ((event.target as Element)?.closest('button,a,input,textarea,select,[role="button"],[contenteditable="true"]')) return;
+      if (resolveGraphShortcut(event, { scope: graphShortcutScope(event.target), blocked: propsRef.current.interactionsPaused }) !== 'pan') return;
       event.preventDefault(); setSpace(true);
     };
     const blur = () => { setSpace(false); cancel(); };
+    const focus = () => { if (graphShortcutScope(document.activeElement) !== 'canvas') setSpace(false); };
     window.addEventListener('keydown', key); window.addEventListener('keyup', key); window.addEventListener('blur', blur);
-    return () => { window.removeEventListener('keydown', key); window.removeEventListener('keyup', key); window.removeEventListener('blur', blur); };
+    document.addEventListener('focusin', focus);
+    return () => { window.removeEventListener('keydown', key); window.removeEventListener('keyup', key); window.removeEventListener('blur', blur); document.removeEventListener('focusin', focus); };
   }, [cancel]);
+  useEffect(() => { if (props.interactionsPaused) setSpace(false); }, [props.interactionsPaused]);
   useEffect(() => () => {
     if (animationTimer.current) clearTimeout(animationTimer.current);
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
@@ -550,7 +556,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
       else propsRef.current.onSelect(node.id);
     },
     keyDown: (id, event) => { if (!keyboardMenu(event, 'node', id) && event.target === event.currentTarget) propsRef.current.onNodeKeyDown?.(id, event); },
-    focus: id => setFocusedCard(id),
+    focus: id => { setFocusedCard(id); propsRef.current.onSelect(id); },
     hover: hoverNode,
     open: id => propsRef.current.onOpen(id),
     edit: id => { clearHover(); propsRef.current.onEdit?.(id); },
@@ -678,7 +684,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   }
 
   const gridSize = 28 * (design.density === 'compact' ? .8 : design.density === 'spacious' ? 1.3 : 1);
-  return <div data-canvas data-node-style={design.nodeStyle} data-density={design.density} data-label-detail={view.zoom < .7 ? 'compact' : 'full'} data-motion={motionAllowed ? 'on' : 'off'} data-magnetic={magnetic.status} data-magnetic-view={magnetic.hasPositions ? 'on' : 'off'} data-magnetic-dirty={magnetic.dirty} tabIndex={0} className={`canvas ${tool === 'hand' || space ? 'hand-mode' : ''} ${connectFrom ? 'connect-mode' : ''} ${dragOver ? 'is-dragover' : ''}`} ref={surface}
+  return <div data-canvas data-node-style={design.nodeStyle} data-density={design.density} data-readable-overview={nodes.length <= 24} data-label-detail={view.zoom < .7 ? 'compact' : 'full'} data-motion={motionAllowed ? 'on' : 'off'} data-magnetic={magnetic.status} data-magnetic-view={magnetic.hasPositions ? 'on' : 'off'} data-magnetic-dirty={magnetic.dirty} tabIndex={0} className={`canvas ${tool === 'hand' || space ? 'hand-mode' : ''} ${connectFrom ? 'connect-mode' : ''} ${dragOver ? 'is-dragover' : ''}`} ref={surface}
     onPointerDown={event => start(event)} onPointerMove={move} onPointerMoveCapture={event => { if (event.pointerType !== 'touch' || event.isPrimary) reportPresence({ x: event.clientX, y: event.clientY }); }} onPointerUp={end} onPointerCancel={cancel}
     onPointerLeave={() => reportPresence(null)}
     onLostPointerCapture={event => { if (pointers.current.has(event.pointerId)) cancel(); }}
@@ -688,7 +694,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     onDragOver={event => { if (event.dataTransfer.types.includes('Files')) { event.preventDefault(); setDragOver(true); } }}
     onDragLeave={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setDragOver(false); }}
     onDrop={event => { event.preventDefault(); setDragOver(false); const files = Array.from(event.dataTransfer.files); if (files.length) propsRef.current.onDropFiles(files, point(event.clientX, event.clientY)); }}
-    style={{ backgroundImage: design.background === 'none' ? 'none' : design.background === 'grid' ? 'linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px)' : 'radial-gradient(var(--grid) 1px, transparent 1px)', backgroundSize: `${gridSize * view.zoom}px ${gridSize * view.zoom}px`, backgroundPosition: `${view.x}px ${view.y}px`, '--accent': colors[design.accent], '--canvas-inverse-zoom': 1 / view.zoom, '--neuron-label-scale': Math.min(2.5, Math.max(1, 1 / view.zoom)), '--neuron-detail-scale': Math.max(1, 1 / view.zoom), '--lowzoom-label-width': `${Math.max(50, 180 * view.zoom)}px` } as React.CSSProperties}
+    style={{ backgroundImage: design.background === 'none' ? 'none' : design.background === 'grid' ? 'linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px)' : 'radial-gradient(var(--grid) 1px, transparent 1px)', backgroundSize: `${gridSize * view.zoom}px ${gridSize * view.zoom}px`, backgroundPosition: `${view.x}px ${view.y}px`, '--accent': colors[design.accent], '--canvas-inverse-zoom': 1 / view.zoom, '--neuron-label-scale': nodes.length <= 24 ? Math.max(1, 1 / view.zoom) : Math.min(2.5, Math.max(1, 1 / view.zoom)), '--neuron-detail-scale': Math.max(1, 1 / view.zoom), '--lowzoom-label-width': `${Math.max(nodes.length <= 24 ? 88 : 50, 180 * view.zoom)}px` } as React.CSSProperties}
     role="region" aria-label={L('بوم ایده‌ها؛ Enter برای ایدهٔ بعدی، Tab روی گره برای زیرشاخه؛ برای خروج از بوم Escape و سپس Tab بزنید.', 'Idea canvas; Enter for the next idea, Tab on a node for a child; press Escape then Tab to leave the canvas.')}>
     <div className="canvas-atmosphere" aria-hidden="true" />
     <div className={`canvas-world ${animating ? 'is-animating' : ''}`} style={{ transform: `translate3d(${view.x}px,${view.y}px,0) scale(${view.zoom})` }}>
@@ -750,7 +756,7 @@ const NodeCard = memo(function NodeCard(props: NodeCardProps) {
         <button className="node-branch" tabIndex={tabStop ? 0 : -1} aria-label={L(`افزودن زیرشاخه به ${node.title}`, `Add child to ${node.title}`)} title={L('زیرشاخهٔ تازه · Tab', 'New child · Tab')} onClick={event => { event.stopPropagation(); dispatch.branch(node.id); }}><Plus size={15} /></button>
       </span>
     </div>
-    {(edit || (selected && tabStop)) && <div className="node-key-hint" aria-hidden="true"><span><kbd>Enter</kbd>{L('بعدی', 'next')}</span><span><kbd>Tab</kbd>{L('زیرشاخه', 'child')}</span>{edit && <span><kbd>Esc</kbd>{L('پایان', 'finish')}</span>}</div>}
+    {(edit || (selected && tabStop)) && <div className="node-key-hint" aria-hidden="true"><span><kbd>Enter</kbd>{L('هم‌سطح', 'sibling')}</span><span><kbd>Tab</kbd>{L('زیرشاخه', 'child')}</span>{edit && <span><kbd>Esc</kbd>{L('پایان', 'finish')}</span>}</div>}
     <button className="node-port port-right" tabIndex={tabStop ? 0 : -1} aria-label={L(`اتصال از ${node.title}`, `Connect from ${node.title}`)} title={L('اتصال به یک گره دیگر', 'Connect to another node')} onClick={event => { event.stopPropagation(); dispatch.port(node.id, false); }} />
     <button className="node-port port-left" tabIndex={tabStop ? 0 : -1} aria-label={L(`اتصال به ${node.title}`, `Connect to ${node.title}`)} onClick={event => { event.stopPropagation(); dispatch.port(node.id, true); }} />
     {presenceLabel && <span className="node-presence-badge">{presenceLabel}</span>}
@@ -777,7 +783,7 @@ const NeuronNode = memo(function NeuronNode({ node, projected, growth, hovered, 
     {edit ? <InlineTitleEditor key={`${node.id}:${edit.session}`} nodeId={node.id} savedTitle={node.title} edit={edit} language={language} dispatch={dispatch} /> : <h3 dir="auto" data-node-title className="neuron-label">{node.title || L('بدون عنوان', 'Untitled')}</h3>}
     {annotations > 0 && !edit && <button className="neuron-annotation" tabIndex={tabStop ? 0 : -1} aria-label={L(`${annotations} یادداشت حاشیه‌ای`, `${annotations} annotations`)} onClick={event => { event.stopPropagation(); dispatch.details(node.id); }}><MessageSquareText size={10} /><span>{annotations}</span></button>}
     {status && !edit && <button type="button" className={`node-task-toggle neuron-task-toggle status-${status}`} data-task-toggle={node.id} tabIndex={tabStop ? 0 : -1} disabled={!canToggleTask} aria-label={L(`وضعیت: ${statusLabel}؛ تغییر به ${nextStatusLabel}`, `Status: ${statusLabel}; change to ${nextStatusLabel}`)} aria-pressed={status === 'done' ? true : status === 'doing' ? 'mixed' : false} onClick={event => { event.stopPropagation(); dispatch.toggleTask(node.id); }}>{status === 'done' ? <Check size={13} /> : status === 'doing' ? <CircleDot size={13} /> : <Circle size={13} />}</button>}
-    {edit && <div className="node-key-hint" aria-hidden="true"><span><kbd>Enter</kbd>{L('بعدی', 'next')}</span><span><kbd>Tab</kbd>{L('زیرشاخه', 'child')}</span><span><kbd>Esc</kbd>{L('پایان', 'finish')}</span></div>}
+    {edit && <div className="node-key-hint" aria-hidden="true"><span><kbd>Enter</kbd>{L('هم‌سطح', 'sibling')}</span><span><kbd>Tab</kbd>{L('زیرشاخه', 'child')}</span><span><kbd>Esc</kbd>{L('پایان', 'finish')}</span></div>}
     <button className="node-port port-right" tabIndex={tabStop ? 0 : -1} aria-label={L(`اتصال از ${node.title}`, `Connect from ${node.title}`)} onClick={event => { event.stopPropagation(); dispatch.port(node.id, false); }} />
     <button className="node-port port-left" tabIndex={tabStop ? 0 : -1} aria-label={L(`اتصال به ${node.title}`, `Connect to ${node.title}`)} onClick={event => { event.stopPropagation(); dispatch.port(node.id, true); }} />
     {presenceLabel && <span className="node-presence-badge">{presenceLabel}</span>}
@@ -938,10 +944,12 @@ const Connection = memo(function Connection({ drawing, selected, dispatch, langu
     onContextMenu={event => { clearDrag(); dispatch.contextMenu(event, edge.id); }} role="button" tabIndex={selected ? 0 : -1}
     aria-label={`${L('ارتباط', 'Connection')}: ${source.title} → ${target.title}${edge.label ? ` · ${edge.label}` : ''}`} aria-pressed={selected}
     onKeyDown={event => {
-      if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
+      if (event.defaultPrevented || event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
       if (dispatch.keyboardMenu(event, edge.id) || event.target !== event.currentTarget || event.altKey) return;
-      if (canDelete && (event.ctrlKey || event.metaKey) && event.key === 'Delete') { event.preventDefault(); event.stopPropagation(); dispatch.remove(edge.id); return; }
+      if (event.repeat && ['Enter', ' ', 'Delete', 'Backspace'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); return; }
+      if (canDelete && !event.shiftKey && event.ctrlKey !== event.metaKey && event.key === 'Delete') { event.preventDefault(); event.stopPropagation(); dispatch.remove(edge.id); return; }
       if (event.ctrlKey || event.metaKey) return;
+      if (event.shiftKey) return;
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); dispatch.select(edge.id); }
       if (canDelete && (event.key === 'Delete' || event.key === 'Backspace')) { event.preventDefault(); event.stopPropagation(); dispatch.remove(edge.id); }
     }}>
@@ -977,7 +985,7 @@ const Connection = memo(function Connection({ drawing, selected, dispatch, langu
       onPointerCancel={event => { if (drag.current?.pointerId === event.pointerId) { event.stopPropagation(); clearDrag(); } }}
       onLostPointerCapture={event => { if (drag.current?.pointerId === event.pointerId) clearDrag(); }}
       onKeyDown={event => {
-        if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
+        if (event.defaultPrevented || event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
         if (dispatch.keyboardMenu(event, edge.id) || event.ctrlKey || event.metaKey || event.altKey) return;
         if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); event.stopPropagation(); clearDrag(); dispatch.bend(edge.id, null); return; }
         if (event.key === 'Escape' && drag.current) { event.preventDefault(); event.stopPropagation(); clearDrag(); return; }
