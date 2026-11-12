@@ -404,3 +404,8 @@ The search dialog scans the full authorized workspace graph for title, note and 
 ### Cross-project search (ND-001 candidate on feature branch)
 
 `lib/thought-search.ts` counts every matching thought while returning a bounded 70-item page. `buildBoardPaths` builds root-to-board labels, guarding broken containment pointers and cycles. The UI searches all personal/shared document nodes within the current document (not other accounts) and navigates to the selected node's own board. For comparisons, Arabic/Persian keyboard forms, numeral glyphs, Arabic vowel marks, tatweel and Persian ZWNJ are normalized **in memory only**; persisted graph text and assets are not changed. This refinement remains on `fix/nd-001-search-clarity` pending full build, browser and publication checks.
+
+
+### Searchable project locations (ND-001 run 4; feature branch only)
+
+The search helper accepts an optional read-only map from board ID to its full display path. The React search dialog builds that map once per document/language change, passes it into the bounded 70-result search, and reuses normalized path labels across nodes belonging to a board. This lets a query match a parent/root project name without adding hidden keywords to node text or changing saved document content. Without the map, helper search retains its prior title/note/asset-only semantics. All personal root spaces are within one private workspace document; shared rooms are independent documents. The dialog states its actual current-document scope rather than claiming to search other accounts or rooms. This candidate is not a live release.
