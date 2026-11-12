@@ -399,3 +399,8 @@ The search dialog scans the full authorized workspace graph for title, note and 
 ### ND-001 search navigation (feature branch, not released)
 
 `lib/thought-search.ts` indexes full board ancestry and counts all matches across nested boards. Search rendering in `components/NodusApp.tsx` is a transient 70-result window with a page offset and a current/total range; it does not store cursor state in the workspace or alter graph records. Previous/next navigation and the current-page indicator live inside the search dialog. If a document shrinks, an offset beyond the new total resolves to the last non-empty page. This implementation remains feature-only pending full runtime/browser and production verification.
+
+
+### Cross-project search (ND-001 candidate on feature branch)
+
+`lib/thought-search.ts` counts every matching thought while returning a bounded 70-item page. `buildBoardPaths` builds root-to-board labels, guarding broken containment pointers and cycles. The UI searches all personal/shared document nodes within the current document (not other accounts) and navigates to the selected node's own board. For comparisons, Arabic/Persian keyboard forms, numeral glyphs, Arabic vowel marks, tatweel and Persian ZWNJ are normalized **in memory only**; persisted graph text and assets are not changed. This refinement remains on `fix/nd-001-search-clarity` pending full build, browser and publication checks.
