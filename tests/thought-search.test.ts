@@ -22,7 +22,7 @@ test('search counts 151 hits but first renders 70, then 140, then all', () => {
 });
 test('zero, 70 and 71 results are honestly counted and limits are bounded', () => {
   const nodes = Array.from({ length: 71 }, (_, i) => thought(String(i), 'Find me'));
-  assert.deepEqual(searchThoughts(nodes, 'absent'), { visible: [], total: 0 });
+  assert.deepEqual(searchThoughts(nodes, 'absent'), { visible: [], total: 0, offset: 0 });
   assert.equal(searchThoughts(nodes.slice(0, 70), 'find').total, 70);
   assert.equal(searchThoughts(nodes, 'find').total, 71);
   assert.equal(searchThoughts(nodes, 'find').visible.length, 70);
@@ -52,4 +52,30 @@ test('broken parent pointers and cycles terminate without unbounded traversal', 
   assert.ok(paths.get('a')?.includes('Untitled'));
   assert.ok(paths.get('b')?.includes('B'));
   assert.equal(paths.get('orphan'), 'Orphan');
+});
+
+test('pages stay bounded and access all 151 matches without duplication', () => {
+  const nodes = Array.from({ length: 151 }, (_, i) => thought(String(i), 'Brainstorm ' + i));
+  const pages = [0, 70, 140].map(offset => searchThoughts(nodes, 'brainstorm', SEARCH_PAGE_SIZE, offset));
+  assert.deepEqual(pages.map(page => page.visible.length), [70, 70, 11]);
+  assert.deepEqual(pages.map(page => page.offset), [0, 70, 140]);
+  assert.ok(pages.every(page => page.total === 151));
+  assert.deepEqual(pages.flatMap(page => page.visible.map(n => n.id)), nodes.map(n => n.id));
+});
+
+test('out-of-range page after document shrink clamps to last non-empty page', () => {
+  const nodes = Array.from({ length: 81 }, (_, i) => thought(String(i), 'Search ' + i));
+  const page = searchThoughts(nodes, 'search', SEARCH_PAGE_SIZE, 140);
+  assert.equal(page.offset, 70);
+  assert.equal(page.visible.length, 11);
+  assert.deepEqual(page.visible.map(n => n.id), nodes.slice(70).map(n => n.id));
+  assert.deepEqual(searchThoughts(nodes, 'missing', SEARCH_PAGE_SIZE, 140), { visible: [], total: 0, offset: 140 });
+});
+
+test('invalid offsets, partial pages and zero cap are safe', () => {
+  const nodes = Array.from({ length: 9 }, (_, i) => thought(String(i), 'Idea ' + i));
+  assert.equal(searchThoughts(nodes, 'idea', 3, -10).offset, 0);
+  assert.deepEqual(searchThoughts(nodes, 'idea', 3, 4).visible.map(n => n.id), ['3', '4', '5']);
+  assert.equal(searchThoughts(nodes, 'idea', 3, Number.POSITIVE_INFINITY).offset, 0);
+  assert.deepEqual(searchThoughts(nodes, 'idea', 0, 100), { visible: [], total: 9, offset: 0 });
 });

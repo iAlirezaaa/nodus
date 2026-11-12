@@ -499,7 +499,8 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
 .search-box input { border: none !important; background: transparent !important; outline: none !important; padding: 12px 0 !important; }
 .search-box>kbd { border: 0; color: var(--faint); background: transparent; }
 .search-meta { padding: 0 26px 10px; color: var(--faint); font-size: 9px; }
-.search-more { display: flex; justify-content: center; border-top: 1px solid var(--border); padding: 12px 8px 6px; }
+.search-more { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--border); padding: 12px 8px 6px; }
+.search-page-count { color: var(--faint); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .search-more .secondary-button { min-height: 42px; max-width: 100%; }
 .search-results>button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 65px; padding: 11px 14px; border-radius: 10px; text-align: start; }
 .search-results>button:hover { background: var(--surface-hover); }
