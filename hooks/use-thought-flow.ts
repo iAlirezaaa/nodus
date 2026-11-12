@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type { CanvasHandle, InlineEditAction } from '@/components/Canvas';
 import { getThoughtParent, insertThought, prepareThought, type ThoughtRelation } from '@/lib/flow';
+import { patchNode } from '@/lib/node-features';
 import type { GraphNode, Language, Workspace } from '@/lib/types';
 
 interface FlowOptions {
@@ -56,13 +57,13 @@ export function useThoughtFlow(options: FlowOptions) {
     });
   }, []);
 
-  const beginFromDocument = useCallback((document: Workspace, sourceId: string | null, relation: ThoughtRelation, anchor?: { x: number; y: number }, initialValue = '') => {
+  const beginFromDocument = useCallback((document: Workspace, sourceId: string | null, relation: ThoughtRelation, anchor?: { x: number; y: number }, initialValue = '', asTask = false) => {
     const config = current.current;
     const source = sourceId ? document.nodes.find(node => node.id === sourceId) : null;
     const boardId = source?.boardId ?? config.boardId;
     if (!document.boards.some(board => board.id === boardId)) return;
     const planned = prepareThought(document, boardId, sourceId, relation, {
-      anchor: anchor ?? config.canvas.current?.getCenter(), language: config.language,
+      anchor: anchor ?? config.canvas.current?.getCenter(), language: config.language, asTask,
     });
     replace({ ...planned, originId: sourceId, existing: false, initialValue,
       selectAll: false, session: ++session.current, owner: config.getUserId() });
@@ -70,13 +71,15 @@ export function useThoughtFlow(options: FlowOptions) {
     config.select(planned.node.id);
   }, [replace]);
 
-  const begin = useCallback((sourceId: string | null = null, relation: ThoughtRelation = 'sibling', anchor?: { x: number; y: number }, initialValue = '') => {
+  const begin = useCallback((sourceId: string | null = null, relation: ThoughtRelation = 'sibling', anchor?: { x: number; y: number }, initialValue = '', asTask = false) => {
     const config = current.current;
     const document = config.getDocument();
     if (!document) return;
-    try { beginFromDocument(document, sourceId, relation, anchor, initialValue); }
+    try { beginFromDocument(document, sourceId, relation, anchor, initialValue, asTask); }
     catch (error) { config.notice(error instanceof Error ? error.message : String(error)); }
   }, [beginFromDocument]);
+
+  const beginTask = useCallback((sourceId: string | null = null, relation: ThoughtRelation = 'sibling', anchor?: { x: number; y: number }) => begin(sourceId, relation, anchor, '', true), [begin]);
 
   const edit = useCallback((id: string, initialValue?: string) => {
     const config = current.current;
@@ -123,11 +126,7 @@ export function useThoughtFlow(options: FlowOptions) {
         if (active.existing) {
           const original = latest.nodes.find(node => node.id === id);
           if (!original) return latest;
-          committed = original.title === title ? latest : {
-            ...latest,
-            nodes: latest.nodes.map(node => node.id === id ? { ...node, title } : node),
-            boards: original.childBoardId ? latest.boards.map(board => board.id === original.childBoardId ? { ...board, title } : board) : latest.boards,
-          };
+          committed = original.title === title ? latest : patchNode(latest, id, { title });
         } else {
           committed = insertThought(latest, { ...active.node, title }, active.parentId);
         }
@@ -167,7 +166,10 @@ export function useThoughtFlow(options: FlowOptions) {
     commit(active.node.id, input?.value ?? active.initialValue, 'finish');
     return draftRef.current === null;
   }, [commit]);
-  const clear = useCallback(() => replace(null), [replace]);
+  const clear = useCallback(() => {
+    if (frame.current !== null) { cancelAnimationFrame(frame.current); frame.current = null; }
+    replace(null);
+  }, [replace]);
   const onDirtyChange = useCallback((id: string, value: boolean) => {
     if (draftRef.current?.node.id === id) setDirty(value);
   }, []);
@@ -194,5 +196,5 @@ export function useThoughtFlow(options: FlowOptions) {
     nodeId: draft.node.id, initialValue: draft.initialValue, session: draft.session, selectAll: draft.selectAll,
   } : null, [draft]);
 
-  return { begin, edit, commit, finish, clear, onDirtyChange, canvasDocument, inlineEdit, editing: !!draft, dirty };
+  return { begin, beginTask, edit, commit, finish, clear, onDirtyChange, canvasDocument, inlineEdit, editing: !!draft, dirty };
 }

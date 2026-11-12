@@ -68,6 +68,8 @@ export function copyWorkspaceAsRoots(current: Workspace, recovered: Workspace, l
     nodes: [...current.nodes, ...recovered.nodes.map(node => ({
       ...node, id: nodes.get(node.id)!, boardId: boards.get(node.boardId)!,
       childBoardId: node.childBoardId ? boards.get(node.childBoardId)! : null,
+      ...(node.task ? { task: { ...node.task, parentId: node.task.parentId ? nodes.get(node.task.parentId)! : null } } : {}),
+      ...(node.annotations ? { annotations: node.annotations.map(annotation => ({ ...annotation, id: crypto.randomUUID() })) } : {}),
     }))],
     edges: [...current.edges, ...recovered.edges.map(edge => ({
       ...edge, id: crypto.randomUUID(), boardId: boards.get(edge.boardId)!,

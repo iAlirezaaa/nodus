@@ -1,4 +1,5 @@
 import type { AssetMeta, Board, GraphEdge, GraphNode, Workspace } from '../types';
+import { assertNodeFeatureMetadata } from '../node-features.ts';
 import { ApiError } from './errors';
 
 export const MAX_WORKSPACE_BYTES = 5 * 1024 * 1024;
@@ -78,12 +79,23 @@ export function validateWorkspace(input: unknown): Workspace {
     str(node.url, 'node.url', 8192);
     if (!isSafeWebUrl(node.url)) fail('Links must use http or https and cannot contain credentials.');
     validateAsset(node.asset);
+    try { assertNodeFeatureMetadata(node as unknown as GraphNode); }
+    catch (error) { fail(error instanceof Error ? error.message : 'Node feature metadata is invalid.'); }
   }
   for (const value of doc.edges) {
     const edge = record(value, 'connection');
     id(edge.id, 'connection.id'); id(edge.boardId, 'connection.boardId');
     id(edge.sourceId, 'connection.sourceId'); id(edge.targetId, 'connection.targetId');
     str(edge.label, 'connection.label', 500);
+    if (edge.route !== undefined && !['curve', 'straight', 'elbow'].includes(edge.route as string)) fail('The connection route is not supported.');
+    if (edge.stroke !== undefined && !['solid', 'dashed', 'dotted'].includes(edge.stroke as string)) fail('The connection stroke is not supported.');
+    if (edge.color !== undefined && !COLORS.has(edge.color as string)) fail('The connection color is not supported.');
+    if (edge.width !== undefined) number(edge.width, 'connection.width', 1, 5);
+    if (edge.animated !== undefined && typeof edge.animated !== 'boolean') fail('connection.animated must be a boolean.');
+    if (edge.bend !== undefined) {
+      const bend = record(edge.bend, 'connection.bend');
+      number(bend.x, 'connection.bend.x', -1e7, 1e7); number(bend.y, 'connection.bend.y', -1e7, 1e7);
+    }
   }
 
   const boards = uniqueIds(doc.boards as Board[], 'Boards');
@@ -94,12 +106,29 @@ export function validateWorkspace(input: unknown): Workspace {
   const childOwners = new Map<string, string>();
   for (const node of nodes.values()) {
     if (!boards.has(node.boardId)) fail('Every node must belong to an existing board.');
+    if (node.task?.parentId) {
+      const parent = nodes.get(node.task.parentId);
+      if (!parent?.task || parent.id === node.id || parent.boardId !== node.boardId) fail('A task parent must be another task on the same board.');
+    }
     if (node.childBoardId) {
       const child = boards.get(node.childBoardId);
       if (!child || child.parentNodeId !== node.id) fail('Nested projects must reference their containing node.');
       if (childOwners.has(child.id)) fail('A nested project cannot have two containing nodes.');
       childOwners.set(child.id, node.id);
     }
+  }
+  // Task ancestry is a separate forest; ordinary graph cycles remain valid.
+  const taskState = new Map<string, 1 | 2>();
+  for (const node of nodes.values()) {
+    if (!node.task || taskState.get(node.id) === 2) continue;
+    const path: string[] = [];
+    let current: GraphNode | undefined = node;
+    while (current?.task && taskState.get(current.id) !== 2) {
+      if (taskState.get(current.id) === 1) fail('Task parents cannot form a cycle.');
+      taskState.set(current.id, 1); path.push(current.id);
+      current = current.task.parentId ? nodes.get(current.task.parentId) : undefined;
+    }
+    for (const id of path) taskState.set(id, 2);
   }
   for (const board of boards.values()) {
     if (board.parentNodeId !== null) {

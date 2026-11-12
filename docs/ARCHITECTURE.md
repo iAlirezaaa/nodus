@@ -44,6 +44,14 @@ Cards and connections are memoized behind stable event dispatchers. Panning only
 
 The app caches board/node lookups and counts, searches only while the search dialog is open, and computes deletion descendants only for the deletion dialog. The workspace store reuses the latest immutable document serialization for recovery and the server request. Repeated lifecycle flushes skip duplicate local writes only after checking the actual stored bytes, retaining detection of changes from another tab. Every real committed change still writes its recovery draft synchronously. These changes reduce repeated work; they do not change the full-document revision protocol or guarantee a particular frame rate on all devices.
 
+### Tasks, annotations and visual metadata
+
+Workspace format version 1 accepts optional node `task`, `annotations` and `appearance` fields and optional connection routing/stroke fields. Existing documents require no migration; the server persists and validates these additions within the same revision-controlled document. Task parents form an acyclic forest on a single board, independently of graph edges and board containment. `lib/node-features.ts` implements content patches, task state, descendant progress and annotation reanchoring. Recovery/import remaps task-parent and annotation identifiers. Deletion or task removal detaches surviving direct task children instead of deleting them.
+
+Annotations contain an exact quote and UTF-16 start/end offsets into the title or notes, plus body, color, resolved state and timestamps. A shared validator requires attached anchors to match their quote. `patchNode` adjusts anchors for unambiguous edits before the quote, preserves them after unrelated edits, and retains edited/deleted or ambiguous quotes as detached comments. Inline title editing, inspector changes and project renaming use this helper. Comment drafts are separate from saved graph changes and retain explicit save/cancel behavior.
+
+Connection geometry is a pure helper supporting curve, straight and orthogonal elbow routes with an optional world-space bend. Canvas handle dragging previews locally and commits on release. Endpoint changes reject self-connections, cross-board links and duplicates. Context menus and deletion are scoped to graph objects, leaving native text editing intact. Traveling light is a bounded visual effect; it does not mutate graph data or advance a task's state.
+
 ### Browser verification boundary
 
 `tests/browser/flow-fixture.html` mounts the real application against a synthetic, page-local workspace API with revision checks and session-storage persistence. `tests/browser/flow-mobile.html` hosts it in a 390 × 844 frame. The fixtures are development-only, block attachment API requests and leave production authentication unchanged.

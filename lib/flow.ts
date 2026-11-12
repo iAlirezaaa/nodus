@@ -1,4 +1,5 @@
 import { makeNode, uid } from './graph.ts';
+import { assertNodeFeatureMetadata, assertTaskParent } from './node-features.ts';
 import type { GraphNode, Language, Workspace } from './types';
 
 export type ThoughtRelation = 'child' | 'sibling';
@@ -21,11 +22,15 @@ function hasGeometry(node: GraphNode): boolean {
   return Number.isFinite(node.x) && Number.isFinite(node.y) && Number.isFinite(node.width) && Number.isFinite(node.height) && node.width > 0 && node.height > 0;
 }
 
-/** A graph parent is an incoming connection, independently of project containment. */
+/** Tasks use explicit ancestry; other thoughts use an incoming graph connection. */
 export function getThoughtParent(document: Workspace, nodeId: string): GraphNode | null {
   const node = document.nodes.find(item => item.id === nodeId);
   if (!node) return null;
   const sameBoard = new Map(document.nodes.filter(item => item.boardId === node.boardId).map(item => [item.id, item]));
+  if (node.task) {
+    const parent = node.task.parentId ? sameBoard.get(node.task.parentId) : undefined;
+    return parent?.task && parent.id !== node.id ? parent : null;
+  }
   for (const edge of document.edges) {
     if (edge.targetId !== nodeId || edge.boardId !== node.boardId || edge.sourceId === nodeId) continue;
     const parent = sameBoard.get(edge.sourceId);
@@ -97,13 +102,17 @@ export function prepareThought(
   boardId: string,
   sourceId: string | null,
   relation: ThoughtRelation,
-  options: { anchor?: { x: number; y: number }; language?: Language } = {},
+  options: { anchor?: { x: number; y: number }; language?: Language; asTask?: boolean } = {},
 ): { node: GraphNode; parentId: string | null } {
   if (!document.boards.some(board => board.id === boardId)) throw new Error('The selected board no longer exists.');
   const source = sourceId ? document.nodes.find(item => item.id === sourceId && item.boardId === boardId) ?? null : null;
   const parent = source ? relation === 'child' ? source : getThoughtParent(document, source.id) : null;
   checkCapacity(document, parent !== null);
-  const node = makeNode(boardId, 'note', 0, 0, { title: '', text: '', color: source?.color ?? 'sage' });
+  const task = source?.task || options.asTask ? {
+    status: 'todo' as const,
+    parentId: source?.task ? relation === 'child' ? source.id : source.task.parentId : null,
+  } : undefined;
+  const node = makeNode(boardId, 'note', 0, 0, { title: '', text: '', color: source?.color ?? 'sage', ...(task ? { task } : {}) });
   const direction = (options.language ?? 'fa') === 'fa' ? -1 : 1;
   let x: number;
   let y: number;
@@ -175,6 +184,8 @@ function validateNewNode(node: GraphNode, document: Workspace): void {
       containing = owner ? document.boards.find(board => board.id === owner.boardId) : undefined;
     }
   }
+  assertNodeFeatureMetadata(node);
+  assertTaskParent(document, node);
 }
 
 /** Commit the note and its connection together, or throw without changing either. */
@@ -185,7 +196,10 @@ export function insertThought(document: Workspace, node: GraphNode, parentId: st
   const parent = parentId === null ? null : document.nodes.find(item => item.id === parentId);
   if (parentId !== null && (!parent || parent.boardId !== node.boardId || parentId === node.id)) throw new Error('The parent thought must exist on the same board.');
   validateNewNode(node, document);
-  const storedNode = { ...node, asset: node.asset ? { ...node.asset } : null };
+  const storedNode = { ...node, asset: node.asset ? { ...node.asset } : null,
+    ...(node.task ? { task: { ...node.task } } : {}),
+    ...(node.annotations ? { annotations: node.annotations.map(annotation => ({ ...annotation })) } : {}),
+  };
   return {
     ...document,
     nodes: [...document.nodes, storedNode],

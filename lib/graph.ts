@@ -211,7 +211,11 @@ export function deleteNode(doc: Workspace, nodeId: string): Workspace {
     boards: doc.boards.filter(board => !removedBoards.has(board.id)),
     nodes: doc.nodes
       .filter(node => !removedNodes.has(node.id) && !removedBoards.has(node.boardId))
-      .map(node => node.childBoardId && removedBoards.has(node.childBoardId) ? { ...node, childBoardId: null } : node),
+      .map(node => {
+        let next = node.childBoardId && removedBoards.has(node.childBoardId) ? { ...node, childBoardId: null } : node;
+        if (next.task?.parentId && removedNodes.has(next.task.parentId)) next = { ...next, task: { ...next.task, parentId: null } };
+        return next;
+      }),
     edges: doc.edges.filter(edge => !removedBoards.has(edge.boardId) && !removedNodes.has(edge.sourceId) && !removedNodes.has(edge.targetId)),
   };
 }
@@ -279,7 +283,9 @@ export function addBranches(doc: Workspace, nodeId: string, titles: string[]): W
   const positions = openPositions(parent, DEFAULT_WIDTH, DEFAULT_HEIGHT);
   const additions: GraphNode[] = [];
   for (const title of labels) {
-    const node = makeNode(parent.boardId, 'note', 0, 0, { title: title.slice(0, 500), text: title.length > 500 ? title : '', color: parent.color });
+    const node = makeNode(parent.boardId, 'note', 0, 0, { title: title.slice(0, 500), text: title.length > 500 ? title : '', color: parent.color,
+      ...(parent.task ? { task: { status: 'todo', parentId: parent.id } as GraphNode['task'] } : {}),
+    });
     while (true) {
       const point = positions.next().value;
       if (!point) throw new Error('Unable to place the new branch.');

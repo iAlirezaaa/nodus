@@ -31,7 +31,10 @@ The following shortcuts apply while the canvas or a thought card has focus. Ordi
 | Shift+Enter | Finish the title and open notes and details. |
 | Ctrl / Cmd+Enter | Open the focused card's nested project. |
 | Escape | Finish inline writing, or discard an empty new draft. On a card, clear selection and focus the canvas; Tab can then leave the canvas. |
-| N / F | New independent thought / fit the canvas, outside text fields. |
+| N / T / F | New independent thought / new task / fit the canvas, outside text fields. |
+| Delete / Backspace | Remove a focused node or connection; graph undo restores it. On an edge's bend handle, reset the path. |
+| Ctrl / Cmd+Delete | Remove the focused node or connection. Text fields retain their native deletion shortcuts. |
+| Shift+F10 | Open the context menu for the focused node, connection or canvas. |
 | Ctrl / Cmd+Z | Undo a committed graph change. Text fields retain native text undo. |
 
 Enter on a root thought creates another independent root. A sibling shares the source's first valid incoming connection; this does not turn an arbitrary graph into a strict tree. Children start on the left in Persian and on the right in English. Placement avoids existing cards without moving earlier thoughts.
@@ -39,6 +42,18 @@ Enter on a root thought creates another independent root. A sibling shares the s
 An empty new card is only a view draft: repeated Enter or Tab does not save empty notes. Its title and connection enter undo history together when committed. Persian text, input-method composition, paste, and native text shortcuts are handled within the inline editor.
 
 Starting a title from a zoomed-out overview raises the scale to 100%, bounded by the available width of the card. Subsequent Enter and Tab keep that scale and pan only as needed. Reveal margins keep the active card above the floating toolbar.
+
+### Tasks, comments and connection editing
+
+Choose **New task** in the add menu, press **T** with the canvas focused, or use **Make a task** in a card's context menu. Any content node can also be a task. Tasks have **To do**, **In progress** and **Done** states. **Tab** on a task creates a subtask; **Enter** creates another task with the same task parent. Completion controls and subtask progress appear on the cards and in Details. Task ancestry is separate from ordinary graph connections, so changing an edge does not silently move a task to another parent. Removing a parent's task status or deleting it promotes its surviving direct subtasks to root tasks.
+
+In Details, select a phrase in the title or notes and add an **annotation**. Comments retain the exact quote, can be edited, colored, resolved, reopened or deleted, and have an explicit save action. Unsaved comment drafts are scoped to the account and node. Editing surrounding text adjusts an unambiguous annotation anchor. A removed or changed quote keeps its comment and is marked as detached, rather than attaching the comment to unrelated text.
+
+Right-click a card, connection or empty part of the canvas for relevant actions. **Shift+F10** or the keyboard context-menu key opens the same menu. Native text-field menus remain available. **Delete**, **Backspace** and **Ctrl/Cmd+Delete** remove a focused card or connection; deleting a project with contained nodes asks for confirmation. Undo restores removed graph content. In text fields these keys continue to edit text.
+
+Select a connection to change its label, endpoints, direction, color, width, solid/dashed/dotted stroke and curved/straight/elbow route. Drag its middle handle to reshape the path, or nudge the focused handle with arrow keys. Resetting the handle restores the automatic route. Nodes have card, sticky-note and outline appearances, plus editable canvas coordinates.
+
+Subtle light travels from source to destination on relevant connections. Animation is bounded to visible connections, pauses when the page is hidden, and respects the operating system's reduced-motion preference. It can also be disabled per connection. New cards have a brief entrance transition.
 
 ## Saving, recovery and limits
 
@@ -130,10 +145,10 @@ Inspect and commit the generated SQL and Drizzle metadata. Build again if bindin
 Run the graph, keyboard-flow, recovery and backend suites:
 
 ```sh
-node --import ./tests/server-loader.mjs --test tests/graph.test.ts tests/flow.test.ts tests/workspace-store.test.ts tests/server.test.mjs
+node --import ./tests/server-loader.mjs --test tests/graph.test.ts tests/flow.test.ts tests/node-features.test.ts tests/edge-geometry.test.ts tests/workspace-store.test.ts tests/server.test.mjs
 ```
 
-The latest completed run passed all **45 tests**. The backend suite uses an in-memory SQLite database initialized from the checked-in migrations. It exercises actual conditional save statements, account isolation, attachment ownership, graph validation and media byte ranges.
+All 65 tests pass across the six suites, covering graph and task hierarchy, annotation anchors, connection geometry, recovery and persistence. The backend suite uses an in-memory SQLite database initialized from the checked-in migrations. It exercises actual conditional save statements, account isolation, attachment ownership, graph validation and media byte ranges.
 
 ### Browser verification
 
@@ -150,10 +165,20 @@ The completed browser checks verified:
 | Focus transitions | Escape followed by Tab leaves the canvas. Clicking the language control commits the current title and leaves focus on that control. |
 | Mobile frame | Title editing and branch creation work at 390 × 844, with readable cards clear of the toolbar. |
 | Pointer controls | Dragging changes the saved node position; canvas panning and zoom controls remain available. |
+| Task flow and progress | Enter and Tab create sibling tasks and subtasks; card status cycles and Inspector completion controls update the parent progress. |
+| Selected-text annotations | Selected notes and title text accept comments; save, edit, resolve and reopen work. Deleting the source selection preserves the comment as detached; graph undo restores the source and anchor. |
+| Annotation recovery | Closing and reopening Details retains a draft. Reloading also restores the unposted draft with its comment and color. |
+| Delete and context menus | Node and edge Delete and Ctrl+Delete remove the intended item; undo restores it. Native text Delete edits only the text. Pointer right-click and Shift+F10 expose context actions. |
+| Connection editing | Route, stroke, color, width, label and direction changes are rendered. Duplicate endpoints are rejected. Dragging the middle handle and arrow-key nudges reshape the path; Delete on the handle resets it. |
+| Persisted feature metadata | Task states, task hierarchy, node appearance, annotations and edge styling survive a fixture reload. |
+| Mobile feature panels | At 390 × 844, task conversion and annotation creation work. The Inspector is 390 px wide and the connection editor stays within the viewport, with no horizontal overflow. |
+| Traveling light | Selected task connections render SVG motion along their path. Reduced-motion, hidden-page and 24-signal limits are implemented and reviewed in code. |
 
 These are browser checks against synthetic persistence, not a deployed authenticated UI test. Physical touch devices, native IME sessions and production signed-in behavior were not verified in this pass.
 
 ![Inline title editing in the synthetic browser verification workspace](docs/screenshots/keyboard-flow.jpg)
+
+![Tasks, subtasks and text annotations in the synthetic browser verification workspace](docs/screenshots/task-annotations.jpg)
 
 ## Hosting
 
