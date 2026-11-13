@@ -616,7 +616,7 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
   .banner-actions button { min-height: 36px; }
   .search-box { margin: 17px 17px 12px; padding-inline: 11px; }
   .search-box input { font-size: 16px !important; }
-  .search-meta { padding-inline: 20px; font-size: 8px; }
+  .search-meta { padding-inline: 20px; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
   .search-box>kbd { display: none; }
   .branch-caption { align-items: flex-start; }
   .dialog-footer { flex-wrap: wrap; }
@@ -652,5 +652,7 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
 /* Search is a reading surface on touch screens, not a truncated graph label. */
 @media (max-width: 650px) {
   .search-results > button strong { font-size: 15px; line-height: 1.55; }
-  .search-results > button small { font-size: 12px; }
+  .search-results > button small,
+  .search-results > button .search-result-context { font-size: 12px; }
+  .search-more .secondary-button { min-height: 44px; }
 }
