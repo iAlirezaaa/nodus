@@ -90,7 +90,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
 /** Build full root-to-board locations with guards for malformed imported containment. */
 export function buildBoardPaths(document: Pick<Workspace, 'boards' | 'nodes'>, untitled: string): Map<string, string> {
   const boardById = new Map(document.boards.map(board => [board.id, board]));
-  const nodeBoardById = new Map(document.nodes.map(node => [node.id, node.boardId]));
+  const nodeById = new Map(document.nodes.map(node => [node.id, node]));
   const paths = new Map<string, string>();
   for (const board of document.boards) {
     const pending: string[] = [];
@@ -100,7 +100,11 @@ export function buildBoardPaths(document: Pick<Workspace, 'boards' | 'nodes'>, u
       visited.add(cursor);
       pending.push(cursor);
       const current: Workspace['boards'][number] = boardById.get(cursor)!;
-      cursor = current.parentNodeId ? nodeBoardById.get(current.parentNodeId) : undefined;
+      // Containment must be reciprocal. A stale/forged parentNodeId is not a
+      // license to label this board as belonging to a different root space.
+      const owner = current.parentNodeId ? nodeById.get(current.parentNodeId) : undefined;
+      cursor = owner?.childBoardId === current.id && boardById.has(owner.boardId)
+        ? owner.boardId : undefined;
     }
     let path = (cursor && paths.get(cursor)) || '';
     while (pending.length) {
