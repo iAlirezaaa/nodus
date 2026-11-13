@@ -439,3 +439,7 @@ The lowest-priority unordered keyword search tier now compares Persian words aft
 ### ND-001 run 11: avoid repeated per-keypress normalization (feature branch only)
 
 Within `searchThoughts`, query and board paths are normalized once, title once per visited node, and note/file fields only after higher-priority title/path tiers miss. Later phrase and unordered-keyword tiers reuse those comparison strings; relevance and 70-item paging are unchanged, and no field is written back to the graph. The pure helper remains synchronous and bounded by the supplied nodes/board paths. Synthetic Node CPU verification and remaining full-app release gates are recorded in [ND-001 QA](ND-001-SEARCH-QA.md). **Not released**.
+
+### ND-001 malformed URL escape recovery (branch only; not released)
+
+The existing pure `lib/thought-search.ts` URL matcher first decodes the complete comparable URL. If decoding throws due to one malformed imported escape, it decodes each independent valid contiguous `%HH` run locally and leaves invalid runs unchanged. Form-style `+` is still interpreted only in URL query parameters; when every percent run is invalid the historical raw fallback stays unchanged. Search relevance and bounded paging are preserved and no canonical URL, node, graph or workspace data is written. Exact Node-only regression and deployment limitations are recorded in [ND-001 QA](ND-001-SEARCH-QA.md); this is *not* the released Site implementation.
