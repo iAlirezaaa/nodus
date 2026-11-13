@@ -12,7 +12,8 @@ function normalizeSearchText(value: string): string {
     .replace(/\u200C/g, '')
     .replace(/[\u0660-\u0669\u06F0-\u06F9]/g, digit =>
       String.fromCharCode(48 + digit.charCodeAt(0) - (digit.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660)))
-    .toLocaleLowerCase();
+    // Case-fold independently of the viewer’s UI locale (e.g. Turkish I/ı).
+    .toLowerCase();
   // Only normalize Latin-accent candidates: ordinary Persian and ASCII
   // searches should not pay for another full Unicode normalization pass.
   if (!/[\u00C0-\u024F\u1E00-\u1EFF\u0300-\u036F]/u.test(normalized)) return normalized;
