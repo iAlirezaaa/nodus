@@ -37,7 +37,8 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
       return [id, { normalized, compact: compactNormalized(normalized) }] as const;
     }))
     : null;
-  const keywords = needle.split(/\s+/u).filter(Boolean);
+  // Separators apply only to the fallback: exact titles and paths retain punctuation.
+  const keywords = needle.split(/[\s,;،؛]+/u).filter(Boolean);
   const hasPersianKeywords = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
   const ranked: GraphNode[][] = Array.from({ length: 9 }, () => []);
   const includes = (value: string, compactValue?: string): boolean =>
