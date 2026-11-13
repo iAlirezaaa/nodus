@@ -41,6 +41,13 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   // normalized forms across all ranking tiers without touching saved text.
   const compactNormalized = (value: string) => value.replace(/[\s\/\\._-]+/g, '');
   const compactNeedle = isPhrase ? '' : compactNormalized(needle);
+  // A Persian quoted phrase may be typed with spaces, ZWNJ or joined
+  // spellings. Fold those boundaries for comparisons within each field only.
+  // Latin word boundaries, punctuation and phrase order remain strict.
+  const foldPersianSpaces = (value: string) =>
+    value.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF0-9])/gu, '$1');
+  const persianPhraseNeedle = isPhrase && /[\u0600-\u06FF]/u.test(needle)
+    ? foldPersianSpaces(needle) : '';
   const normalizedPaths = needle && boardPaths
     ? new Map(Array.from(boardPaths, ([id, path]) => {
       const normalized = compareText(path);
@@ -52,15 +59,18 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   const hasPersianKeywords = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
   const ranked: GraphNode[][] = Array.from({ length: 9 }, () => []);
   const includes = (value: string, compactValue?: string): boolean =>
-    value.includes(needle) || (compactNeedle.length > 0 && (compactValue ?? compactNormalized(value)).includes(compactNeedle));
+    value.includes(needle) ||
+    (persianPhraseNeedle.length > 0 && foldPersianSpaces(value).includes(persianPhraseNeedle)) ||
+    (compactNeedle.length > 0 && (compactValue ?? compactNormalized(value)).includes(compactNeedle));
   for (const node of nodes) {
     if (!needle) { ranked[0].push(node); continue; }
     const title = compareText(node.title);
     const compactTitle = compactNormalized(title);
+    const foldedTitle = persianPhraseNeedle ? foldPersianSpaces(title) : '';
     const path = normalizedPaths?.get(node.boardId);
     let rank = -1;
-    if (title === needle || (compactNeedle.length > 0 && compactTitle === compactNeedle)) rank = 0;
-    else if (title.startsWith(needle) || (compactNeedle.length > 0 && compactTitle.startsWith(compactNeedle))) rank = 1;
+    if (title === needle || (persianPhraseNeedle.length > 0 && foldedTitle === persianPhraseNeedle) || (compactNeedle.length > 0 && compactTitle === compactNeedle)) rank = 0;
+    else if (title.startsWith(needle) || (persianPhraseNeedle.length > 0 && foldedTitle.startsWith(persianPhraseNeedle)) || (compactNeedle.length > 0 && compactTitle.startsWith(compactNeedle))) rank = 1;
     else if (includes(title, compactTitle)) rank = 2;
     else if (path && includes(path.normalized, path.compact)) rank = 3;
     else {
