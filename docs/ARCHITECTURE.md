@@ -424,3 +424,8 @@ The search helper accepts an optional read-only map from board ID to its full di
 ### ND-001 run 8: Persian compound words in unordered search (branch only)
 
 The lowest-priority unordered keyword search tier now compares Persian words after optionally removing spaces **only between Persian letters within each individual field**. The feature recovers mixed title/note/path searches such as `کتاب‌های forest` when stored text uses `کتاب های`. It never joins unrelated fields or thoughts, strips hyphenated Latin fragments, modifies saved text, or changes the canonical board path. Normal title, path, filename and note phrase tiers still take precedence. The change is branch-only until full build, browser and Site verification.
+
+
+### ND-001 run 9: accent-tolerant Latin search (branch only, not released)
+
+`normalizeSearchText` in `lib/thought-search.ts` now performs comparison-only accent folding for decomposed or composed Latin letters (including Turkish dotted I) after existing keyboard normalization; it restores non-Latin combining marks and fast-paths ordinary text. This enables `cafe` → `Café` and `resume` → `Résumé` in title, note, authorized board path or asset filename. The eight relevance tiers, 70-result pages and source document remain unchanged. Six red-green regression cases and 35 existing search cases passed in an isolated Node.js run. No schema, workspace writes, UI behavior, browser verification or Site release were performed. See [ND-001 QA](ND-001-SEARCH-QA.md).
