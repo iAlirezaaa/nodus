@@ -15,6 +15,11 @@ function normalizeSearchText(value: string): string {
     .toLocaleLowerCase();
 }
 
+/** Ignore display separators in a comparison only; never rewrite saved titles. */
+function compactSearchText(value: string): string {
+  return normalizeSearchText(value).replace(/[\s\/\\._-]+/g, '');
+}
+
 /** Count all matches and return one bounded page, without mutating or saving the graph. */
 export function searchThoughts(nodes: readonly GraphNode[], query: string, limit = SEARCH_PAGE_SIZE, offset = 0, boardPaths?: ReadonlyMap<string, string>): ThoughtSearchPage {
   const needle = normalizeSearchText(query.trim());
@@ -22,12 +27,26 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;
   // Normalize each board path once, not once per result. Paths are location
   // labels for this workspace only; they never become saved node content.
+  const compactNeedle = compactSearchText(query.trim());
   const normalizedPaths = needle && boardPaths
-    ? new Map(Array.from(boardPaths, ([id, path]) => [id, normalizeSearchText(path)]))
+    ? new Map(Array.from(boardPaths, ([id, path]) => {
+      const normalized = normalizeSearchText(path);
+      return [id, { normalized, compact: compactSearchText(path) }] as const;
+    }))
     : null;
-  const matches = (node: GraphNode) => !needle
-    || normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? '')).includes(needle)
-    || (normalizedPaths?.get(node.boardId)?.includes(needle) ?? false);
+  const matches = (node: GraphNode) => {
+    if (!needle) return true;
+    // Preserve the existing exact text match, including its field boundaries.
+    const existingText = normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? ''));
+    if (existingText.includes(needle)) return true;
+    const path = normalizedPaths?.get(node.boardId);
+    if (path?.normalized.includes(needle)) return true;
+    // The fallback must NOT join unrelated title, note and asset fields.
+    return compactNeedle.length > 0 && (
+      [node.title, node.text, node.asset?.name].some(field => typeof field === 'string' && compactSearchText(field).includes(compactNeedle))
+      || (path?.compact.includes(compactNeedle) ?? false)
+    );
+  };
   const visible: GraphNode[] = [];
   let total = 0;
   for (const node of nodes) {
