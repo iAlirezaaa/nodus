@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": null,
-  "heartbeat_at": null,
-  "expires_at": null,
-  "current_task_id": null,
-  "feature_branch": null,
+  "owner_run_id": "nodus-auto-20261113T0822Z-nd001-verification",
+  "acquired_at": "2026-11-13T08:22:12Z",
+  "heartbeat_at": "2026-11-13T08:22:12Z",
+  "expires_at": "2026-11-13T09:52:12Z",
+  "current_task_id": "ND-001",
+  "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001_reciprocal_path_branch_only_qa_pass_release_blocked",
+    "phase": "ND-001_verification_and_correctness_review",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -31,9 +31,9 @@
     "last_test": "Node 22.16.0 old exact Git helper: 3/4 pass 1 red; new exact Git helper: 4/4 pass 0 fail; helper-only strict TypeScript 5.8.3 with exact real lib/types.ts pass; 4 historic fixture files updated but unrerun",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Container cannot resolve github.com for private checkout; GitHub connector files and code changes supported, but native ChatGPT Site tooling and full project runtime were unavailable in this run; no current Site tree/deployment check.",
-    "observed_control_head": "449c639410f64bffc3f546f96c90f1d70b35fbd3",
+    "observed_control_head": "b95b0a70c6878be1c15ad1fe7165e3e3e5aed7fc",
     "site_source_verification": "NOT_AVAILABLE_2026-11-13T0728Z",
-    "active_run_id": "nodus-auto-run11-20261113T0612Z-nd001",
+    "active_run_id": "nodus-auto-20261113T0822Z-nd001-verification",
     "observed_at": "2026-11-13T07:29:45.570Z",
     "source_code_commit": "71416c647e079f8ae56379c01aa2608f5aaaf649",
     "test_helper_blob": "4b45e94c77c81bc5d0dfb34437f82a2641650e83",
@@ -65,7 +65,8 @@
     "actual_regression": "4/4 new containment tests pass against exact GitHub blobs; 1 baseline failure reproduced; helper-only strict TS passed; historical suites not rerun",
     "benchmark": "5000 synthetic nodes, 35 queries (5 warmup), old 0 hits p50 23.81ms p95 24.46ms, new 834 hits p50 30.79ms p95 36.17ms; Node-only non-comparable workloads",
     "release": "blocked_pending_full_repo_build_browser_and_authorized_chatgpt_site",
-    "fixture_commit": "7a30174aa9221c03f22f0a360d9df71f966e8b05"
+    "fixture_commit": "7a30174aa9221c03f22f0a360d9df71f966e8b05",
+    "run_plan": "Review ND-001 path/count/navigation and existing regression tests; implement bounded bug fix if reproduced, targeted regression; full build/browser gate remains blocked unless a valid runtime is recovered."
   },
   "last_completed_run": {
     "run_id": "nodus-auto-20261113T0714Z-nd001-gate",
@@ -74,5 +75,5 @@
     "completed_at": "2026-11-13T07:29:45.570Z",
     "summary": "Reciprocal containment guard in search full paths. Exact original source 3/4 (one red), corrected exact source 4/4 Node tests and helper-only strict TS5.8.3 passed; 4 old search fixture files updated but not rerun. Source commit 71416c64, fixtures 7a30174a, docs 456d9757. No project build/browser/native Site release, main/live/data not mutated by this run."
   },
-  "updated_at": "2026-11-13T07:29:45.570Z"
+  "updated_at": "2026-11-13T08:22:12Z"
 }
