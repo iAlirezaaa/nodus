@@ -39,7 +39,9 @@ A workspace is a version-1 JSON document with `homeBoardId`, `boards`, `nodes`, 
 
 Ordinary edges express relationships between ideas. Multiple edges can lead into an idea and graph cycles are supported. Edges cannot reference missing nodes, cross board boundaries, duplicate an existing directed connection, or connect a node to itself.
 
-Board containment is a separate, acyclic structure. A nested board has one containing node; `board.parentNodeId` and `node.childBoardId` must agree. Any content kind can acquire a child board without losing text, media, or URL. Opening a project mounts that board as the active canvas, rather than recursively mounting every descendant inside its parent.
+Board containment is a separate, acyclic structure. A nested board has one containing node; `board.parentNodeId` and `node.childBoardId` must agree.
+
+The derived full-project-path search walker (`buildBoardPaths` in `lib/thought-search.ts`) validates this reciprocal child-board ownership before including an ancestor's title. Missing, mismatched or cross-root stale parent pointers stop the derived path at the child board; they cannot label it as a member of an unrelated root. This is read-only derivation, not graph repair or a migration. Cycles in malformed imported data remain bounded by a visited-board set. Any content kind can acquire a child board without losing text, media, or URL. Opening a project mounts that board as the active canvas, rather than recursively mounting every descendant inside its parent.
 
 Task ancestry is an explicit same-board forest in `node.task.parentId`, independent of edges and containment. Status is `todo`, `doing`, or `done`. Progress counts completed descendants, excluding the parent itself; child completion does not automatically change the parent's status. Removing task status or deleting a task detaches surviving direct task children to roots. Deleting a containing project still removes its contained boards and nodes.
 
