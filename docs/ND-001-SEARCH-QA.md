@@ -188,3 +188,12 @@ Restore the supported Sites checkout/runtime without disturbing another project,
 
 **Remaining Blocked release gates:** historical search tests and full Nodus test suite NOT rerun; actual project TypeScript 5.9.3, build, FA+EN desktop and 390px UI screenshot, real keyboard/IME/focus/reload and authorized current ChatGPT Sites head/tree compare NOT executed. Environment has no GitHub DNS for checkout, no active app at `127.0.0.1:4173`, and no authorized native Sites tools/skill. No real two-account authenticated fixture is claimed. Status **In progress; branch only; not Verified/Released**. Main and owner data remain unchanged. Next: full app QA and version-guarded GitHub/Sites reconciliation, then ND-002.
 
+
+
+## 2026-11-13 11:34 UTC — Encoded URL phrase search (branch-only)
+
+- Current pure helper: `lib/thought-search.ts`, SHA `71da339ec22e0d8b46829a4be9942d12fa2917be`; new `tests/thought-search-encoded-url.test.ts`, SHA `c5fdc385c6cbc1a31ea360cfc4d5f619177b3dfe`.
+- Target: percent-encoded link destinations with quoted FA/EN phrases, raw percent escape fallback, malformed URL safety, ranking and 151-hit pagination with no saved graph writes.
+- Exact source V8 behavioral assertions: baseline 4/7, fixed 7/7. All 13 fetched search test files run through a **non-Node V8 TypeScript-stripped harness**, 75/75 assertions passed; **not Node's native test runner or TypeScript compiler**.
+- Code commit: `2a0aa0e0f17bed5bc4efff25e9f6c0dd9f7a6d1c`; source tree `cd4d7599286e8f88c9c441da0227f76b2106412a`. Main unchanged.
+- Not run: repository Node tests, TS5.9.3, build, actual 4173 FA/EN desktop/390px screenshot, keyboard/IME, reload, Site head/tree/deployment. **Release gate Blocked**; no screenshot/deployment/version to report for this slice.
