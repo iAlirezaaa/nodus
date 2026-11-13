@@ -39,7 +39,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     : null;
   const keywords = needle.split(/\s+/u).filter(Boolean);
   const hasPersianKeywords = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
-  const ranked: GraphNode[][] = Array.from({ length: 8 }, () => []);
+  const ranked: GraphNode[][] = Array.from({ length: 9 }, () => []);
   const includes = (value: string, compactValue?: string): boolean =>
     value.includes(needle) || (compactNeedle.length > 0 && (compactValue ?? compactNormalized(value)).includes(compactNeedle));
   for (const node of nodes) {
@@ -53,21 +53,27 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     else if (includes(title, compactTitle)) rank = 2;
     else if (path && includes(path.normalized, path.compact)) rank = 3;
     else {
-      // Only normalize slower file/note fields after title and path miss.
+      // Only normalize slower file/note/URL fields after title and path miss.
       // Cross-field and unordered-keyword tiers reuse the same values.
       const file = normalizeSearchText(node.asset?.name ?? '');
       if (includes(file)) rank = 4;
       else {
         const note = normalizeSearchText(node.text);
         if (includes(note)) rank = 5;
-        else if ((title + ' ' + note + ' ' + file).includes(needle)) rank = 6;
-        else if (keywords.length > 1) {
-          const fields = [title, note, file, path?.normalized ?? ''];
-          const joinedFields = hasPersianKeywords
-            ? fields.map(field => field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1'))
-            : [];
-          if (keywords.every(word => fields.some(field => field.includes(word)) ||
-            (/[\u0600-\u06FF]/u.test(word) && joinedFields.some(field => field.includes(word))))) rank = 7;
+        else {
+          // Saved link destinations are user content, too; searching for a
+          // domain must find a link even when its title omits the address.
+          const url = normalizeSearchText(node.url ?? '');
+          if (includes(url)) rank = 6;
+          else if ((title + ' ' + note + ' ' + file).includes(needle)) rank = 7;
+          else if (keywords.length > 1) {
+            const fields = [title, note, file, url, path?.normalized ?? ''];
+            const joinedFields = hasPersianKeywords
+              ? fields.map(field => field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1'))
+              : [];
+            if (keywords.every(word => fields.some(field => field.includes(word)) ||
+              (/[\u0600-\u06FF]/u.test(word) && joinedFields.some(field => field.includes(word))))) rank = 8;
+          }
         }
       }
     }
