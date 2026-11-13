@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": null,
-  "heartbeat_at": null,
-  "expires_at": null,
-  "current_task_id": null,
-  "feature_branch": null,
+  "owner_run_id": "nodus-auto-20261113T1817Z-nd001-r11",
+  "acquired_at": "2026-11-13T18:18:36.331Z",
+  "heartbeat_at": "2026-11-13T18:18:36.331Z",
+  "expires_at": "2026-11-13T19:48:36.331Z",
+  "current_task_id": "ND-001",
+  "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND001_directional_marks_source_tests_docs_committed_full_release_gates_blocked",
+    "phase": "lease_acquired_reconciling_ND001",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -30,9 +30,9 @@
     "last_test": "22/22 native Node.js 22.16.0 exact-source targeted tests passed; 9 new + 13 existing; helper-only strict TS5.8.3 passed",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "No authorized Sites skill/actions (skills list empty); no private full checkout and no 4173 Nodus listener; container cannot resolve GitHub DNS; production current Site head/tree unverified",
-    "observed_control_head": "af2746a65701c02b32b1224cbe2f8bc54f1ca581",
-    "site_source_verification": "CURRENT SITE HEAD/TREE UNAVAILABLE",
-    "active_run_id": null,
+    "observed_control_head": "7461317348cde2cc7077246b2cb6e123be98581a",
+    "site_source_verification": "NOT AVAILABLE: no Site skill listed",
+    "active_run_id": "nodus-auto-20261113T1817Z-nd001-r11",
     "observed_at": "2026-11-13T17:30:35.801Z",
     "source_code_commit": "5886491b90485c626fafeac4a6f0e8843b113ca2",
     "test_helper_blob": "4b45e94c77c81bc5d0dfb34437f82a2641650e83",
@@ -96,5 +96,5 @@
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3"
   },
   "last_completed_run": "nodus-auto-20261113T171851557Z-nd001-r12",
-  "updated_at": "2026-11-13T17:30:35.801Z"
+  "updated_at": "2026-11-13T18:18:36.331Z"
 }
