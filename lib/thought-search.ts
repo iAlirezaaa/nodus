@@ -168,6 +168,16 @@ export function buildBoardPaths(document: Pick<Workspace, 'boards' | 'nodes'>, u
       cursor = owner?.childBoardId === current.id && boardById.has(owner.boardId)
         ? owner.boardId : undefined;
     }
+    // Malformed imports may contain a reciprocal parent cycle. Treat every
+    // cycle member as its own root rather than inventing order-dependent
+    // ancestry; descendants outside the cycle still inherit their owner path.
+    if (cursor && visited.has(cursor)) {
+      const cycleStart = pending.indexOf(cursor);
+      for (const id of pending.slice(cycleStart)) {
+        paths.set(id, boardById.get(id)!.title.trim() || untitled);
+      }
+      pending.length = cycleStart;
+    }
     let path = (cursor && paths.get(cursor)) || '';
     while (pending.length) {
       const id = pending.pop()!;
