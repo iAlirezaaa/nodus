@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": null,
-  "heartbeat_at": null,
-  "expires_at": null,
-  "current_task_id": null,
-  "feature_branch": null,
+  "owner_run_id": "nodus-hourly-20261113T0511Z-nd001",
+  "acquired_at": "2026-11-13T05:12:00.000Z",
+  "heartbeat_at": "2026-11-13T05:12:00.000Z",
+  "expires_at": "2026-11-13T06:42:00.000Z",
+  "current_task_id": "ND-001",
+  "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001_run9_branch_only_qa_pass_release_blocked",
+    "phase": "ND-001_run10_checkout_and_release_gate_attempt",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -33,7 +33,7 @@
     "last_blocker": "Private GitHub clone unavailable due DNS; ChatGPT Site project tool/checkout unavailable; no Nodus runtime at 127.0.0.1:4173",
     "observed_control_head": "1c0d91a8eb013931a67898d894d48c372abdef77",
     "site_source_verification": "NOT_AVAILABLE_RUN9",
-    "active_run_id": "nodus-manual-20261113T021816696Z",
+    "active_run_id": "nodus-hourly-20261113T0511Z-nd001",
     "observed_at": "2026-11-12T22:11:19.307Z",
     "source_code_commit": "5a010c1b36ff3447828fb7f5bb78858d6a81deed",
     "test_helper_blob": "4b45e94c77c81bc5d0dfb34437f82a2641650e83",
@@ -54,7 +54,7 @@
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "observed_feature_branch": "87894a0d731ad086adfa159ec4f779cc95b97343",
     "observed_feature_tree": "111544d83ba7eb7547f27e2d9680421f96f97a23",
-    "next_action": "Run actual tests where possible and fix a bounded ND-001 defect; release gated on real app/browser/Sites verification",
+    "next_action": "Recover full repository in trusted execution; run existing tests/TS/build; obtain real Site read and browser QA prior to any release",
     "run_id": "nodus-automation-20261113T041423Z-nd001",
     "red_green": "2/3 tests failed on exact original Git blob 262129e1..., 5/5 passed after isolated fix",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
@@ -73,5 +73,5 @@
     "completed_at": "2026-11-13T04:25:44.277Z",
     "summary": "Implemented Latin diacritic comparison normalization, 6 new red-green regressions, 41/41 exact-source related tests pass, helper-only TS 5.8.3 pass. Commit 5a010c1, docs 31a1c05. Full project/build/browser/Site unavailable; main/live unchanged."
   },
-  "updated_at": "2026-11-13T04:25:44.277Z"
+  "updated_at": "2026-11-13T05:12:00.000Z"
 }
