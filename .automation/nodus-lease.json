@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": "nodus-manual-20261112T221119Z",
-  "acquired_at": "2026-11-12T22:11:19.307Z",
-  "heartbeat_at": "2026-11-12T22:11:19.307Z",
-  "expires_at": "2026-11-12T23:41:19.307Z",
+  "owner_run_id": "nodus-manual-20261113T0019Z",
+  "acquired_at": "2026-11-13T00:20:11.678Z",
+  "heartbeat_at": "2026-11-13T00:20:11.678Z",
+  "expires_at": "2026-11-13T01:50:11.678Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001_manual_run_resume",
+    "phase": "ND-001_release_gate_recovery",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -18,8 +18,8 @@
     "deployment_status": "succeeded",
     "next_task": "ND-001",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "8b806352bb64257be5280c489c8fafd8e36591ae",
-    "feature_branch_tree": "d0579329a9430e76247417ff39c26b84ef1478f8",
+    "feature_branch_head": "c8122bf6e26a031b5ece71b65fcb3b46b6c69bd0",
+    "feature_branch_tree": "28c196f77e9f8759755f574ad7e50a56a32e6716",
     "feature_branch": "fix/nd-001-search-clarity",
     "pending_verification": [
       "Full repository test suite",
@@ -32,9 +32,9 @@
     "last_test": "11/11 exact-blob isolated targeted tests passed (Node.js 22.16.0), helper-only TypeScript 5.8.3 passed with minimal stub",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "No supported app checkout/dependencies, real Nodus browser preview, or authorized Sites tools available in this run",
-    "observed_control_head": "3c3583da3f609e03646aed91559406d140330c3a",
+    "observed_control_head": "7e6716aac468824ba5548a155dcd510341600949",
     "site_source_verification": "NOT_AVAILABLE_THIS_RUN",
-    "active_run_id": "nodus-manual-20261112T221119Z",
+    "active_run_id": "nodus-manual-20261113T0019Z",
     "observed_at": "2026-11-12T22:11:19.307Z"
   },
   "last_completed_run": {
@@ -44,5 +44,5 @@
     "completed_at": "2026-11-12T19:23:34.793Z",
     "summary": "Added Persian/Arabic keyboard-tolerant search normalization (letters, numerals, vowel marks, ZWNJ), preserving stored graph and paging; 11 exact GitHub-blob targeted tests and helper-only TS passed. Updated QA, roadmap, architecture and log on feature branch 8b806352; no full app/Sites/browser release gate, main and live unchanged by run."
   },
-  "updated_at": "2026-11-12T22:11:19.307Z"
+  "updated_at": "2026-11-13T00:20:11.678Z"
 }
