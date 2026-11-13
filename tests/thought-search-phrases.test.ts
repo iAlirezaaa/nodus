@@ -27,8 +27,9 @@ test('quoted phrases can match a full nested location but not unrelated fields',
 });
 
 test('quoted phrases match filename, notes and URLs independently', () => {
-  const nodes = [thought('file', 'File', '', 'root', 'Forest Lighting.MOV'), thought('note', 'Notes', 'Forest Lighting'), thought('link', 'Reference', '', 'root', '', 'https://example.org/forest lighting'), thought('mixed','Forest','','root','lighting.MOV')];
-  assert.deepEqual(searchThoughts(nodes, '"forest lighting"').visible.map(n=>n.id), ['file', 'note', 'link']);
+  const nodes = [thought('file', 'File', '', 'root', 'Forest Lighting.MOV'), thought('note', 'Notes', 'Forest Lighting'), thought('link', 'Reference', '', 'root', '', 'https://example.org/research/forest-lighting'), thought('mixed','Forest','','root','lighting.MOV')];
+  assert.deepEqual(searchThoughts(nodes, '"forest lighting"').visible.map(n=>n.id), ['file', 'note']);
+  assert.deepEqual(searchThoughts(nodes, '"forest-lighting"').visible.map(n=>n.id), ['link']);
 });
 
 test('balanced quotes preserve capped page totals, stable order and original data', () => {
