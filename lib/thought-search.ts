@@ -5,7 +5,7 @@ export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset
 
 /** Compare mixed Persian/Arabic keyboard spellings without rewriting saved content. */
 function normalizeSearchText(value: string): string {
-  return value.normalize('NFKC')
+  const normalized = value.normalize('NFKC')
     .replace(/[\u064A\u0649]/g, 'ی')
     .replace(/\u0643/g, 'ک')
     .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
@@ -13,6 +13,12 @@ function normalizeSearchText(value: string): string {
     .replace(/[\u0660-\u0669\u06F0-\u06F9]/g, digit =>
       String.fromCharCode(48 + digit.charCodeAt(0) - (digit.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660)))
     .toLocaleLowerCase();
+  // Only normalize Latin-accent candidates: ordinary Persian and ASCII
+  // searches should not pay for another full Unicode normalization pass.
+  if (!/[\u00C0-\u024F\u1E00-\u1EFF\u0300-\u036F]/u.test(normalized)) return normalized;
+  // Fold accents on Latin letters, not Greek/Arabic/other script marks.
+  // This changes comparison strings only, never stored graph content.
+  return normalized.normalize('NFKD').replace(/([a-z])[\u0300-\u036F]+/g, '$1').normalize('NFC');
 }
 
 /** Ignore display separators in a comparison only; never rewrite saved titles. */
