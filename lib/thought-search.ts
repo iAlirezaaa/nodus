@@ -66,9 +66,14 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
       // This only reads fields from the supplied workspace; it never joins
       // separate thoughts or writes to the underlying document.
       const fields = [title, normalizeSearchText(node.text), normalizeSearchText(node.asset?.name ?? ''), path?.normalized ?? ''];
-      // Do not compact individual words here: 'F-oo' plus 'B-ar' must not
-      // fabricate a phrase match for 'foo bar' across different fields.
-      if (keywords.every(word => fields.some(field => field.includes(word)))) rank = 7;
+      // Only join Persian letters separated by spaces inside a single field.
+      // Preserve punctuation so split Latin fragments cannot fabricate hits.
+      const hasPersian = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
+      const joinedFields = hasPersian
+        ? fields.map(field => field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1'))
+        : [];
+      if (keywords.every(word => fields.some(field => field.includes(word)) ||
+        (/[\u0600-\u06FF]/u.test(word) && joinedFields.some(field => field.includes(word))))) rank = 7;
     }
     if (rank >= 0) ranked[rank].push(node);
   }
