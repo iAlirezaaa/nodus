@@ -388,3 +388,11 @@ Scope was committed first in `776182fb7467b64317926643ce2ce803f848b93d`; guarded
 
 **Next:** Obtain supported full private checkout and Sites actions; run project tests/TS 5.9.3/build and desktop/390px FA/EN keyboard/IME/Undo/reload browser screenshots; reconcile Site tree, then guarded review/merge/publish only on green. ND-002 focus mode follows verified ND-001.
 
+
+### 2026-11-13 17:20 UTC — ND-001 scoped: invisible RTL direction marks in search (run 12)
+
+**Problem:** Text copied from mixed Persian/English editors can carry display-only U+200E/U+200F, Arabic Letter Mark U+061C, embedding controls U+202A–U+202E and isolates U+2066–U+2069. Visually identical titles, notes or project paths then fail search because these marks currently survive comparison normalization. This is a search-only correctness problem, not a new filtering feature.
+
+**Acceptance and safety:** A query with/without those display controls finds the same title, Persian note, filename, URL and nested-board path; quoted phrase matching remains field-local; document and URL bytes are untouched; 151 matches paginate as 70/70/11 with stable ordering; no workspace write, schema, keyboard, selection, animation, authentication or sharing change. Do not strip ZWJ or unrelated invisible characters without tests. Reproduce red on original search code and green on the corrected source; run targeted regression and helper-only strict TS; do not claim full build/UI tests unless executed.
+
+**Scope:** Existing branch `fix/nd-001-search-clarity` at `a7d62e0ee660e3e1aba91c44bd943e3c9e6e8221` (tree `496301077bfc0c8168c6de6fe633f55f06319563`), main `26fafac05c320ed5db30a0ee908dd816714acdd9` (tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`). Pure `lib/thought-search.ts` comparison helper and a new regression test, with related QA, architecture and roadmap annotations. No data/storage/UI boundaries changed. Sites current head/tree and app preview unavailable at scoping; no publication planned without full gates. Next: implement/review only the search comparison fix, checkpoint green/red evidence and blockers.
