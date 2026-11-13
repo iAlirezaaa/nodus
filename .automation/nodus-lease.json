@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": null,
-  "heartbeat_at": null,
-  "expires_at": null,
-  "current_task_id": null,
-  "feature_branch": null,
+  "owner_run_id": "nodus-automation-20261113T041423Z-nd001",
+  "acquired_at": "2026-11-13T04:14:23.381Z",
+  "heartbeat_at": "2026-11-13T04:14:23.381Z",
+  "expires_at": "2026-11-13T05:44:23.381Z",
+  "current_task_id": "ND-001",
+  "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001_run8_branch_committed_release_blocked",
+    "phase": "run9_lock_held_reviewing_release_gates",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -32,8 +32,8 @@
     "last_test": "11/11 exact-blob isolated targeted tests passed (Node.js 22.16.0), helper-only TypeScript 5.8.3 passed with minimal stub",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Private GitHub clone DNS unavailable in local container; matching ChatGPT Sites project skill and deployed-source access not exposed; no real browser/4173 preview; Node type defs unavailable for test TS check",
-    "observed_control_head": "1dbf512fd6e5321e6dfbb5de7130923fc073b6d9",
-    "site_source_verification": "NOT_AVAILABLE_RUN8",
+    "observed_control_head": "1c0d91a8eb013931a67898d894d48c372abdef77",
+    "site_source_verification": "PENDING_NO_NATIVE_SITES_TOOL",
     "active_run_id": "nodus-manual-20261113T021816696Z",
     "observed_at": "2026-11-12T22:11:19.307Z",
     "source_code_commit": "c63ba69a148d6bc929f2ff29b9e71d781df93f49",
@@ -56,7 +56,7 @@
     "observed_feature_branch": "87894a0d731ad086adfa159ec4f779cc95b97343",
     "observed_feature_tree": "111544d83ba7eb7547f27e2d9680421f96f97a23",
     "next_action": "Run actual tests where possible and fix a bounded ND-001 defect; release gated on real app/browser/Sites verification",
-    "run_id": "nodus-auto-20261113T0310Z-nd001",
+    "run_id": "nodus-automation-20261113T041423Z-nd001",
     "red_green": "2/3 tests failed on exact original Git blob 262129e1..., 5/5 passed after isolated fix",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -74,5 +74,5 @@
     "completed_at": "2026-11-13T03:22:17.334Z",
     "summary": "Exact GitHub helper red-green reproduced Persian compound split-field bug (2 failures before); fixed intra-field Persian spacing in unordered search; 5/5 isolated tests and helper-only strict TS 5.8.3 passed; code c63ba69 docs 4ddaaff; 5000 synthetic Node measurement, no full repo/browser/Sites; main/Site unchanged."
   },
-  "updated_at": "2026-11-13T03:22:17.334Z"
+  "updated_at": "2026-11-13T04:14:23.381Z"
 }
