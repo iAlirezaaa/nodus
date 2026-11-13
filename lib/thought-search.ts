@@ -29,7 +29,12 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   // keywords assembled from unrelated title/note/file/project fields.
   const phrase = rawQuery.match(/^(?:"([^"]*)"|“([^”]*)”|«([^»]*)»)$/u);
   const isPhrase = phrase !== null;
-  const needle = normalizeSearchText(isPhrase ? (phrase[1] ?? phrase[2] ?? phrase[3]) : rawQuery);
+  // Normalize pasted line breaks/tabs only inside balanced quoted phrases.
+  // Unquoted matching and saved graph data remain unchanged.
+  const compareText = isPhrase
+    ? (value: string) => normalizeSearchText(value).replace(/\s+/gu, ' ').trim()
+    : normalizeSearchText;
+  const needle = compareText(isPhrase ? (phrase[1] ?? phrase[2] ?? phrase[3]) : rawQuery);
   const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : SEARCH_PAGE_SIZE;
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;
   // A board path and query are immutable during a search. Reuse their
@@ -38,7 +43,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   const compactNeedle = isPhrase ? '' : compactNormalized(needle);
   const normalizedPaths = needle && boardPaths
     ? new Map(Array.from(boardPaths, ([id, path]) => {
-      const normalized = normalizeSearchText(path);
+      const normalized = compareText(path);
       return [id, { normalized, compact: compactNormalized(normalized) }] as const;
     }))
     : null;
@@ -50,7 +55,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     value.includes(needle) || (compactNeedle.length > 0 && (compactValue ?? compactNormalized(value)).includes(compactNeedle));
   for (const node of nodes) {
     if (!needle) { ranked[0].push(node); continue; }
-    const title = normalizeSearchText(node.title);
+    const title = compareText(node.title);
     const compactTitle = compactNormalized(title);
     const path = normalizedPaths?.get(node.boardId);
     let rank = -1;
@@ -61,16 +66,16 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     else {
       // Only normalize slower file/note/URL fields after title and path miss.
       // Cross-field and unordered-keyword tiers reuse the same values.
-      const file = normalizeSearchText(node.asset?.name ?? '');
+      const file = compareText(node.asset?.name ?? '');
       if (includes(file)) rank = 4;
       else {
-        const note = normalizeSearchText(node.text);
+        const note = compareText(node.text);
         if (includes(note)) rank = 5;
         else {
           // Saved link destinations are user content, too; searching for a
           // domain must find a link even when its title omits the address.
           const rawUrl = node.url ?? '';
-          const url = normalizeSearchText(rawUrl);
+          const url = compareText(rawUrl);
           // Decode destination text only for matching. Form-style + denotes
           // a space in query parameters, but remains literal in paths/fragments.
           // Never rewrite or fetch a saved URL.
@@ -85,7 +90,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
               + rawUrl.slice(queryEnd);
           }
           if (comparableUrl !== rawUrl || rawUrl.includes('%')) {
-            try { decodedUrl = normalizeSearchText(decodeURIComponent(comparableUrl)); }
+            try { decodedUrl = compareText(decodeURIComponent(comparableUrl)); }
             catch { /* Malformed imported escapes still match their raw text. */ }
           }
           if (includes(url) || (decodedUrl !== url && includes(decodedUrl))) rank = 6;
