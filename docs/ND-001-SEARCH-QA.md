@@ -252,3 +252,11 @@ New stored regression: `tests/thought-search-persian-phrase-spacing.test.ts` (11
 
 **Next:** Obtain supported full private checkout and Sites actions; run project tests/TS 5.9.3/build and desktop/390px FA/EN keyboard/IME/Undo/reload browser screenshots; reconcile Site tree, then guarded review/merge/publish only on green. ND-002 focus mode follows verified ND-001.
 
+
+### 2026-11-13 17:28 UTC — RTL/LTR direction controls in copied search text (branch-only)
+
+- **Reproduced failure:** `searchThoughts` did not ignore invisible U+200E/U+200F, U+061C, embedding and isolate marks. Visually identical copied project names, Persian queries, filenames, notes and saved URL query phrases could return zero matches.
+- **Fix:** remove display-only direction controls during pure `normalizeSearchText` comparison. Keep ZWNJ and all original persisted document/URL bytes unaffected; unchanged 70-page mechanics and field-local quoted searches.
+- **Stored regression:** `tests/thought-search-bidi-controls.test.ts` (7 cases, GitHub blob `1e3796f363f5c01c85f5566135317c6fbc574aed`), code blob `f0442eb3266ae85145e3c9987bf38cb981f30ebb`, commit `5886491b90485c626fafeac4a6f0e8843b113ca2`. Original 1/7 green (6 red); changed 7/7 green in V8-transpiled exact GitHub test/helper code. Also ran 14 base + 5 compact + 6 phrase tests, total **32/32 V8 cases** passed. Node's `structuredClone` in one legacy phrase test was emulated by JSON round trip because this V8 harness has no global structuredClone. **Not** native Node test-suite evidence.
+- **TypeScript:** a separately transcribed normalizer-only TS fragment compiled with strict `tsc 5.8.3` and passed one Node 22.16 smoke check. It was not full file/project TS, build, or browser QA.
+- **Not verified:** complete repository Node/TS 5.9.3/build, 4173 real FA/EN/390px browser screenshot+IME/keyboard/save/reload, Site head/tree and release, 2 real authenticated accounts. Screenshot **none**; version/deployment **none**. **Status ND-001 In progress / release Blocked**, not Verified or Released.
