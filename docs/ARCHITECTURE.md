@@ -449,3 +449,8 @@ The existing pure `lib/thought-search.ts` URL matcher first decodes the complete
 ### ND-001 malformed containment cycles (branch-only; 2026-11-13)
 
 `buildBoardPaths` walks reciprocal parent links iteratively; if it revisits a board, that segment is a cycle rather than an ancestry chain. It assigns each cycle member a standalone display/search location and continues pending descendants from the repeated cycle board as their owner. This avoids order-dependent false ancestry on damaged imports, preserves valid hierarchy, and never mutates canonical containment or saved data. The correction remains on `fix/nd-001-search-clarity`, not in the released UI. See [ND-001 search QA](ND-001-SEARCH-QA.md).
+
+
+### Search-result path presentation (ND-001, branch-only 2026-11-13)
+
+In `components/NodusApp.tsx`, the search result renders its full derived `searchPaths.get(node.boardId)` (or an explicit unknown-location fallback) as a separate `dir="auto"` line above the note/type preview. `app/globals.css` allows nested paths to wrap without clipping and uses 12px text for path, 11px for preview, 11px for result count. These are read-only presentation changes: neither `searchThoughts` nor the saved workspace protocol changed. Feature branch `fix/nd-001-search-clarity`; real UI/build/Sites release gates remain blocked.
