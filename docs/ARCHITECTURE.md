@@ -429,3 +429,7 @@ The lowest-priority unordered keyword search tier now compares Persian words aft
 ### ND-001 run 9: accent-tolerant Latin search (branch only, not released)
 
 `normalizeSearchText` in `lib/thought-search.ts` now performs comparison-only accent folding for decomposed or composed Latin letters (including Turkish dotted I) after existing keyboard normalization; it restores non-Latin combining marks and fast-paths ordinary text. This enables `cafe` → `Café` and `resume` → `Résumé` in title, note, authorized board path or asset filename. The eight relevance tiers, 70-result pages and source document remain unchanged. Six red-green regression cases and 35 existing search cases passed in an isolated Node.js run. No schema, workspace writes, UI behavior, browser verification or Site release were performed. See [ND-001 QA](ND-001-SEARCH-QA.md).
+
+### ND-001 run 11: avoid repeated per-keypress normalization (feature branch only)
+
+Within `searchThoughts`, query and board paths are normalized once, title once per visited node, and note/file fields only after higher-priority title/path tiers miss. Later phrase and unordered-keyword tiers reuse those comparison strings; relevance and 70-item paging are unchanged, and no field is written back to the graph. The pure helper remains synchronous and bounded by the supplied nodes/board paths. Synthetic Node CPU verification and remaining full-app release gates are recorded in [ND-001 QA](ND-001-SEARCH-QA.md). **Not released**.
