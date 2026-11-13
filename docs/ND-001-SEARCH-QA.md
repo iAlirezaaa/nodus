@@ -218,3 +218,12 @@ Restore the supported Sites checkout/runtime without disturbing another project,
 **Actual validation:** Native Node 22.16.0 isolated test file `tests/thought-search-phrase-whitespace.test.ts`: **3/9 baseline**, **9/9 fixed**, 0 fails; strict helper-only TypeScript **5.8.3** passed against exact `lib/types.ts`. Local and GitHub SHA blobs matched for fixed helper `7a6663f99dfa99ae496c2117ef91b0a58a3f8892` and new test `18492105c53b7e6115f8d1a0b3a21ff2e33c2fe5`. Source/test commit `c2d8d1d2e3f2732e083a5e006a5eefef57e57261`, tree `ae213f6791437cce86b4bd53da82bfe278c02de2`. Tests prove title, note, filename, full board path, query padding, field boundary/order/punctuation, 70/70/11 pagination and nonmutating search; these are isolated exact-source fixtures, **not** authenticated UI tests.
 
 **Not run:** historical full search/repo suites, TS 5.9.3, production build, real 4173 browser/390px screenshot, keyboard/IME/Undo/reload, two-account tests, authenticated current Sites source/tree or deploy. No screenshot or new version ID. Release is **Blocked**, code only on branch.
+
+
+## 2026-11-13 14:31 UTC — Persian quoted compound spacing (branch only)
+
+A balanced quoted Persian query `«کتاب های من»` now matches field-local `کتاب‌های من` and `کتابهای من`; applies to node titles, notes, attachment names and full verified nested board paths. Same-title/prefix priority, punctuation boundaries, English strict phrases, 151-count 70/70/11 pagination and immutable graph data are retained.
+
+New stored regression: `tests/thought-search-persian-phrase-spacing.test.ts` (11 tests). Exact older helper via GitHub blob: **3/11**, patched exact helper: **11/11** using V8 TS-stripped source. V8 execution of exact blobs from **11 relevant search test files: 76/76** passing. These are not native Node tests and do not verify TypeScript/build. Code commit `23b5931ab0d1d0f1840428924b40622d60499663`, tested helper blob `b54febc5535a6014ce1ee773dfce5d7c31e9140c`, test blob `711fc187eceb3835b650036e83cc1392dc6406e3`, tree `fd31dbb9e28e808dc10bc30ca343c3c86e4b95f9`.
+
+**Release Blocked:** Full repo native Node/TS5.9.3/build, 4173 actual desktop/390px FA/EN screenshot/focus/IME/reload, authenticated Site source-tree comparison and Site deployment not performed. No screenshot/new deployment or real user login evidence. Only feature branch; `main` and Site not changed.
