@@ -107,3 +107,14 @@ Run ID `nodus-manual-20261113T0019Z`. Started on existing feature branch after g
 
 
 **Run 6 implementation and check (2026-11-13T01:25:46.209Z):** On existing `fix/nd-001-search-clarity`, added deterministic relevance-first search buckets (title, project path, file, note), stable 70-result pages and expanded mobile search title typography without graph writes. Five fresh local Node 22.16 tests and isolated strict TypeScript 5.8.3 with the actual repository types passed. Synthetic 5,000-node/30-iteration helper benchmark: 2,500 matches, median 12.31 ms, p95 23.76 ms (not UI/browser performance). Exact local source/test Git SHA checks documented in [QA](ND-001-SEARCH-QA.md). Full app/browser/build/Sites verification **not run**; CSS not visually verified, Site and main untouched. Keep ND-001 In progress, release Blocked. Next action: full checkout, full project check and real mobile/desktop QA, then guarded merge/deploy if verified.
+
+
+## Run 7 scope — unordered keywords for locating thoughts (2026-11-13T02:21:40.180Z)
+
+**Roadmap:** ND-001, In progress; continue `fix/nd-001-search-clarity`. GitHub main `26fafac05c320ed5db30a0ee908dd816714acdd9`, tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`; feature baseline `e5aad2f70e9ab75bac33781ff1cdccc8abbee53a`, tree `5a8525f8d7d41c39ab96485e57f43aa650528569`. Site tree reconciliation is still pending (last checkpoint source `eb8a9ad1f470447bf15634efbaa47531924901c5`; last known main-matching tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`).
+
+**Observed problem:** In a crowded or irregular mind map, multi-word queries only match contiguous wording, so a reversed word order or keywords split across a title/note/project location can hide the relevant thought. This is a comparison-only findability enhancement, not a graph layout or persistence change.
+
+**This bounded slice:** Append a lower-priority, order-independent **multi-keyword** fallback to `searchThoughts` after all existing title/path/asset/note relevance tiers. Require **every** normalized nonempty query word to occur in at least one searchable field of the **same** thought (title, notes, attachment name, or authorized current-workspace board path). Keep existing contiguous results ranked first, stable ties, 70-page results/total, Unicode normalization, no mutation, no extra graph writes, and no cross-room search. Do not change Enter/Tab/IME handlers, canvas positions, or port 4173.
+
+**Acceptance checks:** 1) reverse-word-order and split-field Persian/English queries find the expected items; 2) missing keyword does not match; 3) deterministic relevance and 151-item paging still work; 4) graph and paths are unmodified; 5) exact-source regression tests and helper TypeScript pass. Full app tests/build/real desktop + 390px browser/Sites deployment remain separate mandatory release gates. **Checkpoint if unavailable:** keep branch only and mark release Blocked; no main/Site publish.
