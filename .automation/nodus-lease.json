@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261113T131952796Z-nd001-run11",
   "acquired_at": "2026-11-13T13:19:52.796Z",
-  "heartbeat_at": "2026-11-13T13:19:52.796Z",
-  "expires_at": "2026-11-13T14:49:52.796Z",
+  "heartbeat_at": "2026-11-13T13:28:31.818Z",
+  "expires_at": "2026-11-13T14:58:31.818Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "RUN11_ACQUIRED_pre_source",
+    "phase": "ND001_phrase_whitespace_9of9_native_node_and_helper_ts_pass_before_push",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -39,13 +39,13 @@
     "test_helper_blob": "4b45e94c77c81bc5d0dfb34437f82a2641650e83",
     "test_cases_blob": "b53393e66d28c60889ec6b43dacf0c479b2be0fe",
     "test_result": "7/7 new V8 assertions pass (3 red on old code); 68/68 preexisting V8 search assertions pass.",
-    "publication_status": "not attempted",
+    "publication_status": "NOT_ATTEMPTED_BRANCH_ONLY",
     "search_source_blob": "e7bf57935e5b3cb2e753487c4730fed1eef1eb3c",
     "relevance_test_blob": "b0e54dfaabfac759b28a34b04d805d33d974bb84",
     "scoping_commit": "776182fb7467b64317926643ce2ce803f848b93d",
     "pending_source_hash": "262129e1f3b7852d4c3e64de29241ce07da8873e",
     "pending_test_hash": "eb948583c595a1207235b72ecd5350f573a092ac",
-    "verification": "New 6 cases: 2/6 baseline, 6/6 fixed. 19/19 Native Node.js 22.16.0 targeted cases green (6 new, 13 previous exact GitHub bytes); helper TypeScript 5.8.3 strict pass with actual types. Full repo/TS5.9.3/build/4173 screenshots/Sites blocked.",
+    "verification": "Exact old GitHub helper hash 6431eba1..., Node 22.16.0 original regression 3/9; proposed local source hash 7a6663f9..., new test blob 18492105..., Node 22.16.0 9/9, helper TypeScript 5.8.3 strict pass against exact types 8502a312...",
     "source_code_tree": "cce2b8dbad3b6c7c8e216e290adc85cfd4efb2a7",
     "documentation_commit": "ac120f52997cce1f653081f118dc150ed51478cd",
     "source_blob": "b2f0fba3cbd35236b27b4db0a6428f790fb21676",
@@ -77,8 +77,9 @@
     "current_goal": "Re-run existing exact source search tests; fix real search regression if found. If no regression, deliver one bounded accessibility/accuracy bug fix with tests. Keep branch only until full release gates.",
     "source_old_blob": "71da339ec22e0d8b46829a4be9942d12fa2917be",
     "source_new_blob": "6431eba140bee94dc3d3f53ad502ffc937f73e72",
-    "source_target": "fix/nd-001-search-clarity"
+    "source_target": "fix/nd-001-search-clarity",
+    "screenshot": "none; no Nodus 4173 preview"
   },
   "last_completed_run": "nodus-auto-20261113T121241-nd001-fullqa",
-  "updated_at": "2026-11-13T13:19:52.796Z"
+  "updated_at": "2026-11-13T13:28:31.818Z"
 }
