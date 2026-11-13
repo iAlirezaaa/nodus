@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { buildBoardPaths, searchThoughts, SEARCH_PAGE_SIZE } from '../lib/thought-search.ts';
 import type { GraphNode, Workspace } from '../lib/types.ts';
 
-function node(id: string, title: string, boardId = 'root', text = '', assetName?: string): GraphNode {
-  return { id, title, boardId, text, asset: assetName ? { name: assetName } : null } as GraphNode;
+function node(id: string, title: string, boardId = 'root', text = '', assetName?: string, childBoardId: string | null = null): GraphNode {
+  return { id, title, boardId, text, asset: assetName ? { name: assetName } : null, childBoardId } as GraphNode;
 }
 function board(id: string, title: string, parentNodeId: string | null = null): Workspace['boards'][number] {
   return { id, title, parentNodeId, description: '', createdAt: '2026-11-13T00:00:00Z' };
@@ -18,7 +18,7 @@ test('Persian compounds search in both directions without rewriting document', (
   assert.equal(JSON.stringify(items),before);
 });
 test('location is found with or without slash and Persian spacing', () => {
-  const nodes=[node('container','Holder','root'),node('leaf','Shot note','child')];
+  const nodes=[node('container','Holder','root','',undefined,'child'),node('leaf','Shot note','child')];
   const paths=buildBoardPaths({nodes,boards:[board('root','کتاب‌های ۱۲۳'),board('child','بخش دوم', 'container')]},'Untitled');
   const before = JSON.stringify([...paths]);
   assert.deepEqual(searchThoughts(nodes,'کتابهای۱۲۳/بخشدوم',70,0,paths).visible.map(n=>n.id),['leaf']);

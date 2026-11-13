@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { SEARCH_PAGE_SIZE, searchThoughts, buildBoardPaths } from '../lib/thought-search.ts';
 import type { GraphNode, Workspace } from '../lib/types.ts';
 
-const note = (id: string, title: string, text = '', boardId = 'root', filename?: string) =>
-  ({ id, title, text, boardId, asset: filename ? { name: filename } : null }) as GraphNode;
+const note = (id: string, title: string, text = '', boardId = 'root', filename?: string, childBoardId: string | null = null) =>
+  ({ id, title, text, boardId, asset: filename ? { name: filename } : null, childBoardId }) as GraphNode;
 const board = (id: string, title: string, parentNodeId: string | null = null) =>
   ({ id, title, parentNodeId, description: '', createdAt: '2026-11-13T00:00:00Z' }) as Workspace['boards'][number];
 
@@ -21,7 +21,7 @@ test('contiguous phrase matches retain priority over unordered fallback', () => 
 });
 
 test('Persian keyboard variants and out-of-order project paths work without mutation', () => {
-  const nodes = [note('parent', 'پروژه', '', 'root'), note('child', 'طرح لباس', 'چراغ', 'inner'), note('other', 'چراغ', '', 'other')];
+  const nodes = [note('parent', 'پروژه', '', 'root', undefined, 'inner'), note('child', 'طرح لباس', 'چراغ', 'inner'), note('other', 'چراغ', '', 'other')];
   const doc = { boards: [board('root', 'فیلم'),board('inner', 'جنگل‌های ۱۲۳','parent'),board('other','استودیو')], nodes };
   const before = JSON.stringify(doc);
   const paths = buildBoardPaths(doc, 'بدون عنوان');

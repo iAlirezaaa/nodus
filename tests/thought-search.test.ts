@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { SEARCH_PAGE_SIZE, buildBoardPaths, searchThoughts } from '../lib/thought-search.ts';
 import type { GraphNode, Workspace } from '../lib/types.ts';
 
-function thought(id: string, title: string, boardId = 'root', text = '', assetName?: string): GraphNode {
-  return { id, boardId, title, text, asset: assetName ? { name: assetName } : null } as GraphNode;
+function thought(id: string, title: string, boardId = 'root', text = '', assetName?: string, childBoardId: string | null = null): GraphNode {
+  return { id, boardId, title, text, asset: assetName ? { name: assetName } : null, childBoardId } as GraphNode;
 }
 function board(id: string, title: string, parentNodeId: string | null = null): Workspace['boards'][number] {
   return { id, title, parentNodeId, description: '', createdAt: '2026-11-12T00:00:00.000Z' };
@@ -38,7 +38,7 @@ test('Persian title, English notes and attachment filename search remain intact'
   assert.equal(searchThoughts(nodes, '  ').total, 3);
 });
 test('nested full paths disambiguate same-titled boards across different roots', () => {
-  const doc = { boards: [board('root', 'Studio'), board('child', 'Episode', 'parent'), board('grand', 'Shot 12', 'container'), board('other', 'Episode')], nodes: [thought('parent', 'Container', 'root'), thought('container', 'Container 2', 'child')] };
+  const doc = { boards: [board('root', 'Studio'), board('child', 'Episode', 'parent'), board('grand', 'Shot 12', 'container'), board('other', 'Episode')], nodes: [thought('parent', 'Container', 'root', '', undefined, 'child'), thought('container', 'Container 2', 'child', '', undefined, 'grand')] };
   const paths = buildBoardPaths(doc, 'Untitled');
   assert.equal(paths.get('root'), 'Studio');
   assert.equal(paths.get('child'), 'Studio / Episode');
@@ -103,7 +103,7 @@ test('Arabic vowel marks and tatweel do not prevent an otherwise matching search
 });
 
 test('a parent or nested project name finds only thoughts under that location', () => {
-  const nodes = [thought('container', 'Container', 'root'), thought('nested', 'Lighting notes', 'shot'), thought('other', 'Lighting notes', 'other')];
+  const nodes = [thought('container', 'Container', 'root', '', undefined, 'shot'), thought('nested', 'Lighting notes', 'shot'), thought('other', 'Lighting notes', 'other')];
   const paths = buildBoardPaths({ boards: [board('root', 'Studio'), board('shot', 'Episode / Shot 12', 'container'), board('other', 'Unrelated')], nodes }, 'Untitled');
   assert.deepEqual(searchThoughts(nodes, 'Studio', 70, 0, paths).visible.map(n => n.id), ['container', 'nested']);
   assert.deepEqual(searchThoughts(nodes, 'Shot 12', 70, 0, paths).visible.map(n => n.id), ['nested']);

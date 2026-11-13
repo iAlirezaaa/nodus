@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { buildBoardPaths, SEARCH_PAGE_SIZE, searchThoughts } from '../lib/thought-search.ts';
 import type { GraphNode, Workspace } from '../lib/types.ts';
 
-const node = (id: string, title: string, text = '', boardId = 'root', filename?: string): GraphNode =>
-  ({ id, title, text, boardId, asset: filename ? { name: filename } : null }) as GraphNode;
+const node = (id: string, title: string, text = '', boardId = 'root', filename?: string, childBoardId: string | null = null): GraphNode =>
+  ({ id, title, text, boardId, asset: filename ? { name: filename } : null, childBoardId }) as GraphNode;
 const board = (id: string, title: string, parentNodeId: string | null = null): Workspace['boards'][number] =>
   ({ id, title, parentNodeId, description: '', createdAt: '2026-11-13T00:00:00Z' }) as Workspace['boards'][number];
 
@@ -36,7 +36,7 @@ test('note text and attached filenames keep same matching and priority under Tur
 
 test('root-to-nested-board path searching is independent of locale and source is unchanged', () => {
   inTurkishLocale(() => {
-    const doc = { nodes: [node('parent', 'Holder'), node('leaf', 'Sketch', '', 'child')], boards: [board('root', 'FILM'), board('child', 'INTERIOR', 'parent')] };
+    const doc = { nodes: [node('parent', 'Holder', '', 'root', undefined, 'child'), node('leaf', 'Sketch', '', 'child')], boards: [board('root', 'FILM'), board('child', 'INTERIOR', 'parent')] };
     const before = JSON.stringify(doc);
     const paths = buildBoardPaths(doc, 'Untitled');
     assert.equal(paths.get('child'), 'FILM / INTERIOR');
