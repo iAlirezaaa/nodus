@@ -36,8 +36,10 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     : null;
   // The document's insertion order is not a useful relevance ranking on busy
   // boards: a matching title must not be buried under hundreds of note hits.
-  // Seven stable buckets retain original order among equally useful results.
-  const ranked: GraphNode[][] = Array.from({ length: 7 }, () => []);
+  // Eight stable buckets retain original order among equally useful results.
+  // The final fallback finds all keywords in any order, beneath phrase matches.
+  const keywords = needle.split(/\s+/u).filter(Boolean);
+  const ranked: GraphNode[][] = Array.from({ length: 8 }, () => []);
   const hit = (field: string | undefined, compact = true): boolean =>
     typeof field === 'string' && (normalizeSearchText(field).includes(needle) ||
       (compact && compactNeedle.length > 0 && compactSearchText(field).includes(compactNeedle)));
@@ -58,6 +60,16 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     // Maintain the preexisting exact cross-field query behavior, without
     // inventing new *compact* matches across unrelated fields.
     else if (normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? '')).includes(needle)) rank = 6;
+    else if (keywords.length > 1) {
+      // A thought can be found even when people remember its words in a
+      // different order or across title, notes, attachment and project path.
+      // This only reads fields from the supplied workspace; it never joins
+      // separate thoughts or writes to the underlying document.
+      const fields = [title, normalizeSearchText(node.text), normalizeSearchText(node.asset?.name ?? ''), path?.normalized ?? ''];
+      // Do not compact individual words here: 'F-oo' plus 'B-ar' must not
+      // fabricate a phrase match for 'foo bar' across different fields.
+      if (keywords.every(word => fields.some(field => field.includes(word)))) rank = 7;
+    }
     if (rank >= 0) ranked[rank].push(node);
   }
   const total = ranked.reduce((count, bucket) => count + bucket.length, 0);
