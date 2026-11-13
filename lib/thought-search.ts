@@ -100,8 +100,25 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
               + rawUrl.slice(queryEnd);
           }
           if (comparableUrl !== rawUrl || rawUrl.includes('%')) {
-            try { decodedUrl = compareText(decodeURIComponent(comparableUrl)); }
-            catch { /* Malformed imported escapes still match their raw text. */ }
+            // One malformed imported escape must not suppress other valid
+            // percent-encoded words elsewhere in this saved destination.
+            // Decode complete URLs on the fast path; on error, decode only
+            // independent valid escape runs, keeping invalid bytes literal.
+            let comparableDecoded = comparableUrl;
+            let recovered = false;
+            try { comparableDecoded = decodeURIComponent(comparableUrl); recovered = true; }
+            catch {
+              comparableDecoded = comparableUrl.replace(/(?:%[0-9a-fA-F]{2})+/g, run => {
+                try {
+                  const part = decodeURIComponent(run);
+                  recovered = true;
+                  return part;
+                } catch { return run; }
+              });
+            }
+            // Keep the historical raw fallback if every escaped run was
+            // invalid. Do not reinterpret + alone in a malformed destination.
+            if (recovered) decodedUrl = compareText(comparableDecoded);
           }
           if (includes(url) || (decodedUrl !== url && includes(decodedUrl))) rank = 6;
           else if (!isPhrase && (title + ' ' + note + ' ' + file).includes(needle)) rank = 7;
