@@ -55,6 +55,18 @@ Nodus باید فضای واقعی و ماندگاری برای فکرکردن �
 | ND-005 | راهنمای زمینه‌ای و شروع ساده‌تر | شروع یک فکر و زیرشاخه بدون خواندن راهنمای بلند ممکن باشد؛ راهنما بعد از بستن مزاحم کار نشود؛ ابزار پیشرفته در پنل مرتبط بماند؛ رفتار Enter/Tab/Escape در متن و بوم به‌صورت روشن معرفی و حفظ شود. | Queued · feat/nd-005-guided-start |
 | ND-006 | بهبود لمس و مسیر کیبورد | هدف‌های لمسی مهم حداقل ۴۴ پیکسل باشند؛ در عرض ۳۹۰ پیکسل اسکرول افقی ناخواسته نباشد؛ focus واضح، ترتیب Tab، کلیک راست/معادل لمسی و خروج از پنل بررسی شوند؛ از میان‌بر سراسری تازه و متداخل پرهیز شود. | Queued · برش‌های کوچک fix/nd-006-* |
 
+### 2026-11-13 16:20 UTC — ND-001 cycle ancestry guard (run 11; branch only)
+
+**User-visible correction:** Imported/corrupted reciprocal project-parent cycles previously fabricated paths depending on board iteration order (e.g. `Beta / Alpha` for a board that has no valid root). The pure `buildBoardPaths` helper now breaks the cycle *for display/search only*: each cycle board shows its own title, and a legitimate child outside the cycle retains its nearest owner's path (e.g. `Alpha / Tail`). Valid nested project paths and saved node/board data are unchanged. No new UI control, persistence write, migration, or animation.
+
+**Scope:** task ND-001; existing `fix/nd-001-search-clarity`; source/test commit [`5a9180abe0cf`](https://github.com/iAlirezaaa/nodus/commit/5a9180abe0cf97b1540a17882fbec120740870c2), tree `fd683ca89dbc588cc7f15d4b72294531d62c93fa`, `lib/thought-search.ts` and `tests/thought-search-cycle-paths.test.ts`. `main` remains `26fafac05c32` (tree `cf93a13f4c7d`). Historical Site source `eb8a9ad1f470`, version `appgprj_6af58606fb9c81918541f056a898c1a2~appgver_1ff68661a3e08191aa4e84f9e593f05d`, deployment `appgdep_6af5e638d4748191a1a4a0f1f4caca21`; **not freshly verified**.
+
+**Red/green:** The exact byte-identical GitHub `buildBoardPaths` function was extracted to an isolated native Node 22.16.0 harness (1931 UTF-16 code units, FNV1a32 `60428ca3`). Before: 1/4 passing, three reciprocal-cycle assertions failed; after: 4/4 passing. Two further native Node stress/safety tests passed: 2,500 levels without recursion and orphan-pointer guard; **6/6 isolated behavior tests total**. Strict *helper-only* TypeScript 5.8.3 with a narrow structural `Workspace` stub passed; the checked-in integrated test file and full repository suite were **not executed**.
+
+**Release QA:** TypeScript 5.9.3 against the full project, native full test suite, production build, real Nodus `127.0.0.1:4173` desktop/390px browser/IME/screenshot, real-account sessions and live GitHub/Sites head/tree comparison remain **Blocked/not run**. The test port had no active Nodus listener; container GitHub DNS could not resolve, and no native Sites skill/actions were available. Screenshot: none. Fixture is not production login evidence. No main merge, Site save/publish or owner-data change. **ND-001 remains In progress, release Blocked.**
+
+**Next:** Obtain supported full private checkout and Sites actions; run project tests/TS 5.9.3/build and desktop/390px FA/EN keyboard/IME/Undo/reload browser screenshots; reconcile Site tree, then guarded review/merge/publish only on green. ND-002 focus mode follows verified ND-001.
+
 ## ۲. امکانات و مدیریت پروژه
 
 | شناسه | کار و نتیجهٔ مورد انتظار | معیار پذیرش | وضعیت / مسیر |

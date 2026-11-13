@@ -443,3 +443,7 @@ Within `searchThoughts`, query and board paths are normalized once, title once p
 ### ND-001 malformed URL escape recovery (branch only; not released)
 
 The existing pure `lib/thought-search.ts` URL matcher first decodes the complete comparable URL. If decoding throws due to one malformed imported escape, it decodes each independent valid contiguous `%HH` run locally and leaves invalid runs unchanged. Form-style `+` is still interpreted only in URL query parameters; when every percent run is invalid the historical raw fallback stays unchanged. Search relevance and bounded paging are preserved and no canonical URL, node, graph or workspace data is written. Exact Node-only regression and deployment limitations are recorded in [ND-001 QA](ND-001-SEARCH-QA.md); this is *not* the released Site implementation.
+
+### ND-001 malformed containment cycles (branch-only; 2026-11-13)
+
+`buildBoardPaths` walks reciprocal parent links iteratively; if it revisits a board, that segment is a cycle rather than an ancestry chain. It assigns each cycle member a standalone display/search location and continues pending descendants from the repeated cycle board as their owner. This avoids order-dependent false ancestry on damaged imports, preserves valid hierarchy, and never mutates canonical containment or saved data. The correction remains on `fix/nd-001-search-clarity`, not in the released UI. See [ND-001 search QA](ND-001-SEARCH-QA.md).
