@@ -24,13 +24,18 @@ function normalizeSearchText(value: string): string {
 
 /** Count all matches and return one bounded page, without mutating or saving the graph. */
 export function searchThoughts(nodes: readonly GraphNode[], query: string, limit = SEARCH_PAGE_SIZE, offset = 0, boardPaths?: ReadonlyMap<string, string>): ThoughtSearchPage {
-  const needle = normalizeSearchText(query.trim());
+  const rawQuery = query.trim();
+  // Balanced quotation marks request a contiguous phrase, not unordered
+  // keywords assembled from unrelated title/note/file/project fields.
+  const phrase = rawQuery.match(/^(?:"([^"]*)"|“([^”]*)”|«([^»]*)»)$/u);
+  const isPhrase = phrase !== null;
+  const needle = normalizeSearchText(isPhrase ? (phrase[1] ?? phrase[2] ?? phrase[3]) : rawQuery);
   const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : SEARCH_PAGE_SIZE;
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;
   // A board path and query are immutable during a search. Reuse their
   // normalized forms across all ranking tiers without touching saved text.
   const compactNormalized = (value: string) => value.replace(/[\s\/\\._-]+/g, '');
-  const compactNeedle = compactNormalized(needle);
+  const compactNeedle = isPhrase ? '' : compactNormalized(needle);
   const normalizedPaths = needle && boardPaths
     ? new Map(Array.from(boardPaths, ([id, path]) => {
       const normalized = normalizeSearchText(path);
@@ -66,8 +71,8 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
           // domain must find a link even when its title omits the address.
           const url = normalizeSearchText(node.url ?? '');
           if (includes(url)) rank = 6;
-          else if ((title + ' ' + note + ' ' + file).includes(needle)) rank = 7;
-          else if (keywords.length > 1) {
+          else if (!isPhrase && (title + ' ' + note + ' ' + file).includes(needle)) rank = 7;
+          else if (!isPhrase && keywords.length > 1) {
             const fields = [title, note, file, url, path?.normalized ?? ''];
             const joinedFields = hasPersianKeywords
               ? fields.map(field => field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1'))
