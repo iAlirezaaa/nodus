@@ -419,3 +419,8 @@ The search helper accepts an optional read-only map from board ID to its full di
 ### ND-001 branch: unordered search keywords
 
 `lib/thought-search.ts` first evaluates established title/phrase/path/asset/note rankings, and only if none match checks all words from a multi-term query (regardless of order) across the **same thought** and its explicit, authorized current-workspace board path. The final tier neither compacts isolated punctuation-fragmented words nor joins separate nodes/documents. It is read-only, uses the existing 70-item paging and search-result UI, and does not store any derived index or change the board/edge graph. The branch change is not a published architectural baseline until the full app/Sites release gates pass.
+
+
+### ND-001 run 8: Persian compound words in unordered search (branch only)
+
+The lowest-priority unordered keyword search tier now compares Persian words after optionally removing spaces **only between Persian letters within each individual field**. The feature recovers mixed title/note/path searches such as `کتاب‌های forest` when stored text uses `کتاب های`. It never joins unrelated fields or thoughts, strips hyphenated Latin fragments, modifies saved text, or changes the canonical board path. Normal title, path, filename and note phrase tiers still take precedence. The change is branch-only until full build, browser and Site verification.
