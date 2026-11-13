@@ -173,3 +173,8 @@ In the existing Search dialog, a balanced quoted phrase like `"forest lighting"`
 ### 2026-11-13 18:27 UTC — ND-001 result path legibility (checkpoint)
 
 Still **In progress** / release **Blocked**. On `fix/nd-001-search-clarity`, `components/NodusApp.tsx` now renders each nested project path separately from the content preview, with 12px wrapping path text and a readable 11px results count. Source commit `2d9571a3d9a4d6844d022e4c29d1fee92d16c1ac`, tree `d3f104f5d3331b93d2d2c480fcd5e21b1915fb1e`. Isolated V8 helper checks 8/8, GitHub source invariants 11/11, JSX fragment parser and three changed CSS rules syntactically valid; not full TypeScript/build/browser. No screenshot or new Site version. Main/Site are not updated. Full gates and GitHub/Sites tree reconciliation required before ND-002.
+
+
+### ND-001 — 2026-11-13 19:21 UTC: خوانایی نتیجه‌های جست‌وجو در موبایل (فقط برنچ)
+
+قانون قبلی موبایل شمارندهٔ نتیجه‌ها را به **۸ پیکسل** کاهش می‌داد؛ متن پیش‌نمایش نیز با اولویت CSS خاص‌تر روی ۱۱ پیکسل می‌ماند. روی `fix/nd-001-search-clarity` با [کامیت `45d87a5ad6e5`](https://github.com/iAlirezaaa/nodus/commit/45d87a5ad6e5f2c0b6942f78ec1ad552d36177dd)، هر دو در عرض ۳۹۰ پیکسل **۱۲ پیکسل** شدند، شمارنده چندخطی است و حداقل ارتفاع دکمه‌های صفحه‌بندی به **۴۴ پیکسل** رسید. درخت سورس `3998aee8b6abe76384253c58b71b1b756408d1bf`. آزمایش محدود CSS و Chromium روی نمونهٔ ایزوله موفق بود؛ **مرورگر خود اپ، اسکرین‌شات واقعی، TypeScript کامل، build و Sites فعلی هنوز انجام نشده‌اند**؛ بنابراین **ND-001 همچنان In progress و انتشار Blocked** است. `main` و Site بدون تغییر. قدم بعدی همان تکمیل gateهای انتشار و تطبیق tree پیش از ND-002 است.
