@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": null,
-  "heartbeat_at": null,
-  "expires_at": null,
-  "current_task_id": null,
-  "feature_branch": null,
+  "owner_run_id": "nodus-auto-20261113T0913Z-nd001-regression",
+  "acquired_at": "2026-11-13T09:14:14.013Z",
+  "heartbeat_at": "2026-11-13T09:14:14.013Z",
+  "expires_at": "2026-11-13T10:44:14.013Z",
+  "current_task_id": "ND-001",
+  "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001_url_destination_branch_only_qa_pass_release_blocked",
+    "phase": "ND-001_regression_review_in_progress",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -30,9 +30,9 @@
     "last_test": "Node 22.16.0 old exact Git helper: 3/4 pass 1 red; new exact Git helper: 4/4 pass 0 fail; helper-only strict TypeScript 5.8.3 with exact real lib/types.ts pass; 4 historic fixture files updated but unrerun",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "git checkout cannot resolve github.com from local container; official ChatGPT Sites skill/action unavailable, Nodus http://127.0.0.1:4173/ not serving. No full suite, project TS5.9.3, build, screenshots, current Site tree or deployment.",
-    "observed_control_head": "b95b0a70c6878be1c15ad1fe7165e3e3e5aed7fc",
+    "observed_control_head": "9baef5b90c6019ad664a3fb03c476746722f801c",
     "site_source_verification": "NOT_AVAILABLE_2026-11-13T0836Z",
-    "active_run_id": "nodus-auto-20261113T0822Z-nd001-verification",
+    "active_run_id": "nodus-auto-20261113T0913Z-nd001-regression",
     "observed_at": "2026-11-13T08:36:41Z",
     "source_code_commit": "587646dcf449f05119fc154317feeb72fe3267d9",
     "test_helper_blob": "4b45e94c77c81bc5d0dfb34437f82a2641650e83",
@@ -51,7 +51,7 @@
     "new_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
     "observed_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
-    "observed_feature_branch": "456d9757f887a13223b94580ff5657755df1f288",
+    "observed_feature_branch": "7bec9e293b0513c8e82344f91eecb33e4f525264",
     "observed_feature_tree": "a03cc4c20be776e69cd57b69def9c9ec8d96567d",
     "next_action": "Complete release gates for ND-001; then ND-002 focus and mobile canvas readability",
     "run_id": "nodus-auto-20261113T0822Z-nd001-verification",
@@ -65,7 +65,7 @@
     "benchmark": "5000 synthetic nodes, 35 queries (5 warmup), old 0 hits p50 23.81ms p95 24.46ms, new 834 hits p50 30.79ms p95 36.17ms; Node-only non-comparable workloads",
     "release": "blocked_pending_full_repo_build_browser_and_authorized_chatgpt_site",
     "fixture_commit": "7a30174aa9221c03f22f0a360d9df71f966e8b05",
-    "run_plan": "Review ND-001 path/count/navigation and existing regression tests; implement bounded bug fix if reproduced, targeted regression; full build/browser gate remains blocked unless a valid runtime is recovered.",
+    "run_plan": "Run current entire thought-search tests from exact GitHub source and repaired historical fixtures, fix reproducible breakage, helper TS and branch-only documentation; build/browser/Sites release gates pending.",
     "local_test": "Exact original helper SHA b2f0fba3... reproduced 4/4 red; URL-only search corrected local helper SHA ad0acedffecca93f4592ff4353c0d7ca0b5c1604 passed 4/4 and strict helper-only TS5.8.3; not yet pushed."
   },
   "last_completed_run": {
@@ -75,5 +75,5 @@
     "completed_at": "2026-11-13T08:36:41Z",
     "summary": "Indexed saved link URL within existing Search modal; 4/4 committed red-green regression and 4/4 local-only compatibility smoke passed, helper-only strict TypeScript 5.8.3 passed. Code commit 587646dc, docs commit 7bec9e29. Full project/build/UI/Sites gates unavailable; main, live Site and owner data unchanged."
   },
-  "updated_at": "2026-11-13T08:36:41Z"
+  "updated_at": "2026-11-13T09:14:14.013Z"
 }
