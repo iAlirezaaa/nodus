@@ -22,65 +22,54 @@ function normalizeSearchText(value: string): string {
   return normalized.normalize('NFKD').replace(/([a-z])[\u0300-\u036F]+/g, '$1').normalize('NFC');
 }
 
-/** Ignore display separators in a comparison only; never rewrite saved titles. */
-function compactSearchText(value: string): string {
-  return normalizeSearchText(value).replace(/[\s\/\\._-]+/g, '');
-}
-
 /** Count all matches and return one bounded page, without mutating or saving the graph. */
 export function searchThoughts(nodes: readonly GraphNode[], query: string, limit = SEARCH_PAGE_SIZE, offset = 0, boardPaths?: ReadonlyMap<string, string>): ThoughtSearchPage {
   const needle = normalizeSearchText(query.trim());
   const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : SEARCH_PAGE_SIZE;
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;
-  // Normalize each board path once, not once per result. Paths are location
-  // labels for this workspace only; they never become saved node content.
-  const compactNeedle = compactSearchText(query.trim());
+  // A board path and query are immutable during a search. Reuse their
+  // normalized forms across all ranking tiers without touching saved text.
+  const compactNormalized = (value: string) => value.replace(/[\s\/\\._-]+/g, '');
+  const compactNeedle = compactNormalized(needle);
   const normalizedPaths = needle && boardPaths
     ? new Map(Array.from(boardPaths, ([id, path]) => {
       const normalized = normalizeSearchText(path);
-      return [id, { normalized, compact: compactSearchText(path) }] as const;
+      return [id, { normalized, compact: compactNormalized(normalized) }] as const;
     }))
     : null;
-  // The document's insertion order is not a useful relevance ranking on busy
-  // boards: a matching title must not be buried under hundreds of note hits.
-  // Eight stable buckets retain original order among equally useful results.
-  // The final fallback finds all keywords in any order, beneath phrase matches.
   const keywords = needle.split(/\s+/u).filter(Boolean);
+  const hasPersianKeywords = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
   const ranked: GraphNode[][] = Array.from({ length: 8 }, () => []);
-  const hit = (field: string | undefined, compact = true): boolean =>
-    typeof field === 'string' && (normalizeSearchText(field).includes(needle) ||
-      (compact && compactNeedle.length > 0 && compactSearchText(field).includes(compactNeedle)));
+  const includes = (value: string, compactValue?: string): boolean =>
+    value.includes(needle) || (compactNeedle.length > 0 && (compactValue ?? compactNormalized(value)).includes(compactNeedle));
   for (const node of nodes) {
     if (!needle) { ranked[0].push(node); continue; }
     const title = normalizeSearchText(node.title);
-    const compactTitle = compactSearchText(node.title);
-    const titleIsExact = title === needle || (compactNeedle.length > 0 && compactTitle === compactNeedle);
-    const titleStarts = title.startsWith(needle) || (compactNeedle.length > 0 && compactTitle.startsWith(compactNeedle));
+    const compactTitle = compactNormalized(title);
     const path = normalizedPaths?.get(node.boardId);
     let rank = -1;
-    if (titleIsExact) rank = 0;
-    else if (titleStarts) rank = 1;
-    else if (hit(node.title)) rank = 2;
-    else if (path?.normalized.includes(needle) || (compactNeedle.length > 0 && path?.compact.includes(compactNeedle))) rank = 3;
-    else if (hit(node.asset?.name)) rank = 4;
-    else if (hit(node.text)) rank = 5;
-    // Maintain the preexisting exact cross-field query behavior, without
-    // inventing new *compact* matches across unrelated fields.
-    else if (normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? '')).includes(needle)) rank = 6;
-    else if (keywords.length > 1) {
-      // A thought can be found even when people remember its words in a
-      // different order or across title, notes, attachment and project path.
-      // This only reads fields from the supplied workspace; it never joins
-      // separate thoughts or writes to the underlying document.
-      const fields = [title, normalizeSearchText(node.text), normalizeSearchText(node.asset?.name ?? ''), path?.normalized ?? ''];
-      // Only join Persian letters separated by spaces inside a single field.
-      // Preserve punctuation so split Latin fragments cannot fabricate hits.
-      const hasPersian = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
-      const joinedFields = hasPersian
-        ? fields.map(field => field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1'))
-        : [];
-      if (keywords.every(word => fields.some(field => field.includes(word)) ||
-        (/[\u0600-\u06FF]/u.test(word) && joinedFields.some(field => field.includes(word))))) rank = 7;
+    if (title === needle || (compactNeedle.length > 0 && compactTitle === compactNeedle)) rank = 0;
+    else if (title.startsWith(needle) || (compactNeedle.length > 0 && compactTitle.startsWith(compactNeedle))) rank = 1;
+    else if (includes(title, compactTitle)) rank = 2;
+    else if (path && includes(path.normalized, path.compact)) rank = 3;
+    else {
+      // Only normalize slower file/note fields after title and path miss.
+      // Cross-field and unordered-keyword tiers reuse the same values.
+      const file = normalizeSearchText(node.asset?.name ?? '');
+      if (includes(file)) rank = 4;
+      else {
+        const note = normalizeSearchText(node.text);
+        if (includes(note)) rank = 5;
+        else if ((title + ' ' + note + ' ' + file).includes(needle)) rank = 6;
+        else if (keywords.length > 1) {
+          const fields = [title, note, file, path?.normalized ?? ''];
+          const joinedFields = hasPersianKeywords
+            ? fields.map(field => field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1'))
+            : [];
+          if (keywords.every(word => fields.some(field => field.includes(word)) ||
+            (/[\u0600-\u06FF]/u.test(word) && joinedFields.some(field => field.includes(word))))) rank = 7;
+        }
+      }
     }
     if (rank >= 0) ranked[rank].push(node);
   }
