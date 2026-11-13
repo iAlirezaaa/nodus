@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": null,
-  "heartbeat_at": null,
-  "expires_at": null,
-  "current_task_id": null,
-  "feature_branch": null,
+  "owner_run_id": "nodus-manual-20261113T021816696Z",
+  "acquired_at": "2026-11-13T02:18:16.696Z",
+  "heartbeat_at": "2026-11-13T02:18:16.696Z",
+  "expires_at": "2026-11-13T03:48:16.696Z",
+  "current_task_id": "ND-001",
+  "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001_run6_search_relevance_and_mobile_readability_branch_only",
+    "phase": "ND-001_run7_full_verification_and_reconciliation",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -33,9 +33,9 @@
     "last_test": "11/11 exact-blob isolated targeted tests passed (Node.js 22.16.0), helper-only TypeScript 5.8.3 passed with minimal stub",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Full checkout/dependencies, Nodus browser/390px screenshots, authorized Sites verification and publication unavailable; CSS unverified visually",
-    "observed_control_head": "0e1500f7fdd499cbe946da393ca63af9ff13c584",
-    "site_source_verification": "NOT_AVAILABLE_THIS_RUN",
-    "active_run_id": "nodus-auto-20261113T011642Z",
+    "observed_control_head": "1dbf512fd6e5321e6dfbb5de7130923fc073b6d9",
+    "site_source_verification": "PENDING_THIS_RUN",
+    "active_run_id": "nodus-manual-20261113T021816696Z",
     "observed_at": "2026-11-12T22:11:19.307Z",
     "source_code_commit": "e5aad2f70e9ab75bac33781ff1cdccc8abbee53a",
     "test_helper_blob": "4b45e94c77c81bc5d0dfb34437f82a2641650e83",
@@ -52,5 +52,5 @@
     "completed_at": "2026-11-13T01:26:43.886Z",
     "summary": "Added deterministic title-first search ranking and mobile result title wrapping; 5 exact-blob targeted tests and helper TS passed. Branch e5aad2f, main/Site unchanged; full app/browser/deploy gates still blocked."
   },
-  "updated_at": "2026-11-13T01:26:43.886Z"
+  "updated_at": "2026-11-13T02:18:16.696Z"
 }
