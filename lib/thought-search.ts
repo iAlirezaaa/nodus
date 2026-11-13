@@ -111,11 +111,30 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
             try { comparableDecoded = decodeURIComponent(comparableUrl); recovered = true; }
             catch {
               comparableDecoded = comparableUrl.replace(/(?:%[0-9a-fA-F]{2})+/g, run => {
-                try {
-                  const part = decodeURIComponent(run);
-                  recovered = true;
-                  return part;
-                } catch { return run; }
+                // A single invalid UTF-8 byte must not hide valid escapes
+                // immediately before or after it in the same encoded run.
+                // UTF-8 scalars take at most four bytes: bounded work per byte.
+                const escapes = run.match(/%[0-9a-fA-F]{2}/g) ?? [];
+                let decoded = '';
+                for (let i = 0; i < escapes.length;) {
+                  let fragment = '';
+                  let consumed = 0;
+                  for (let width = 1; width <= 4 && i + width <= escapes.length; width++) {
+                    try {
+                      fragment = decodeURIComponent(escapes.slice(i, i + width).join(''));
+                      consumed = width;
+                      break;
+                    } catch { /* Try the next byte width. */ }
+                  }
+                  if (consumed) {
+                    decoded += fragment;
+                    recovered = true;
+                    i += consumed;
+                  } else {
+                    decoded += escapes[i++];
+                  }
+                }
+                return decoded;
               });
             }
             // Keep the historical raw fallback if every escaped run was
