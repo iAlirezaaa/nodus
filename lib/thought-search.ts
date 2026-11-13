@@ -9,6 +9,8 @@ function normalizeSearchText(value: string): string {
     .replace(/[\u064A\u0649]/g, 'ی')
     .replace(/\u0643/g, 'ک')
     .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
+    // Copied RTL/LTR directional marks alter display order, not search content.
+    .replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, '')
     .replace(/\u200C/g, '')
     .replace(/[\u0660-\u0669\u06F0-\u06F9]/g, digit =>
       String.fromCharCode(48 + digit.charCodeAt(0) - (digit.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660)))
