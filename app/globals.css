@@ -505,7 +505,7 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
 .search-results>button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 65px; padding: 11px 14px; border-radius: 10px; text-align: start; }
 .search-results>button:hover { background: var(--surface-hover); }
 .search-results>button>span:nth-child(2) { flex: 1; min-width: 0; }
-.search-results>button strong { display: block; font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-results>button strong { display: block; font-size: 14px; font-weight: 600; line-height: 1.45; white-space: normal; overflow-wrap: anywhere; }
 .search-results>button small { display: block; font-size: 10px; margin-top: 4px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .search-results>button .search-result-path { white-space: normal; overflow: visible; overflow-wrap: anywhere; line-height: 1.55; }
 .search-results>button>svg { color: var(--faint); flex: 0 0 auto; }
@@ -646,4 +646,10 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
   .zoom-controls .icon-button { width: 40px; height: 40px; }
   .node-branch { width: 40px; height: 40px; }
   .toast>button { min-width: 32px; min-height: 32px; }
+}
+
+/* Search is a reading surface on touch screens, not a truncated graph label. */
+@media (max-width: 650px) {
+  .search-results > button strong { font-size: 15px; line-height: 1.55; }
+  .search-results > button small { font-size: 12px; }
 }

@@ -111,3 +111,8 @@ Nodus باید فضای واقعی و ماندگاری برای فکرکردن �
 ## معیار بازبینی برنامه
 
 در هر نوبت، کار بعدی از شواهد رابط، بازخورد Hades، خطای واقعی یا وابستگی‌های همین جدول انتخاب می‌شود. پس از هر قابلیت، مسئلهٔ بعدی و هر وابستگی تازه ثبت شود؛ افزایش بی‌دلیل تعداد کارها هدف نیست. اولویت‌ها می‌توانند عوض شوند، اما شناسه و تاریخچهٔ کارهای قبلی حذف یا دوباره استفاده نمی‌شوند.
+
+
+### ND-001 development checkpoint — 2026-11-13T01:25:46.209Z
+
+Relevance-first search and mobile search-result title wrapping are implemented **only on `fix/nd-001-search-clarity`**, not live. New 5/5 isolated relevance tests and helper-only strict TypeScript 5.8.3 passed with actual repo types. The existing search suite, full project tests/build, mobile/desktop screenshot and Site reconciliation **remain blocked/not run**, so status remains **In progress** and publication is **not authorized yet**. See [ND-001 QA](ND-001-SEARCH-QA.md); next step is the full verification gate rather than claiming release.

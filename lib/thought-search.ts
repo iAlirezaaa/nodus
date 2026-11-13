@@ -34,36 +34,42 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
       return [id, { normalized, compact: compactSearchText(path) }] as const;
     }))
     : null;
-  const matches = (node: GraphNode) => {
-    if (!needle) return true;
-    // Preserve the existing exact text match, including its field boundaries.
-    const existingText = normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? ''));
-    if (existingText.includes(needle)) return true;
-    const path = normalizedPaths?.get(node.boardId);
-    if (path?.normalized.includes(needle)) return true;
-    // The fallback must NOT join unrelated title, note and asset fields.
-    return compactNeedle.length > 0 && (
-      [node.title, node.text, node.asset?.name].some(field => typeof field === 'string' && compactSearchText(field).includes(compactNeedle))
-      || (path?.compact.includes(compactNeedle) ?? false)
-    );
-  };
-  const visible: GraphNode[] = [];
-  let total = 0;
+  // The document's insertion order is not a useful relevance ranking on busy
+  // boards: a matching title must not be buried under hundreds of note hits.
+  // Seven stable buckets retain original order among equally useful results.
+  const ranked: GraphNode[][] = Array.from({ length: 7 }, () => []);
+  const hit = (field: string | undefined, compact = true): boolean =>
+    typeof field === 'string' && (normalizeSearchText(field).includes(needle) ||
+      (compact && compactNeedle.length > 0 && compactSearchText(field).includes(compactNeedle)));
   for (const node of nodes) {
-    if (!matches(node)) continue;
-    if (total >= start && visible.length < cap) visible.push(node);
-    total++;
+    if (!needle) { ranked[0].push(node); continue; }
+    const title = normalizeSearchText(node.title);
+    const compactTitle = compactSearchText(node.title);
+    const titleIsExact = title === needle || (compactNeedle.length > 0 && compactTitle === compactNeedle);
+    const titleStarts = title.startsWith(needle) || (compactNeedle.length > 0 && compactTitle.startsWith(compactNeedle));
+    const path = normalizedPaths?.get(node.boardId);
+    let rank = -1;
+    if (titleIsExact) rank = 0;
+    else if (titleStarts) rank = 1;
+    else if (hit(node.title)) rank = 2;
+    else if (path?.normalized.includes(needle) || (compactNeedle.length > 0 && path?.compact.includes(compactNeedle))) rank = 3;
+    else if (hit(node.asset?.name)) rank = 4;
+    else if (hit(node.text)) rank = 5;
+    // Maintain the preexisting exact cross-field query behavior, without
+    // inventing new *compact* matches across unrelated fields.
+    else if (normalizeSearchText(node.title + ' ' + node.text + ' ' + (node.asset?.name ?? '')).includes(needle)) rank = 6;
+    if (rank >= 0) ranked[rank].push(node);
   }
-  // A document can shrink while a later page is open. Recover the last
-  // non-empty page instead of showing an empty list with a positive total.
-  if (cap > 0 && total > 0 && start >= total) {
-    start = Math.floor((total - 1) / cap) * cap;
-    let index = 0;
-    for (const node of nodes) {
-      if (!matches(node)) continue;
-      if (index >= start && visible.length < cap) visible.push(node);
-      index++;
+  const total = ranked.reduce((count, bucket) => count + bucket.length, 0);
+  if (cap > 0 && total > 0 && start >= total) start = Math.floor((total - 1) / cap) * cap;
+  const visible: GraphNode[] = [];
+  let seen = 0;
+  for (const bucket of ranked) {
+    if (cap > 0 && visible.length < cap && start < seen + bucket.length) {
+      const first = Math.max(0, start - seen);
+      visible.push(...bucket.slice(first, first + cap - visible.length));
     }
+    seen += bucket.length;
   }
   return { visible, total, offset: start };
 }

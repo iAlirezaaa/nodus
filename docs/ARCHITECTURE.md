@@ -409,3 +409,8 @@ The search dialog scans the full authorized workspace graph for title, note and 
 ### Searchable project locations (ND-001 run 4; feature branch only)
 
 The search helper accepts an optional read-only map from board ID to its full display path. The React search dialog builds that map once per document/language change, passes it into the bounded 70-result search, and reuses normalized path labels across nodes belonging to a board. This lets a query match a parent/root project name without adding hidden keywords to node text or changing saved document content. Without the map, helper search retains its prior title/note/asset-only semantics. All personal root spaces are within one private workspace document; shared rooms are independent documents. The dialog states its actual current-document scope rather than claiming to search other accounts or rooms. This candidate is not a live release.
+
+
+### Search result relevance and narrow-screen reading (ND-001 in-progress branch)
+
+`lib/thought-search.ts` computes location paths once for the active workspace and groups matching thoughts by stable relevance (exact/prefix/substring title → board path → asset filename → notes → historical full-string match). It computes exact global totals before slicing a 70-result page, so ranking never hides or rewrites results. Equal relevance preserves persisted document order, but document order itself is not a semantic ranking. All lookup normalization is comparison-only. The search modal in `NodusApp` still owns page changes and navigation. Search result headings in `app/globals.css` are allowed to wrap on mobile rather than displaying ellipses. These changes are not released until full UI/build gates complete.
