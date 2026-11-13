@@ -67,6 +67,8 @@ Inline titles, inspector edits, duplication title changes, and project renaming 
 
 For copied mixed-direction Persian/English material, comparison additionally ignores Unicode bidi formatting controls U+061C, U+200E/U+200F, U+202A–U+202E and U+2066–U+2069. Only the derived search string changes; the stored title, note, filename, URL, board path, text direction and workspace revision remain untouched. The change is pending on the ND-001 feature branch, not yet a live-site guarantee.
 
+The in-progress ND-001 Search keyboard adapter (`lib/search-input.ts`) keeps modal Enter intent separate from canvas creation shortcuts. `NodusApp` uses the current result page for immediate Enter navigation and recalculates only if `useDeferredValue` still represents an older query; composition/legacy 229 Enter does not trigger navigation. Each search input change returns the result panel to its top without graph or document writes. This is branch-only and requires live browser QA before release.
+
 ## Canvas and layouts
 
 `Canvas.tsx` uses DOM nodes and SVG connections in a transformed world layer. Pointer events provide pan, pointer-centered zoom, pinch, dragging, and bend-handle interaction. Off-screen items are culled, detail changes with zoom, and memoized cards/connections use stable event dispatchers. View changes coalesce into animation frames; dragging recomputes incident edge geometry. These are bounded rendering strategies, not a promise of a particular frame rate for every graph and device.
