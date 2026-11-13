@@ -61,6 +61,10 @@ Inline titles, inspector edits, duplication title changes, and project renaming 
 
 `scheduledAt` is an optional calendar date on any node, formatted `YYYY-MM-DD`. `lib/calendar.ts` validates the actual calendar date, including invalid days and leap years. It is not a timestamp or reminder. Timeline grouping uses it when present and otherwise the creation date. Display formatting preserves the calendar day instead of shifting it through the viewer's time zone.
 
+### Workspace search (derived, read-only)
+
+`lib/thought-search.ts` searches only the current authenticated workspace/room document, using reciprocal containment to derive root-to-nested-board paths. All matches count toward the total while 70 items per page are displayed in the existing Search modal in `components/NodusApp.tsx`. Ranking prioritizes exact title, prefix, substring, project location, asset filename, and notes, then saved node URLs, cross-field phrases and unordered keywords. Saved URL values are compared locally; the search does not fetch their remote contents or write new indices, workspace revisions or preference changes. Normalization affects comparison only, not saved Persian/English content.
+
 ## Canvas and layouts
 
 `Canvas.tsx` uses DOM nodes and SVG connections in a transformed world layer. Pointer events provide pan, pointer-centered zoom, pinch, dragging, and bend-handle interaction. Off-screen items are culled, detail changes with zoom, and memoized cards/connections use stable event dispatchers. View changes coalesce into animation frames; dragging recomputes incident edge geometry. These are bounded rendering strategies, not a promise of a particular frame rate for every graph and device.

@@ -129,3 +129,7 @@ Relevance-first search and mobile search-result title wrapping are implemented *
 ### ND-001 — checkpoint اجرای ۱۰ (۲۰۲۶-۱۱-۱۳)
 
 جست‌وجو در مرورگرهای با تنظیمات زبان ترکی دیگر به حروف I/İ حساسیت ناخواسته ندارد. با شبیه‌سازی locale ترکی، چهار خطای واقعی در عنوان، متن، فایل و مسیر پروژه در فایل اصلی بازتولید و رفع شد؛ ۵/۵ تست جدید پاس و TypeScript مستقل ۵.۸.۳ با انواع واقعی بررسی شد. کد/تست: `ecc0d8480b03261e2b669ff5e31a4c23488af308`، درخت کد `f580a5c91ba11beda35ac9329426b1e22b943072` (پیش از مستندات). این تست‌ها جایگزین full suite، TypeScript 5.9.3، build یا QA مرورگر نیستند. **In progress / فقط برنچ؛ انتشار Blocked.** مرحلهٔ بعد: بازیابی محیط و دسترسی معتبر Site، تست کامل و موبایل ۳۹۰ پیکسل، مقایسهٔ tree، سپس ادغام/انتشارِ بررسی‌شده. مسائل ND-002/003 و خوانایی نودهای موبایل همچنان بازند.
+
+### ND-001 checkpoint — 2026-11-13T08:34Z (URL-only saved resource discovery)
+
+The **existing Search modal** now indexes saved link destinations. The exact old GitHub source failed 4/4 new URL cases and the corrected source passed 4/4; four local-only compatibility checks and helper TypeScript 5.8.3 also passed. Code `587646dcf449f05119fc154317feeb72fe3267d9`, tree `2256918c1191cbe57b8814989dcd30183d3d40f0`. No project test/build or real 4173 FA/EN mobile/desktop screenshot; Site source tree and publication not accessible. **ND-001 remains In progress (branch only), release Blocked**. Recover project/runtime/Site gates before merging or ND-002.
