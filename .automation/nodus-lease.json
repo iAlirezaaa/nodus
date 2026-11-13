@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261113T1817Z-nd001-r11",
   "acquired_at": "2026-11-13T18:18:36.331Z",
-  "heartbeat_at": "2026-11-13T18:18:36.331Z",
-  "expires_at": "2026-11-13T19:48:36.331Z",
+  "heartbeat_at": "2026-11-13T18:27:09.691Z",
+  "expires_at": "2026-11-13T19:57:09.691Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "lease_acquired_reconciling_ND001",
+    "phase": "ND001_path_ui_code_committed_pre_release_gates",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -18,8 +18,8 @@
     "deployment_status": "Historical IDs only; no new Site publication",
     "next_task": "Restore native Sites skill and full GitHub checkout, verify current source/tree vs live Site; run full repo Node tests/TS5.9.3/build and 4173 browser screenshots; guarded review/merge/publish if green, then ND-002.",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "a7d62e0ee660e3e1aba91c44bd943e3c9e6e8221",
-    "feature_branch_tree": "496301077bfc0c8168c6de6fe633f55f06319563",
+    "feature_branch_head": "2d9571a3d9a4d6844d022e4c29d1fee92d16c1ac",
+    "feature_branch_tree": "d3f104f5d3331b93d2d2c480fcd5e21b1915fb1e",
     "feature_branch": "fix/nd-001-search-clarity",
     "pending_verification": [
       "Full project native Node tests, TypeScript 5.9.3, production build",
@@ -31,10 +31,10 @@
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "No authorized Sites skill/actions (skills list empty); no private full checkout and no 4173 Nodus listener; container cannot resolve GitHub DNS; production current Site head/tree unverified",
     "observed_control_head": "7461317348cde2cc7077246b2cb6e123be98581a",
-    "site_source_verification": "NOT AVAILABLE: no Site skill listed",
+    "site_source_verification": "No native Sites skill/actions (skills list returned []); current Site source/tree cannot be compared.",
     "active_run_id": "nodus-auto-20261113T1817Z-nd001-r11",
     "observed_at": "2026-11-13T17:30:35.801Z",
-    "source_code_commit": "5886491b90485c626fafeac4a6f0e8843b113ca2",
+    "source_code_commit": "2d9571a3d9a4d6844d022e4c29d1fee92d16c1ac",
     "test_helper_blob": "4b45e94c77c81bc5d0dfb34437f82a2641650e83",
     "test_cases_blob": "b53393e66d28c60889ec6b43dacf0c479b2be0fe",
     "test_result": "3/4 isolated tests baseline -> 4/4 patched; +2 stress/safety = 6/6 exact-function Node 22.16.0; helper-only tsc 5.8.3 stub types pass; full project not executed",
@@ -44,8 +44,8 @@
     "scoping_commit": "f1c7156077c82077359a47654dc4a09e9d7fe417",
     "pending_source_hash": "262129e1f3b7852d4c3e64de29241ce07da8873e",
     "pending_test_hash": "eb948583c595a1207235b72ecd5350f573a092ac",
-    "verification": "Red 1/7 => green 7/7 exact GitHub source/tests in V8 transpilation. Four GitHub test files 32/32 V8 cases pass; isolated normalizer-only tsc 5.8.3 strict and Node 22.16.0 smoke passed. Native full Node suite / project tsc5.9.3 / app build / real browser+screenshots / Site source+deployment NOT RUN.",
-    "source_code_tree": "fd683ca89dbc588cc7f15d4b72294531d62c93fa",
+    "verification": "V8 8/8 search helper cases; 11/11 static JSX/CSS invariants; isolated TSX syntax no errors TS5.8.3; PostCSS parses 3 rules/17 declarations. Full project Node/TS5.9.3/build and real browser/screenshots not run.",
+    "source_code_tree": "d3f104f5d3331b93d2d2c480fcd5e21b1915fb1e",
     "documentation_commit": "3fa9ba5cdc8378c9d77696f0c8f9e44c2b8c4194",
     "source_blob": "f0442eb3266ae85145e3c9987bf38cb981f30ebb",
     "new_test_blob": "1e3796f363f5c01c85f5566135317c6fbc574aed",
@@ -77,7 +77,7 @@
     "source_old_blob": "71da339ec22e0d8b46829a4be9942d12fa2917be",
     "source_new_blob": "6431eba140bee94dc3d3f53ad502ffc937f73e72",
     "source_target": "fix/nd-001-search-clarity",
-    "screenshot": "none (no real browser/4173 session)",
+    "screenshot": "none; no app at 127.0.0.1:4173",
     "last_run_id": "nodus-auto-20261113T151532953Z-nd001-verify",
     "scoped_task": {
       "id": "ND-001",
@@ -96,5 +96,5 @@
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3"
   },
   "last_completed_run": "nodus-auto-20261113T171851557Z-nd001-r12",
-  "updated_at": "2026-11-13T18:18:36.331Z"
+  "updated_at": "2026-11-13T18:27:09.691Z"
 }
