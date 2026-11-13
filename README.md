@@ -4,6 +4,10 @@ Nodus is a brainstorming application for personal and shared work, built around 
 
 The application has a React interface, a server API, a persistent SQL database and original-file storage. The initial board is editable guidance, with a real nested project and no pretend uploads.
 
+## Development roadmap
+
+The [living roadmap](docs/ROADMAP.md) prioritizes usability, capabilities, visual design, personalization and animation, with acceptance criteria for each item. The [development loop](docs/DEVELOPMENT_LOOP.md) defines hourly work, isolated branches for special/large changes, verification, publication and source synchronization. The [development log](docs/DEVELOPMENT_LOG.md) records actual outcomes and the next checkpoint. The roadmap is updated whenever a capability becomes available; a feature being coded or verified is not yet a released feature.
+
 ## Working with a board
 
 - Hover over a node for a readable content preview. Click it to open its full content and attachments in a popup; **Shift+Enter** opens the notes editor directly.
@@ -237,7 +241,7 @@ Run the graph, layouts, keyboard-flow, collaboration, recovery and backend suite
 node --import ./tests/server-loader.mjs --test tests/*.test.ts tests/*.test.mjs
 ```
 
-The current multi-selection and personal-space release recorded **205 automated tests passing**. New coverage includes projected rectangle selection, add/toggle/replace semantics, board-scoped bulk updates/deletion, task ancestry, large/deep containment and personal-space deletion with an actual single Undo/Redo snapshot. These automated results do not add a browser-verification claim for the new interactions.
+The current multi-selection and personal-space release recorded **205 automated tests passing**. New coverage includes projected rectangle selection, add/toggle/replace semantics, board-scoped bulk updates/deletion, task ancestry, large/deep containment and personal-space deletion with an actual single Undo/Redo snapshot. Its separate [browser-verification record](docs/SELECTION-SPACES-QA.md) documents the completed group interaction, deletion/recovery and mobile-frame checks and their coverage limits.
 
 The earlier clarity release recorded **165 automated tests passing** with TypeScript checking passing; the preceding magnetic and living-node releases recorded 157 and 130 tests respectively. These are historical verification snapshots. The current suite covers graph and task hierarchy, incoming/outgoing connection growth, growth-aware layout and keyboard placement, magnetic simulation and guarded layout application, annotation anchors, connection geometry, recovery, collaboration and persistence. The backend tests use an in-memory SQLite database initialized from the checked-in migrations. They exercise actual conditional save statements and transactions, independent identities, field conflicts, receipt retries, revocation during commit, rollback, attachment access, graph validation and media byte ranges. Client tests cover pause/resume races, lost acknowledgements, guarded own undo, room/account scoping and presence lifecycle.
 

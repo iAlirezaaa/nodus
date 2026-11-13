@@ -335,7 +335,7 @@ Files are immutable. Removing a node removes its current room-derived file grant
 
 ## Verification and its boundaries
 
-The current multi-selection and personal-space deletion regression pass recorded **205 automated tests passing**. This snapshot covers the domain helpers and keyboard scope; it does not assert completion of browser checks for the new group gestures or sidebar deletion flow.
+The current multi-selection and personal-space deletion regression pass recorded **205 automated tests passing**. This snapshot covers the domain helpers and keyboard scope. The separate [selection and personal-space browser record](SELECTION-SPACES-QA.md) documents completed group gestures, sidebar deletion/recovery, reload and mobile-frame checks, with explicit production-authentication and physical-touch coverage limits.
 
 The connected-growth release passed **181 tests**, TypeScript checking and diff validation. Its [managed-browser verification record](CONNECTED-GROWTH-QA.md) documents measured growth/animation, color/status persistence, keyboard scope, mobile controls and magnetic pin/drag behavior on isolated data.
 
