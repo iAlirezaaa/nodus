@@ -69,11 +69,19 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
         else {
           // Saved link destinations are user content, too; searching for a
           // domain must find a link even when its title omits the address.
-          const url = normalizeSearchText(node.url ?? '');
-          if (includes(url)) rank = 6;
+          const rawUrl = node.url ?? '';
+          const url = normalizeSearchText(rawUrl);
+          // Decode destination text only for matching. Preserve the saved URL
+          // and its raw representation (including literal % escapes).
+          let decodedUrl = url;
+          if (rawUrl.includes('%')) {
+            try { decodedUrl = normalizeSearchText(decodeURIComponent(rawUrl)); }
+            catch { /* A malformed imported URL stays searchable as raw text. */ }
+          }
+          if (includes(url) || (decodedUrl !== url && includes(decodedUrl))) rank = 6;
           else if (!isPhrase && (title + ' ' + note + ' ' + file).includes(needle)) rank = 7;
           else if (!isPhrase && keywords.length > 1) {
-            const fields = [title, note, file, url, path?.normalized ?? ''];
+            const fields = [title, note, file, url, ...(decodedUrl !== url ? [decodedUrl] : []), path?.normalized ?? ''];
             const joinedFields = hasPersianKeywords
               ? fields.map(field => field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1'))
               : [];
