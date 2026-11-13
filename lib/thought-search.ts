@@ -71,12 +71,22 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
           // domain must find a link even when its title omits the address.
           const rawUrl = node.url ?? '';
           const url = normalizeSearchText(rawUrl);
-          // Decode destination text only for matching. Preserve the saved URL
-          // and its raw representation (including literal % escapes).
+          // Decode destination text only for matching. Form-style + denotes
+          // a space in query parameters, but remains literal in paths/fragments.
+          // Never rewrite or fetch a saved URL.
           let decodedUrl = url;
-          if (rawUrl.includes('%')) {
-            try { decodedUrl = normalizeSearchText(decodeURIComponent(rawUrl)); }
-            catch { /* A malformed imported URL stays searchable as raw text. */ }
+          const queryAt = rawUrl.indexOf('?');
+          const fragmentAt = rawUrl.indexOf('#');
+          let comparableUrl = rawUrl;
+          if (queryAt >= 0 && (fragmentAt < 0 || queryAt < fragmentAt)) {
+            const queryEnd = fragmentAt >= 0 ? fragmentAt : rawUrl.length;
+            comparableUrl = rawUrl.slice(0, queryAt + 1)
+              + rawUrl.slice(queryAt + 1, queryEnd).replace(/\+/g, ' ')
+              + rawUrl.slice(queryEnd);
+          }
+          if (comparableUrl !== rawUrl || rawUrl.includes('%')) {
+            try { decodedUrl = normalizeSearchText(decodeURIComponent(comparableUrl)); }
+            catch { /* Malformed imported escapes still match their raw text. */ }
           }
           if (includes(url) || (decodedUrl !== url && includes(decodedUrl))) rank = 6;
           else if (!isPhrase && (title + ' ' + note + ' ' + file).includes(needle)) rank = 7;
