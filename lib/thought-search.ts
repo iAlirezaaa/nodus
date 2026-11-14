@@ -1,5 +1,6 @@
 import type { GraphNode, Workspace } from './types';
 import { parseQuotedSearchPhrase } from './search-phrase';
+import { hasExplicitSearchQuery } from './search-query-state';
 
 export const SEARCH_PAGE_SIZE = 70;
 export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset: number; }
@@ -50,7 +51,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   // empty-query browse of every private thought in this workspace.
   // String.trim() treats U+FEFF as whitespace. An explicitly pasted
   // formatting-only query still means 'no matches', not 'browse everything'.
-  if ((rawQuery || /[\u200B\u2060\uFEFF]/u.test(query)) && !needle)
+  if (hasExplicitSearchQuery(query) && !needle)
     return { visible: [], total: 0, offset: 0 };
   const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : SEARCH_PAGE_SIZE;
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;

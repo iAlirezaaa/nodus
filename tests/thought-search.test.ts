@@ -140,3 +140,13 @@ test('last page resets when matches vanish, including an empty workspace, withou
   assert.deepEqual(searchThoughts(nodes.slice(0, 70), 'idea', SEARCH_PAGE_SIZE, 140).offset, 0);
   assert.equal(JSON.stringify(nodes), before);
 });
+
+test('formatting-only pasted searches are not treated as blank workspace browsing', () => {
+  const nodes = [thought('a', 'محتوای موجود'), thought('b', 'An existing thought')];
+  const before = JSON.stringify(nodes);
+  for (const query of ['\uFEFF', ' \uFEFF ', '\u200B', '\u2060', '\u200F']) {
+    assert.deepEqual(searchThoughts(nodes, query, 70, 140), { visible: [], total: 0, offset: 0 });
+  }
+  assert.deepEqual(searchThoughts(nodes, ' \t ').visible.map(node => node.id), ['a', 'b']);
+  assert.equal(JSON.stringify(nodes), before);
+});
