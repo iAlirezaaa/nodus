@@ -60,3 +60,25 @@ test('search result link preview never echoes signed URLs or fragments', () => {
   assert.deepEqual(searchResultPreview(n, 'SECRET_VALUE'), {kind:'link', text:'example.com'});
   assert.ok(!searchResultPreview(n, 'private-note')?.text.includes('private-note'));
 });
+
+
+test('deep Persian/Arabic and Latin-accented matches appear in the actual note excerpt', () => {
+  for (const [query, original] of [
+    ['اسلام', 'إسلام'], ['کتابها', 'کتاب‌ها'], ['resume', 'Résumé'],
+    ['123', '۱۲۳'],
+  ]) {
+    const n = node('x'.repeat(180) + ' ' + original + ' پایان');
+    const before = JSON.stringify(n);
+    const result = searchResultPreview(n, query);
+    assert.equal(result?.kind, 'note', query);
+    assert.ok(result?.text.includes(original), query + ': ' + result?.text);
+    assert.ok(result?.text.startsWith('…'), query);
+    assert.equal(JSON.stringify(n), before);
+  }
+});
+test('deep compact aliases and quoted joined Persian words have relevant previews', () => {
+  const compact = searchResultPreview(node('x'.repeat(180) + ' Frame-12 approved'), 'frame12');
+  assert.ok(compact?.text.includes('Frame-12'));
+  const phrase = searchResultPreview(node('x'.repeat(180) + ' کتاب های کودک ثبت شد'), '«کتابهای کودک»');
+  assert.ok(phrase?.text.includes('کتاب های کودک'), phrase?.text);
+});

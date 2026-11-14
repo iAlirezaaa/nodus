@@ -31,6 +31,30 @@ export function searchResultPreview(
         if (index >= 0) break;
       }
     }
+    if (index < 0 && needle) {
+      // Raw substring offsets miss visually equivalent matches:
+      // إسلام/اسلام, کتاب‌ها/کتابها, Résumé/resume, or Persian joined phrases.
+      // Locate the corresponding source position without a per-character map.
+      const candidates: { token: string; fold: (s: string) => string }[] = [
+        { token: needle, fold: compare },
+        ...(persianPhraseNeedle ? [{ token: persianPhraseNeedle, fold: (s: string) => folded(compare(s)) }] : []),
+        ...(compactNeedle ? [{ token: compactNeedle, fold: (s: string) => compact(compare(s)) }] : []),
+        ...(!isPhrase ? keywords.map(token => ({ token, fold: compare })) : []),
+      ];
+      for (const candidate of candidates) {
+        const matchAt = candidate.fold(source).indexOf(candidate.token);
+        if (matchAt < 0) continue;
+        let low = 0;
+        let high = source.length;
+        while (low < high) {
+          const mid = Math.floor((low + high) / 2);
+          if (candidate.fold(source.slice(0, mid)).length <= matchAt) low = mid + 1;
+          else high = mid;
+        }
+        index = Math.max(0, low - 1);
+        break;
+      }
+    }
     const start = Math.max(0, (index < 0 ? 0 : index) - 26);
     const end = Math.min(source.length, start + 96);
     return (start ? '…' : '') + source.slice(start, end).trim() + (end < source.length ? '…' : '');
