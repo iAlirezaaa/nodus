@@ -204,3 +204,10 @@ Still **In progress** / release **Blocked**. On `fix/nd-001-search-clarity`, `co
 ### ND-001 checkpoint — 2026-11-14 04:20 UTC (not Released)
 
 Copied zero-width/word-joiner separators in search text are handled on `fix/nd-001-search-clarity` at [`2d94b4e22133`](https://github.com/iAlirezaaa/nodus/commit/2d94b4e22133f8ff50b7f3fb1ab2e1d69f9ba5e4) (tree `8a5665d408016cd2dc3ac2754ef8b8e388bae8f4`). Exact-source V8 search scenarios **15/15 pass** (preceding source 10/15), extracted native normalizer **12/12 pass**, extracted-helper TypeScript **5.8.3 pass**. These are limited checks; checked-in tests, full Node, project TS5.9.3, build, actual 4173 FA/EN browser/mobile screenshots, Sites current head/tree and release remain **Blocked**. New CI [run 43555845177](https://github.com/iAlirezaaa/nodus/actions/runs/43555845177) failed **before any recorded job step**. No feature is newly active on Site; `ND-001 = In progress`, `ND-002 = Ready`, `ND-003 = Queued`. See [QA](ND-001-SEARCH-QA.md) and [log](DEVELOPMENT_LOG.md).
+ 
+### بررسی تازهٔ ND-001 — ۲۰۲۶-۱۱-۱۴، ۰۸:۲۰ UTC
+
+- **وضعیت:** In progress روی `fix/nd-001-search-clarity`؛ انتشار **Blocked**، نه Verified یا Released.
+- **رفع ابهام در جست‌وجو:** ورودی کپی‌شدهٔ نامرئی مانند `U+FEFF` به‌درستی «بدون نتیجه» نشان می‌دهد، نه پیام نادرست «هیچ فکری در این محیط نیست». منطق ورودی صریح در `lib/search-query-state.ts` میان جست‌وجو و پیام خالی مشترک است؛ تنها متن رابط تغییر می‌کند و هیچ داده‌ای نوشته نمی‌شود. [کد](https://github.com/iAlirezaaa/nodus/commit/812a71a799e6df77b40be8477e4d73da06004849) · [QA](ND-001-SEARCH-QA.md).
+- **بررسی این نوبت:** ۳/۳ تست native Node 22.16.0 برای helper و TypeScript سخت‌گیرانهٔ مستقل 5.8.3 پاس؛ SHA دو blob دقیق GitHub با فایل‌های تست‌شده یکسان. آزمون سراسری/TS5.9.3/build/مرورگر ۴۱۷۳/اسکرین‌شات/Sites تأیید نشده است. [Actions run 43575205199](https://github.com/iAlirezaaa/nodus/actions/runs/43575205199) پیش از هر قدم با runner_id=0 ناموفق شد.
+- **قدم بعدی:** بازیابی اجرای کامل و مرورگر واقعی Nodus، بررسی درخت/نسخهٔ جاری Sites و بازبینی مستقل، سپس ادغام و انتشار محافظت‌شده؛ پس از آن ND-002.

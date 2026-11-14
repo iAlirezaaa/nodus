@@ -69,6 +69,8 @@ For copied mixed-direction Persian/English material, comparison additionally ign
 
 The in-progress ND-001 quoted-phrase parser (`lib/search-phrase.ts`) discards only ignored Unicode directional/invisible formatting marks at the **outer** boundaries of user input before detecting balanced straight, curly or Persian guillemet quotes. It preserves the full phrase interior and hands it to the existing field-local normalizer; incomplete quotes remain literal, empty quoted phrases still yield zero matches, and no document, URL, permission or workspace revision is changed. The behavior is branch-only and needs authentic browser and release QA.
 
+The query-empty-state predicate is shared by `lib/search-query-state.ts`, `searchThoughts` and `NodusApp` so a copied U+FEFF-only search cannot be mislabeled as an empty workspace. This is a derived UI distinction only, with no network or document writes; branch-only until real UI/Sites checks.
+
 The in-progress ND-001 Search keyboard adapter (`lib/search-input.ts`) keeps modal Enter intent separate from canvas creation shortcuts. `NodusApp` uses the current result page for immediate Enter navigation and recalculates only if `useDeferredValue` still represents an older query; composition/legacy 229 Enter or Ctrl/Alt/Meta/Shift-modified Enter does not trigger navigation. Each search input change returns the result panel to its top without graph or document writes. This is branch-only and requires live browser QA before release.
 
 ## Canvas and layouts
