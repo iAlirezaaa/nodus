@@ -1,0 +1,33 @@
+name: ND-001 full-source release checks
+
+on:
+  push:
+    branches:
+      - fix/nd-001-search-clarity
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nd001-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-gates:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install complete locked dependencies
+        run: npm run install:ci
+      - name: Native full repository regression suite
+        run: node --import ./tests/server-loader.mjs --test tests/*.test.ts tests/*.test.mjs
+      - name: Project TypeScript 5.9.3
+        run: ./node_modules/.bin/tsc --noEmit
+      - name: Production build
+        run: npm run build
