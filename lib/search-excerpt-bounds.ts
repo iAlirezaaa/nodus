@@ -1,11 +1,25 @@
-/** Keep search-result snippets within a 96-code-unit budget without splitting
- * a UTF-16 surrogate pair at either edge. This never edits the original text. */
+/** Bound a read-only search snippet to 96 UTF-16 units without splitting a
+ * visible Unicode character (joined emoji, flags or combining sequences).
+ * Older browsers without Intl.Segmenter retain surrogate-safe boundaries. */
+const segmenter = typeof Intl.Segmenter === 'function'
+  ? new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+  : null;
+
 export function searchExcerptBounds(text: string, desiredStart: number): { start: number; end: number } {
   let start = Math.max(0, Math.min(text.length, desiredStart));
   const isLowSurrogate = (index: number) => {
     const code = text.charCodeAt(index);
     return code >= 0xDC00 && code <= 0xDFFF;
   };
+  if (segmenter) {
+    // containing() resolves the full grapheme at a UTF-16 offset; a raw slice
+    // might otherwise leave only half of a family emoji or a detached mark.
+    const segments = segmenter.segment(text);
+    if (start < text.length) start = segments.containing(start)?.index ?? start;
+    let end = Math.min(text.length, start + 96);
+    if (end < text.length) end = segments.containing(end)?.index ?? end;
+    return { start, end };
+  }
   if (start > 0 && start < text.length && isLowSurrogate(start)) start--;
   let end = Math.min(text.length, start + 96);
   if (end < text.length && isLowSurrogate(end)) end--;
