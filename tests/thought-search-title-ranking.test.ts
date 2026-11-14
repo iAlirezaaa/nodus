@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { searchThoughts, SEARCH_PAGE_SIZE, buildBoardPaths } from '../lib/thought-search.ts';
-import type { GraphNode } from '../lib/types.ts';
+import type { GraphNode, NodeAnnotation, Workspace } from '../lib/types.ts';
 
 const thought = (id: string, title: string, boardId = 'root', text = '') =>
   ({ id, title, boardId, text, asset: null, url: '', annotations: [] }) as GraphNode;
@@ -35,9 +35,13 @@ test('151 matches keep honest 70/70/11 pages after rank correction', () => {
 test('nested project path and annotation-only matches remain discoverable', () => {
   const holder = { ...thought('holder', 'Folder'), childBoardId: 'nested' };
   const nested = thought('nested-note', 'Reference', 'nested');
-  const annotated = { ...thought('annotation', 'Reference'), annotations: [{ quote: 'scene 10', body: 'lighting revise' }] };
+  const comment: NodeAnnotation = { id: 'comment-1', field: 'text', start: 0, end: 8, quote: 'scene 10', body: 'lighting revise', color: 'blue', resolved: false, createdAt: '2026-11-14T00:00:00Z', updatedAt: '2026-11-14T00:00:00Z' };
+  const annotated: GraphNode = { ...thought('annotation', 'Reference'), annotations: [comment] };
   const nodes = [holder, nested, annotated];
-  const doc = { nodes, boards: [{ id: 'root', title: 'Studio', parentNodeId: null }, { id: 'nested', title: 'Shot 12', parentNodeId: 'holder' }] };
+  const doc: Pick<Workspace, 'boards' | 'nodes'> = { nodes, boards: [
+    { id: 'root', title: 'Studio', description: '', parentNodeId: null, createdAt: '2026-11-14T00:00:00Z' },
+    { id: 'nested', title: 'Shot 12', description: '', parentNodeId: 'holder', createdAt: '2026-11-14T00:00:00Z' },
+  ] };
   const before = JSON.stringify(doc);
   const paths = buildBoardPaths(doc, 'Untitled');
   assert.equal(paths.get('nested'), 'Studio / Shot 12');
