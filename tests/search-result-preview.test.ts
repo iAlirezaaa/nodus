@@ -136,3 +136,28 @@ test('a malformed URL escape cannot hide a valid encoded result explanation', ()
     assert.equal(JSON.stringify(n), original);
   }
 });
+
+
+test('preview favors a matching note over a lower-ranked comment', () => {
+  const n = node('Lighting revision in the current shot', [{ quote: 'shot', body: 'Lighting review from last week' }]);
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'lighting'), { kind: 'note', text: 'Lighting revision in the current shot' });
+  assert.equal(JSON.stringify(n), before);
+});
+test('preview favors matching attachment filename over comment text', () => {
+  const n = node('An unrelated note', [{ quote: 'frame', body: 'Storyboard review' }], 'Storyboard.pdf');
+  assert.deepEqual(searchResultPreview(n, 'storyboard'), { kind: 'file', text: 'Storyboard.pdf' });
+});
+test('preview favors a matching saved link over a comment without exposing its token', () => {
+  const n = node('', [{ quote: 'frame', body: 'Lighting review' }], '', 'https://example.com/lighting?access_token=PRIVATE');
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'lighting'), { kind: 'link', text: 'example.com' });
+  assert.deepEqual(searchResultPreview(n, 'PRIVATE'), { kind: 'link', text: 'example.com' });
+  assert.equal(JSON.stringify(n), before);
+});
+test('annotation-only hits retain their source explanation after priority alignment', () => {
+  const comment = node('Other work', [{ quote: 'frame 12', body: 'Lighting approved' }]);
+  assert.deepEqual(searchResultPreview(comment, 'lighting'), { kind: 'comment', text: 'Lighting approved' });
+  const quote = node('', [{ quote: 'camera storyboard', body: 'Reviewed' }]);
+  assert.deepEqual(searchResultPreview(quote, 'storyboard'), { kind: 'quote', text: 'camera storyboard' });
+});

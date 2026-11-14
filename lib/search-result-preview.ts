@@ -78,10 +78,6 @@ export function searchResultPreview(
   };
   // An annotation-only result must show the reason it was found, rather than
   // unrelated opening note text or a generic node-kind label.
-  for (const annotation of node.annotations ?? []) {
-    if (matches(annotation.body)) return preview('comment', annotation.body);
-    if (matches(annotation.quote)) return preview('quote', annotation.quote);
-  }
   if (matches(note)) return preview('note', note);
   if (node.asset?.name && matches(node.asset.name)) return preview('file', node.asset.name);
   if (node.url) {
@@ -95,6 +91,12 @@ export function searchResultPreview(
       try { hostname = new URL(rawUrl).hostname || 'URL'; } catch { /* Relative/legacy URL: generic label. */ }
       return preview('link', hostname);
     }
+  }
+  // Comments and quotes are the last-ranked searchable fields. If a note,
+  // filename or saved URL also matches, explain that stronger hit instead.
+  for (const annotation of node.annotations ?? []) {
+    if (matches(annotation.body)) return preview('comment', annotation.body);
+    if (matches(annotation.quote)) return preview('quote', annotation.quote);
   }
   return note ? preview('note', note) : null;
 }
