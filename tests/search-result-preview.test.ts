@@ -55,3 +55,8 @@ test('derived context never mutates the workspace, annotations or attachment', (
   assert.equal(searchResultPreview(n as unknown as Pick<GraphNode,'text'|'annotations'|'asset'|'url'>,'light')?.kind,'comment');
   assert.equal(JSON.stringify(n),before);
 });
+test('search result link preview never echoes signed URLs or fragments', () => {
+  const n = node('', [], '', 'https://example.com/assets?access_token=SECRET_VALUE#private-note');
+  assert.deepEqual(searchResultPreview(n, 'SECRET_VALUE'), {kind:'link', text:'example.com'});
+  assert.ok(!searchResultPreview(n, 'private-note')?.text.includes('private-note'));
+});

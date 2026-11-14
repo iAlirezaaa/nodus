@@ -59,6 +59,12 @@ export function searchResultPreview(
   }
   if (matches(note)) return preview('note', note);
   if (node.asset?.name && matches(node.asset.name)) return preview('file', node.asset.name);
-  if (node.url && matches(node.url)) return preview('link', node.url);
+  if (node.url && matches(node.url)) {
+    // A saved link may contain signed query strings, credentials or fragments.
+    // Search may match them, but the result row should not echo private tokens.
+    let hostname = 'URL';
+    try { hostname = new URL(node.url).hostname || 'URL'; } catch { /* Relative/legacy URL: generic label. */ }
+    return preview('link', hostname);
+  }
   return note ? preview('note', note) : null;
 }
