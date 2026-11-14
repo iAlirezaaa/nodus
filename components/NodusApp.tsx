@@ -24,7 +24,7 @@ import { useCanvasPreferences } from '@/hooks/use-canvas-preferences';
 import { useThoughtFlow } from '@/hooks/use-thought-flow';
 import { findDirectionalNode, getThoughtParent } from '@/lib/flow';
 import { SEARCH_PAGE_SIZE, buildBoardPaths, searchThoughts } from '@/lib/thought-search';
-import { firstSearchResultForEnter, shouldActivateSearchResult, visibleSearchResultsForQuery } from '@/lib/search-input';
+import { firstSearchResultForEnter, shouldActivateSearchResult, visibleSearchResultsForQuery, searchOffsetCorrection } from '@/lib/search-input';
 import { hasExplicitSearchQuery } from '@/lib/search-query-state';
 import { graphShortcutScope, isEditableTarget, resolveGraphShortcut } from '@/lib/keyboard';
 import { patchNode, convertToTask, removeTask, setTaskStatus } from '@/lib/node-features';
@@ -333,6 +333,15 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
   const searchPaths=useMemo(()=>doc&&dialog==='search'?buildBoardPaths(doc,L('بدون عنوان','Untitled')):new Map<string,string>(),[doc?.nodes,doc?.boards,dialog,L]);
   const searchPage=useMemo(()=>doc&&dialog==='search'?searchThoughts(doc.nodes,deferredQuery,SEARCH_PAGE_SIZE,searchOffset,searchPaths):{visible:[] as GraphNode[],total:0,offset:0},[doc?.nodes,dialog,deferredQuery,searchOffset,searchPaths]);
   const searchPending=query!==deferredQuery;const matches=visibleSearchResultsForQuery(query,deferredQuery,searchPage.visible);
+  // A reduced result set can clamp page 3 to page 2 (or to empty); do not
+  // resurrect that stale requested offset if matching thoughts grow again.
+  useEffect(()=>{
+    if(dialog!=='search')return;
+    const corrected=searchOffsetCorrection(searchOffset,searchPage.offset,searchPending);
+    if(corrected===null)return;
+    setSearchOffset(corrected);
+    if(searchResultsRef.current)searchResultsRef.current.scrollTop=0;
+  },[dialog,searchOffset,searchPage.offset,searchPending]);
   const focusResult=(n:GraphNode)=>{navigate(n.boardId);setSelected(n.id);setDialog(null);requestAnimationFrame(()=>canvas.current?.revealNode(n.id));};
   const branchNode=doc?.nodes.find(n=>n.id===branchSource);const branchCount=branchText.split('\n').filter(s=>s.trim()).length;
   const descendants=useMemo(()=>dialog==='delete-node'&&node&&doc?doc.nodes.length-deleteNode(doc,node.id).nodes.length-1:0,[dialog,node,doc]);

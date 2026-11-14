@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { firstSearchResultForEnter, shouldActivateSearchResult, visibleSearchResultsForQuery } from '../lib/search-input.ts';
+import { firstSearchResultForEnter, shouldActivateSearchResult, visibleSearchResultsForQuery, searchOffsetCorrection } from '../lib/search-input.ts';
 
 test('Enter activates a result from the search field; Tab and other keys stay native', () => {
   assert.equal(shouldActivateSearchResult('Enter', false, 13), true);
@@ -85,4 +85,22 @@ test('clearing a search while deferred results lag never triggers a full-workspa
   }
   assert.deepEqual(calls, [], 'clearing Search must not trigger a fallback scan on Enter');
   assert.equal(stale[0].id, 'stale-other-project');
+});
+
+
+test('a shrinking result set reconciles the requested page to the actual visible page', () => {
+  assert.equal(searchOffsetCorrection(140, 70, false), 70, '151 results on page 3 shrink to 81 on page 2');
+  assert.equal(searchOffsetCorrection(140, 0, false), 0, 'all matches removed returns to page 1');
+  assert.equal(searchOffsetCorrection(70, 0, false), 0, 'zero-match state must stay on page 1');
+});
+
+test('a settled page never changes unless the actual page differs', () => {
+  assert.equal(searchOffsetCorrection(0, 0, false), null);
+  assert.equal(searchOffsetCorrection(70, 70, false), null);
+  assert.equal(searchOffsetCorrection(140, 140, false), null);
+});
+
+test('pending IME or ordinary deferred typing does not restore stale page selection', () => {
+  assert.equal(searchOffsetCorrection(140, 0, true), null);
+  assert.equal(searchOffsetCorrection(70, 0, true), null);
 });

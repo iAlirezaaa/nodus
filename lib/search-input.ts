@@ -23,3 +23,10 @@ export function firstSearchResultForEnter<T>(
 export function visibleSearchResultsForQuery<T>(typedQuery: string, displayedQuery: string, visiblePage: readonly T[]): readonly T[] {
   return typedQuery === displayedQuery ? visiblePage : [];
 }
+
+/** Restore the user's visible page choice after the result set shrinks.
+ * Ignore a temporarily stale deferred-query page while typing.
+ */
+export function searchOffsetCorrection(requestedOffset: number, resolvedOffset: number, queryPending: boolean): number | null {
+  return queryPending || requestedOffset === resolvedOffset ? null : resolvedOffset;
+}
