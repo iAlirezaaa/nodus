@@ -1,4 +1,5 @@
 import type { GraphNode, Workspace } from './types';
+import { parseQuotedSearchPhrase } from './search-phrase';
 
 export const SEARCH_PAGE_SIZE = 70;
 export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset: number; }
@@ -37,14 +38,14 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   const rawQuery = query.trim();
   // Balanced quotation marks request a contiguous phrase, not unordered
   // keywords assembled from unrelated title/note/file/project fields.
-  const phrase = rawQuery.match(/^(?:"([^"]*)"|“([^”]*)”|«([^»]*)»)$/u);
+  const phrase = parseQuotedSearchPhrase(query);
   const isPhrase = phrase !== null;
   // Normalize pasted line breaks/tabs only inside balanced quoted phrases.
   // Unquoted matching and saved graph data remain unchanged.
   const compareText = isPhrase
     ? (value: string) => normalizeSearchText(value).replace(/\s+/gu, ' ').trim()
     : normalizeSearchText;
-  const needle = compareText(isPhrase ? (phrase[1] ?? phrase[2] ?? phrase[3]) : rawQuery);
+  const needle = compareText(isPhrase ? phrase : rawQuery);
   // An explicit query that normalizes to nothing must not become an
   // empty-query browse of every private thought in this workspace.
   // String.trim() treats U+FEFF as whitespace. An explicitly pasted
