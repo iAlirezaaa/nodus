@@ -470,3 +470,8 @@ Search-only `normalizeSearchText` additionally removes U+200B, U+2060 and U+FEFF
 ### ND-001: page-index reconciliation after a shrinking search result set (branch only)
 
 The pure `searchThoughts` return value is the authoritative rendered page offset after result counts change; `NodusApp` now copies that resolved offset back into its transient `searchOffset` state using `searchOffsetCorrection`, unless the typed query is pending via `useDeferredValue`. This prevents a previously stale page index from reappearing when matches grow again and scrolls the result list to its top. This change introduces no data model field, persistence writes, collaboration operation, animation frame or schema change. It remains unverified in the actual app/browser and is not published; see [ND-001 QA](ND-001-SEARCH-QA.md).
+
+
+### ND-001: Arabic alef matching (branch only, 2026-11-14)
+
+The read-only search comparison normalizer in `lib/thought-search.ts` now folds Arabic `أ`, `إ`, `ٱ` to plain `ا` after NFKC so Persian/Arabic keyboard variants can find titles, notes, filenames, quoted phrases and root-to-board paths. Alef-madda `آ` remains distinct. Nothing in the Workspace model, saved text, graph, URL, document revisions or shared operations changes. This remains **In progress on `fix/nd-001-search-clarity`**, without a release until native full tests/build, browser input/390px screenshots and authenticated Sites tree reconciliation complete. See [QA](ND-001-SEARCH-QA.md).
