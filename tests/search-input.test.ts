@@ -37,3 +37,14 @@ test('no matching results safely yields no activation', () => {
   assert.equal(firstSearchResultForEnter('none', 'none', [], () => { throw new Error('no scan'); }), undefined);
   assert.equal(firstSearchResultForEnter('none', 'previous', [{id: 'stale'}], () => []), undefined);
 });
+
+for (const [name, modifiers] of [
+  ['Ctrl', { ctrlKey: true }],
+  ['Alt', { altKey: true }],
+  ['Meta', { metaKey: true }],
+  ['Shift', { shiftKey: true }],
+] as const) {
+  test(name + '+Enter must not activate a search result', () => {
+    assert.equal(shouldActivateSearchResult('Enter', false, 13, modifiers), false);
+  });
+}
