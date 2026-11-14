@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-14T21:14:37.164Z",
-  "heartbeat_at": "2026-11-14T21:22:31.026Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-20261114T221723Z-nd001-release-gate-11",
+  "acquired_at": "2026-11-14T22:17:52.010Z",
+  "heartbeat_at": "2026-11-14T22:17:52.010Z",
+  "expires_at": "2026-11-14T23:47:52.010Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001 shared malformed URL match/preview correction committed and documented; native helper 9/9, standalone TS PASS; project release still Blocked; guarded lease released",
+    "phase": "ND-001 release-gate recovery in progress; inspecting CI/available native environments and existing search branch",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -30,7 +30,7 @@
     "last_test": "Native Node22 helper 9/9 PASS, strict standalone TS 5.8.3 PASS; GitHub SHA matches local hash-object. Integration regressions committed but NOT executed full repo; build/browser/Sites not verified.",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "CI new push completed failure before visible steps; native complete project and Site/browser still unavailable",
-    "observed_control_head": "6b54a0f8c1633ed46c60deb19c318a816bc28f45",
+    "observed_control_head": "7e03487117e14ae0fc70cf0a3594cf18b19939d2",
     "site_source_verification": "UNVERIFIED",
     "active_run_id": "nodus-20261114T1917Z-nd001-native-qa-11",
     "observed_at": "2026-11-14T18:25:21.731Z",
@@ -51,10 +51,10 @@
     "new_test_blob": "067125ad8688f635be8ec67d0a2cc99e69911108",
     "observed_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
-    "observed_feature_branch": "7d9194e3524398fb1f0c0cde901ce1673556ba91",
+    "observed_feature_branch": "8c683bd9842545fcf168494dc9817a0ca72eaba7",
     "observed_feature_tree": "4d9b52beb041013109af139cf06d9fda7c7d3d99",
     "next_action": "Recover full native repo checkout/runner and Sites skill; run full tests/TS5.9.3/build and real 127.0.0.1:4173 FA/EN desktop/390px screenshot, IME/keyboard/Undo/save/reload; inspect authenticated current Site tree and independent review, then guarded ND-001 merge/release; ND-002 afterwards",
-    "run_id": "nodus-20261114T211437-nd001-native-gate",
+    "run_id": "nodus-20261114T221723Z-nd001-release-gate-11",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -81,9 +81,9 @@
     "last_run_id": "nodus-20261114T211437-nd001-native-gate",
     "scoped_task": {
       "id": "ND-001",
-      "problem": "Unreleased search branch has blocked native full test/build and unverifiable Site tree; avoid repeated unverified micro-fixes",
-      "acceptance": "Recover native repo tests, strict project TypeScript/build and browser/Sites parity before release; only commit verified regression on existing feature branch",
-      "slice": "Investigate accessible execution environments and stalled GitHub Actions, then deliver one measured useful ND-001 gate/fix without changing main or live Site",
+      "problem": "Search improvements on unmerged branch remain blocked by lack of full test/build/browser and Site tree parity",
+      "acceptance": "Run native full tests, TS and build if possible; verify Site tree/browser before release; otherwise deliver checked useful tooling fix on the same branch and record blocked gates",
+      "slice": "Recover native checkout/CI gates and inspect scope before a minimal verifiable change",
       "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
@@ -127,5 +127,5 @@
     "code_commit": "26f0fbd87534c12c12750f375e47d2f6ca531ba5",
     "docs_commit": "8c683bd9842545fcf168494dc9817a0ca72eaba7"
   },
-  "updated_at": "2026-11-14T21:22:31.026Z"
+  "updated_at": "2026-11-14T22:17:52.010Z"
 }
