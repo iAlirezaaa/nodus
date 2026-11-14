@@ -97,3 +97,30 @@ test('search preview keeps complete Unicode code points at both snippet boundari
   assert.ok(endPreview?.text.includes('target'));
   assert.equal([...(endPreview?.text ?? '')].some(ch => /^[\uD800-\uDFFF]$/u.test(ch)), false);
 });
+
+
+test('decoded URL search previews remain host-only for Persian and percent-encoded terms', () => {
+  const n = node('', [], '', 'https://example.com/%D9%86%D9%88%D8%AF?access_token=PRIVATE#personal');
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'نود'), { kind: 'link', text: 'example.com' });
+  assert.deepEqual(searchResultPreview(n, 'PRIVATE'), { kind: 'link', text: 'example.com' });
+  assert.equal(JSON.stringify(n), before);
+});
+
+test('quoted URL phrases show a safe link explanation after path decoding or query + decoding', () => {
+  assert.deepEqual(
+    searchResultPreview(node('', [], '', 'https://example.com/story%20board'), '"story board"'),
+    { kind: 'link', text: 'example.com' },
+  );
+  assert.deepEqual(
+    searchResultPreview(node('', [], '', 'https://example.com/?q=blue+hour#secret'), '"blue hour"'),
+    { kind: 'link', text: 'example.com' },
+  );
+  assert.equal(searchResultPreview(node('', [], '', 'https://example.com/blue+hour'), '"blue hour"'), null);
+});
+
+test('malformed URL escape falls back safely without hiding raw URL hits', () => {
+  assert.deepEqual(searchResultPreview(node('', [], '', 'https://example.com/%GG/foo'), 'foo'), {
+    kind: 'link', text: 'example.com',
+  });
+});

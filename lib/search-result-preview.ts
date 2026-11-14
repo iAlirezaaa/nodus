@@ -83,12 +83,24 @@ export function searchResultPreview(
   }
   if (matches(note)) return preview('note', note);
   if (node.asset?.name && matches(node.asset.name)) return preview('file', node.asset.name);
-  if (node.url && matches(node.url)) {
-    // A saved link may contain signed query strings, credentials or fragments.
-    // Search may match them, but the result row should not echo private tokens.
-    let hostname = 'URL';
-    try { hostname = new URL(node.url).hostname || 'URL'; } catch { /* Relative/legacy URL: generic label. */ }
-    return preview('link', hostname);
+  if (node.url) {
+    // URL search also checks valid percent-encoded text and form-style query
+    // spaces. Derive only a comparison value; never display a signed URL.
+    const rawUrl = node.url;
+    const queryAt = rawUrl.indexOf('?');
+    const fragmentAt = rawUrl.indexOf('#');
+    const queryEnd = fragmentAt >= 0 ? fragmentAt : rawUrl.length;
+    const comparable = queryAt >= 0 && (fragmentAt < 0 || queryAt < fragmentAt)
+      ? rawUrl.slice(0, queryAt + 1) + rawUrl.slice(queryAt + 1, queryEnd).replace(/\+/g, ' ') + rawUrl.slice(queryEnd)
+      : rawUrl;
+    let decoded = comparable;
+    try { decoded = decodeURIComponent(comparable); } catch { /* Keep original on malformed percent escapes. */ }
+    if (matches(rawUrl) || matches(decoded)) {
+      // Never echo the query string, fragment or embedded credentials.
+      let hostname = 'URL';
+      try { hostname = new URL(rawUrl).hostname || 'URL'; } catch { /* Relative/legacy URL: generic label. */ }
+      return preview('link', hostname);
+    }
   }
   return note ? preview('note', note) : null;
 }
