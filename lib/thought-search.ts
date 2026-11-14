@@ -172,7 +172,9 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     if (rank >= 0) ranked[rank].push(node);
   }
   const total = ranked.reduce((count, bucket) => count + bucket.length, 0);
-  if (cap > 0 && total > 0 && start >= total) start = Math.floor((total - 1) / cap) * cap;
+  // A stale page is not meaningful when the last matching thought disappears.
+  if (total === 0) start = 0;
+  else if (cap > 0 && start >= total) start = Math.floor((total - 1) / cap) * cap;
   const visible: GraphNode[] = [];
   let seen = 0;
   for (const bucket of ranked) {

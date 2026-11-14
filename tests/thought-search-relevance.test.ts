@@ -34,6 +34,6 @@ test('empty query, zero cap, missing paths and stale offset remain safe',()=>{
  const nodes=[n('a','AAA'),n('b','BBB')];
  assert.deepEqual(searchThoughts(nodes,'').visible.map(n=>n.id),['a','b']);
  assert.deepEqual(searchThoughts(nodes,'a',0,100),{visible:[],total:1,offset:0});
- assert.deepEqual(searchThoughts(nodes,'z',70,140),{visible:[],total:0,offset:140});
+ assert.deepEqual(searchThoughts(nodes,'z',70,140),{visible:[],total:0,offset:0});
  assert.deepEqual(searchThoughts(nodes,'a',70,140).visible.map(n=>n.id),['a']);
 });

@@ -69,7 +69,7 @@ test('out-of-range page after document shrink clamps to last non-empty page', ()
   assert.equal(page.offset, 70);
   assert.equal(page.visible.length, 11);
   assert.deepEqual(page.visible.map(n => n.id), nodes.slice(70).map(n => n.id));
-  assert.deepEqual(searchThoughts(nodes, 'missing', SEARCH_PAGE_SIZE, 140), { visible: [], total: 0, offset: 140 });
+  assert.deepEqual(searchThoughts(nodes, 'missing', SEARCH_PAGE_SIZE, 140), { visible: [], total: 0, offset: 0 });
 });
 
 test('invalid offsets, partial pages and zero cap are safe', () => {
@@ -127,4 +127,16 @@ test('location-only matches retain exact count, capped pages and ignore missing 
   assert.deepEqual(pages.map(page => [page.total, page.offset, page.visible.length]), [[151,0,70],[151,70,70],[151,140,11]]);
   assert.deepEqual(pages.flatMap(page=>page.visible.map(n=>n.id)), nodes.slice(0,151).map(n=>n.id));
   assert.deepEqual(searchThoughts(nodes, 'missing', 70, 0, paths).visible, []);
+});
+
+
+test('last page resets when matches vanish, including an empty workspace, without document changes', () => {
+  const nodes = Array.from({ length: 151 }, (_, i) => thought(String(i), 'طرح Idea ' + i));
+  const before = JSON.stringify(nodes);
+  const last = searchThoughts(nodes, 'idea', SEARCH_PAGE_SIZE, 140);
+  assert.deepEqual([last.total, last.offset, last.visible.length], [151, 140, 11]);
+  assert.deepEqual(searchThoughts(nodes, 'missing', SEARCH_PAGE_SIZE, 140), { visible: [], total: 0, offset: 0 });
+  assert.deepEqual(searchThoughts([], 'idea', SEARCH_PAGE_SIZE, 140), { visible: [], total: 0, offset: 0 });
+  assert.deepEqual(searchThoughts(nodes.slice(0, 70), 'idea', SEARCH_PAGE_SIZE, 140).offset, 0);
+  assert.equal(JSON.stringify(nodes), before);
 });
