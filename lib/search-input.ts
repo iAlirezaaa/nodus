@@ -14,3 +14,8 @@ export function firstSearchResultForEnter<T>(
 ): T | undefined {
   return (typedQuery === displayedQuery ? visiblePage : searchCurrentQuery(typedQuery))[0];
 }
+
+/** Hide deferred-query results until they correspond to the visible input. */
+export function visibleSearchResultsForQuery<T>(typedQuery: string, displayedQuery: string, visiblePage: readonly T[]): readonly T[] {
+  return typedQuery === displayedQuery ? visiblePage : [];
+}

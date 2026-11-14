@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { firstSearchResultForEnter, shouldActivateSearchResult } from '../lib/search-input.ts';
+import { firstSearchResultForEnter, shouldActivateSearchResult, visibleSearchResultsForQuery } from '../lib/search-input.ts';
 
 test('Enter activates a result from the search field; Tab and other keys stay native', () => {
   assert.equal(shouldActivateSearchResult('Enter', false, 13), true);
@@ -48,3 +48,18 @@ for (const [name, modifiers] of [
     assert.equal(shouldActivateSearchResult('Enter', false, 13, modifiers), false);
   });
 }
+
+test('pending deferred search never exposes results from a previous query to pointer activation', () => {
+  const stale = [{id: 'old-project'}, {id: 'old-thought'}];
+  const hidden = visibleSearchResultsForQuery('پروژهٔ جدید', 'پروژهٔ قدیم', stale);
+  assert.deepEqual(hidden, []);
+  assert.notEqual(hidden, stale);
+  assert.equal(stale.length, 2, 'source results remain unchanged');
+});
+
+test('settled search keeps current page identity and ordering, including empty results', () => {
+  const page = [{id: 'current-first'}, {id: 'current-last'}];
+  assert.equal(visibleSearchResultsForQuery('نور', 'نور', page), page);
+  const empty: {id: string}[] = [];
+  assert.equal(visibleSearchResultsForQuery('', '', empty), empty);
+});
