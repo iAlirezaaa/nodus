@@ -43,9 +43,9 @@ test('a quoted mixed-script number stays a single-field phrase', () => {
   assert.deepEqual(searchThoughts([match, split], '«شماره 12.5% نهایی»').visible.map(n => n.id), ['match']);
 });
 
-test('number punctuation remains distinct: decimal is not a grouping separator', () => {
-  assert.equal(searchThoughts([thought('a', '1,500')], '۱٫۵۰۰').total, 0);
-  assert.equal(searchThoughts([thought('b', '1.500')], '۱٬۵۰۰').total, 0);
+test('quoted numeric punctuation remains distinct: decimal is not a grouping separator', () => {
+  assert.equal(searchThoughts([thought('a', '1,500')], '«۱٫۵۰۰»').total, 0);
+  assert.equal(searchThoughts([thought('b', '1.500')], '«۱٬۵۰۰»').total, 0);
 });
 
 test('151 numeric results retain exact count and 70/70/11 bounded paging', () => {
