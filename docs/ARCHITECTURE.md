@@ -71,7 +71,7 @@ The in-progress ND-001 quoted-phrase parser (`lib/search-phrase.ts`) discards on
 
 The query-empty-state predicate is shared by `lib/search-query-state.ts`, `searchThoughts` and `NodusApp` so a copied U+FEFF-only search cannot be mislabeled as an empty workspace. This is a derived UI distinction only, with no network or document writes; branch-only until real UI/Sites checks.
 
-The in-progress ND-001 Search keyboard adapter (`lib/search-input.ts`) keeps modal Enter intent separate from canvas creation shortcuts. `NodusApp` uses the current result page for immediate Enter navigation and recalculates only if `useDeferredValue` still represents an older query; composition/legacy 229 Enter or Ctrl/Alt/Meta/Shift-modified Enter does not trigger navigation. Each search input change returns the result panel to its top without graph or document writes. This is branch-only and requires live browser QA before release.
+The in-progress ND-001 Search keyboard adapter (`lib/search-input.ts`) keeps modal Enter intent separate from canvas creation shortcuts. `NodusApp` uses the current result page for immediate Enter navigation and recalculates only if `useDeferredValue` still represents an older query; composition/legacy 229 Enter or Ctrl/Alt/Meta/Shift-modified Enter does not trigger navigation. Each search input change returns the result panel to its top without graph or document writes. This is branch-only and requires live browser QA before release. The same pure Enter helper now suppresses automatic selection while the input is blank (including immediately after clearing a deferred query), without hiding the 70-item browse list or changing any document state; this also remains branch-only until real UI verification.
 
 ## Canvas and layouts
 
