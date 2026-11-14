@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": "nodus-nd001-20261114T0119Z-native-qa",
+  "owner_run_id": null,
   "acquired_at": "2026-11-14T01:17:23.950Z",
-  "heartbeat_at": "2026-11-14T01:29:05.303Z",
-  "expires_at": "2026-11-14T02:59:05.303Z",
+  "heartbeat_at": "2026-11-14T01:29:36.702Z",
+  "expires_at": null,
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND001_native_11of11_strict_TS5_8_3_pass_docs_ready",
+    "phase": "ND001_normalized_empty_exact_native_11of11_branch_only_lease_released",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -18,8 +18,8 @@
     "deployment_status": "NO NEW DEPLOYMENT",
     "next_task": "ND-001 release gates then ND-002 focus",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "364c28a8a4696dc2f093b482c94f8a4192227e52",
-    "feature_branch_tree": "f44a5d5ce464ab7accef62397e3601774c2ae50c",
+    "feature_branch_head": "4e03ed80626a604831d1992fbf791c82e3968abd",
+    "feature_branch_tree": "5e440a7481943ecaeacfc4c2b1abd0d6c59ba1da",
     "feature_branch": "fix/nd-001-search-clarity",
     "pending_verification": [
       "Full repo native tests, TS 5.9.3, production build",
@@ -27,9 +27,9 @@
       "Authenticated Sites current head/tree/version; reconcile with GitHub before any release",
       "Independent review and guarded merge/publish if release gates pass"
     ],
-    "last_test": "Native Node 22.16.0 isolated exact source/test GitHub blobs 6/6 pass, 1/6 baseline; TypeScript 5.8.3 helper-only strict pass; full repo tests/TS5.9.3/build not run",
+    "last_test": "Native Node 22.16.0 11/11 exact blob target; 2/11 baseline (9 red); isolated exact lib/thought-search.ts strict tsc 5.8.3 PASS; full repo native tests/TS 5.9.3/build NOT RUN",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
-    "last_blocker": "No supported private full checkout (container GitHub DNS unresolved), no Nodus listener at 127.0.0.1:4173, no connected browser or authorized Sites skill/actions; full repository tests/build and real UI screenshot not possible",
+    "last_blocker": "No authorized complete checkout, Sites native skill/action, real app port 4173 browser, screenshot; full release gates blocked",
     "observed_control_head": "0d65dec419b50345e0eb784af468bb3fe7f0bf9c",
     "site_source_verification": "NOT VERIFIED in this run; historical version/deployment only",
     "active_run_id": "nodus-nd001-20261113T231700Z-hourly-11",
@@ -53,7 +53,7 @@
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "observed_feature_branch": "a06590b6b0e503ce2cfcf08e14f868c458d7e21c",
     "observed_feature_tree": "3a35cd5f2d53dc3309d1adb9192cda83b461f01d",
-    "next_action": "Native full project tests/TS5.9.3/build and 4173 real browser screenshots; authorize Sites current head/tree and independently review; guarded merge/publish; ND-002 next",
+    "next_action": "Recover authorized full checkout, run full Node/TS5.9.3/build; real 4173 desktop & 390px FA/EN screenshot including keyboard/IME/save/reload; obtain current Sites source tree; independently review and guarded merge/publish ND-001, then ND-002",
     "run_id": "nodus-nd001-20261113T231700Z-hourly-11",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
@@ -77,7 +77,7 @@
     "source_old_blob": "71da339ec22e0d8b46829a4be9942d12fa2917be",
     "source_new_blob": "6431eba140bee94dc3d3f53ad502ffc937f73e72",
     "source_target": "fix/nd-001-search-clarity",
-    "screenshot": "NONE",
+    "screenshot": "NONE: no real Nodus browser screenshot",
     "last_run_id": "nodus-nd001-20261113T231700Z-hourly-11",
     "scoped_task": {
       "id": "ND-001",
@@ -87,7 +87,7 @@
       "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
-    "site_current_head_tree": "NOT VERIFIED",
+    "site_current_head_tree": "UNAVAILABLE; historical Site IDs only",
     "source_branch": "fix/nd-001-search-clarity",
     "documentation_tree": "5e440a7481943ecaeacfc4c2b1abd0d6c59ba1da",
     "corrected_test_commit": "31afe519178a5ed850ba571ca24ba9cf1e474f9a",
@@ -96,6 +96,6 @@
     "staged_tree": "309789887f03bab82d09c66a3cddb246d50630e8",
     "release_status": "Blocked"
   },
-  "last_completed_run": "nodus-nd001-20261114T0015Z-hourly-12",
-  "updated_at": "2026-11-14T01:29:05.303Z"
+  "last_completed_run": "nodus-nd001-20261114T0119Z-native-qa",
+  "updated_at": "2026-11-14T01:29:36.702Z"
 }
