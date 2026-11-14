@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-14T04:11:53.612Z",
-  "heartbeat_at": "2026-11-14T04:21:00.578Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-20261114T0520Z-nd001-native-search-tests",
+  "acquired_at": "2026-11-14T05:20:19.796Z",
+  "heartbeat_at": "2026-11-14T05:20:19.796Z",
+  "expires_at": "2026-11-14T06:50:19.796Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -30,7 +30,7 @@
     "last_test": "Exact current GitHub source 15/15 V8 search scenarios (previous 10/15); manually extracted native Node normalizer 12/12; extracted strict tsc5.8.3 pass; GitHub Actions 43555845177 failed pre-step; checked-in new test file/full repo TS5.9.3/build NOT RUN",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Actions run 43555845177 failed pre-steps; 4173 absent; current authorized Sites skill/source tree absent",
-    "observed_control_head": "b7b8490e3a4a56c0e14b3779ddb8067e9aaa7858",
+    "observed_control_head": "7704556cd622897945ca94b349c7c676ead027da",
     "site_source_verification": "NOT VERIFIED in this run; historical version/deployment only",
     "active_run_id": "nodus-20261114T0413Z-nd001-native-validation",
     "observed_at": "2026-11-14T00:24:00.000Z",
@@ -54,7 +54,7 @@
     "observed_feature_branch": "5a70cad984d13c22890c64f669cc1d44e4b2a548",
     "observed_feature_tree": "fceb7bfca811064c0b3d4c756a73653f5cae3975",
     "next_action": "Recover full source and GitHub Actions failed check annotation (runner 43555845177), run full checked-in Node/tsc5.9.3/build, verify actual port 4173 FA/EN desktop/mobile screenshots and Sites head/tree, independent review then guarded publish; ND-002 after ND-001 release.",
-    "run_id": "nodus-nd001-20261113T231700Z-hourly-11",
+    "run_id": "nodus-20261114T0520Z-nd001-native-search-tests",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -73,7 +73,7 @@
     "phrase_new_code_blob": "5b61f400d9833c2def267398ca40abd62719c5b1",
     "phrase_old_code_blob": "44d74a4e36b0c116bd63f88562c67cdd14555f96",
     "phrase_tests_local_blob": "57d30d1ac082b815746d1b63a307220626df5908",
-    "current_goal": "Restore full authorized Nodus checkout/Sites access; validate and publish current in-progress ND-001 branch before starting ND-002",
+    "current_goal": "Native checked-in regressions and full-source release-gate recovery without Sites deployment",
     "source_old_blob": "71da339ec22e0d8b46829a4be9942d12fa2917be",
     "source_new_blob": "6431eba140bee94dc3d3f53ad502ffc937f73e72",
     "source_target": "fix/nd-001-search-clarity",
@@ -81,9 +81,9 @@
     "last_run_id": "nodus-nd001-20261113T231700Z-hourly-11",
     "scoped_task": {
       "id": "ND-001",
-      "problem": "Search branch is blocked by full native build, Site/tree and real browser gates; latest branch has possible CI workflow gate",
-      "acceptance": "Independent native tests, TS5.9.3 and build; real app 4173 FA/EN desktop+390px screenshots; site tree match; keep unpublished until verified",
-      "slice": "Recover current repo CI/QA and native checkout; fix a demonstrable ND-001 regression or release-gate issue and record exact evidence",
+      "problem": "Native checked-in tests and project build unverified; Actions fails pre-steps, no 4173 runtime and no Sites source API.",
+      "acceptance": "Reproduce and test one real ND-001 behavior using exact checked-in source; full repo TS/build and Site/browser remain blocked unless actually run.",
+      "slice": "Fetch GitHub source and checked-in targeted suite into isolated runtime, execute regression tests; correct concrete failures on existing branch or record a verified blocker.",
       "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
@@ -97,5 +97,5 @@
     "release_status": "Blocked"
   },
   "last_completed_run": "nodus-20261114T0413Z-nd001-native-validation",
-  "updated_at": "2026-11-14T04:21:00.578Z"
+  "updated_at": "2026-11-14T05:20:19.796Z"
 }
