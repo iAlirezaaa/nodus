@@ -67,6 +67,13 @@ Nodus باید فضای واقعی و ماندگاری برای فکرکردن �
 
 **Next:** Obtain supported full private checkout and Sites actions; run project tests/TS 5.9.3/build and desktop/390px FA/EN keyboard/IME/Undo/reload browser screenshots; reconcile Site tree, then guarded review/merge/publish only on green. ND-002 focus mode follows verified ND-001.
 
+
+### 2026-11-14 00:22 UTC — ND-001 Persian numeric notation (run 12; branch only)
+
+**In progress; release Blocked.** Numeric marks ٪, ٫ and ٬ now compare as %, . and , in the existing read-only search, for both Persian/Arabic and ASCII input. This improves shot numbers, percentages, filenames and nested project paths without changing original text, identifiers, URLs, ordering, 70-item pages or keyboard behavior. Unquoted queries retain fuzzy keyword matching; quoted phrases distinguish decimal and grouping punctuation.
+
+Source commit [fcff7fc](https://github.com/iAlirezaaa/nodus/commit/fcff7fc78a99a484c602fac04865dc2e61b74b54); test correction [31afe51](https://github.com/iAlirezaaa/nodus/commit/31afe519178a5ed850ba571ca24ba9cf1e474f9a), tree 36b332cb868f0aab479bc832cb0016c1f1147342. Byte-matched GitHub blobs: source 91f12be855feda14db6cb89d935580d11331ba02, test 67285cecec764527decb547329e96e8e392f46be. Native isolated Node 22.16.0 test suite: **6/6 passed**, baseline without the mapping: **1/6 passed**. Helper-only strict TypeScript 5.8.3 passed using a minimal local domain stub. [QA](ND-001-SEARCH-QA.md). Full repository tests, TS5.9.3, build, real app 4173 browser/390px screenshots and authenticated Sites tree remain unavailable. Screenshot: none; deployment: none new; main and Site unchanged. Next: restore authorized checkout/Sites, verify release gates, reconcile trees and independently review before guarded merge/publish; then ND-002.
+
 ## ۲. امکانات و مدیریت پروژه
 
 | شناسه | کار و نتیجهٔ مورد انتظار | معیار پذیرش | وضعیت / مسیر |
