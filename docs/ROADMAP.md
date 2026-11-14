@@ -1,6 +1,6 @@
 # رودمپ Nodus
 
-آخرین به‌روزرسانی: ۲۰۲۶-۱۱-۱۲ · مالک: Hades · مخزن: [iAlirezaaa/nodus](https://github.com/iAlirezaaa/nodus)
+آخرین به‌روزرسانی: ۲۰۲۶-۱۱-۱۴ · مالک: Hades · مخزن: [iAlirezaaa/nodus](https://github.com/iAlirezaaa/nodus)
 
 ## هدف محصول
 
@@ -252,3 +252,7 @@ Branch `fix/nd-001-search-clarity`; scope-first [c519caf](https://github.com/iAl
 ### 2026-11-14 18:22 UTC — ND-001 emoji-safe search excerpt (branch only)
 
 **In progress; release Blocked.** Existing search-result previews can cut a UTF-16 emoji surrogate pair when a relevant term falls deep inside a long note; the new `lib/search-excerpt-bounds.ts` snaps both edges to complete Unicode code points while keeping the original 96-code-unit window. Source and tests: [`4a2e3466b4e2`](https://github.com/iAlirezaaa/nodus/commit/4a2e3466b4e22076116f5e7d2396588f10db42f7), code tree `678784ff006bd61918fbb2d087246e2efba7b640`. Targeted native Node 22.16.0 **4/4** (exact GitHub helper/test blob SHAs `5aa3b0e41671d3da5e41c326748aaa870273ef31` / `d5b32a16db6cf74dd84716e6c562c73926b24237`), standalone strict TypeScript 5.8.3 **PASS**; baseline old slicing failed both surrogate-boundary scenarios. Integrated preview regression added but not native-run with the complete repo. Search counts, 70/page, project paths, persisted data, URL token redaction and keyboard/pan/drag/Undo remain unchanged. Full native suite, TS5.9.3/build, browser 4173 desktop/390px screenshot and current Sites tree **not verified**. [CI run 43626225275](https://github.com/iAlirezaaa/nodus/actions/runs/43626225275) failed with `steps=null` before test evidence. Screenshot: NONE. No main merge, Site version/deployment or user/audience change. Next: restore full release checks and safely reconcile Sites, then ND-002.
+
+### 2026-11-14 19:23 UTC — ND-001: پیش‌نمایش با نویسهٔ کامل (فقط برنچ)
+
+**In progress · Release Blocked.** پیش‌نمایش Search / «فکرت را پیدا کن» اکنون با `Intl.Segmenter` در مرورگرهای پشتیبانی‌کننده از وسط یک نویسهٔ قابل‌دیدن (ایموجی متصل 👩‍💻، خانواده 👨‍👩‍👧‍👦، پرچم 🇷🇺، اعراب/ترکیب) بریده نمی‌شود؛ در محیط‌های قدیمی، روش محافظت‌شدهٔ UTF-16 قبلی باقی است. محدودهٔ عادی ۹۶ واحد کد، شمارش صادقانه، صفحه‌های ۷۰تایی، مسیر کامل پروژه، کنترل‌های کیبورد و داده‌های ذخیره‌شده تغییری نکردند. کد [`8b922030`](https://github.com/iAlirezaaa/nodus/commit/8b922030eddf47ce3651abc5b0da53d52da8c083)، tree `87d0c25cd082f4dc6038cb1d8137f0e6ce12d764`. آزمون محلی Node 22.16 با فایل‌های دارای hash برابر GitHub: **۹/۹** (۴ قدیمی + ۵ جدید) موفق، کد قبلی در ۴ مورد از ۵ تست تازه شکست؛ TypeScript مستقل 5.8.3 پاس. تست سراسری/TS5.9.3/build/مرورگر 4173/Screenshot و head/tree فعلی Site **انجام نشد**؛ [Actions 43631813712](https://github.com/iAlirezaaa/nodus/actions/runs/43631813712) پیش از runner شکست خورد (runner_id=0, steps=[]). انتشار/نسخهٔ جدید: **ندارد**؛ `main` و مخاطب/داده‌های Site دست‌نخورده. گام بعدی: بازیابی محیط تست کامل و Sites، بازبینی مستقل، سپس guarded merge/deploy فقط پس از green؛ ND-002 بعد از ND-001.
