@@ -88,7 +88,6 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     if (!needle) { ranked[0].push(node); continue; }
     const title = compareText(node.title);
     const compactTitle = compactNormalized(title);
-    const foldedTitle = persianPhraseNeedle ? foldPersianSpaces(title) : '';
     const path = normalizedPaths?.get(node.boardId);
     let rank = -1;
     // Exact normalized titles must win over punctuation/spacing-insensitive
