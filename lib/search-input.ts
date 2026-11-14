@@ -12,6 +12,10 @@ export function firstSearchResultForEnter<T>(
   visiblePage: readonly T[],
   searchCurrentQuery: (query: string) => readonly T[],
 ): T | undefined {
+  // Blank Search intentionally browses all workspace thoughts, but pressing
+  // Enter without a search must not open an unrelated first node. In
+  // particular, clearing a query can leave a stale deferred page briefly.
+  if (!typedQuery.trim()) return undefined;
   return (typedQuery === displayedQuery ? visiblePage : searchCurrentQuery(typedQuery))[0];
 }
 

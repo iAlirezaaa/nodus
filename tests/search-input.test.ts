@@ -63,3 +63,26 @@ test('settled search keeps current page identity and ordering, including empty r
   const empty: {id: string}[] = [];
   assert.equal(visibleSearchResultsForQuery('', '', empty), empty);
 });
+
+test('Enter with an untouched or visually blank Search field never opens an arbitrary thought', () => {
+  const firstWorkspaceThought = [{ id: 'not-searched-for' }];
+  for (const query of ['', ' \t ', '\uFEFF', '\u3000']) {
+    assert.equal(firstSearchResultForEnter(query, query, firstWorkspaceThought, () => {
+      throw new Error('blank Search should not scan the workspace on Enter');
+    }), undefined, 'blank input ' + JSON.stringify(query) + ' must not navigate');
+  }
+});
+
+test('clearing a search while deferred results lag never triggers a full-workspace Enter navigation', () => {
+  const stale = [{ id: 'stale-other-project' }];
+  const calls: string[] = [];
+  for (const query of ['', ' ', '\uFEFF']) {
+    const result = firstSearchResultForEnter(query, 'previous project', stale, current => {
+      calls.push(current);
+      return [{ id: 'first-unrelated-thought' }];
+    });
+    assert.equal(result, undefined, 'cleared input ' + JSON.stringify(query) + ' must not navigate');
+  }
+  assert.deepEqual(calls, [], 'clearing Search must not trigger a fallback scan on Enter');
+  assert.equal(stale[0].id, 'stale-other-project');
+});
