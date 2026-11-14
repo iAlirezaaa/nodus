@@ -12,3 +12,15 @@ export function anyAnnotationFieldMatches(
   return (annotations ?? []).some(annotation =>
     matchesField(annotation.quote) || matchesField(annotation.body));
 }
+
+/** Match unordered, already-normalized query words only inside one field.
+ * A caller must not use this fallback for a balanced quoted exact phrase.
+ * Do not concatenate a quote, comment or different annotations.
+ */
+export function annotationKeywordsMatch(field: string, keywords: readonly string[]): boolean {
+  if (keywords.length < 2 || keywords.some(word => !word)) return false;
+  // Match Persian joined/spaced compounds without changing the saved comment.
+  const folded = field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1');
+  return keywords.every(word => field.includes(word) ||
+    (/[\u0600-\u06FF]/u.test(word) && folded.includes(word)));
+}

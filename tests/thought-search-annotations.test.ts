@@ -42,3 +42,36 @@ test('151 comment matches maintain exact totals, 70/70/11 pages and stable IDs',
   assert.deepEqual(pages.map(p => [p.total,p.offset,p.visible.length]), [[151,0,70],[151,70,70],[151,140,11]]);
   assert.deepEqual(pages.flatMap(p=>p.visible.map(n=>n.id)), nodes.map(n=>n.id));
 });
+
+test('unordered annotation words find one comment or quote without changing title/note priority', () => {
+  const nodes = [
+    node('comment', 'Reference', '', [annotation('frame 10', 'lighting revise')]),
+    node('title', 'revise lighting'),
+    node('note', 'Reference', 'revise lighting'),
+    node('cross', 'Reference', '', [annotation('revise', 'lighting')]),
+    node('quote', 'Reference', '', [annotation('lighting revise', 'elsewhere')]),
+  ];
+  const before = JSON.stringify(nodes);
+  assert.deepEqual(searchThoughts(nodes, 'revise lighting').visible.map(n => n.id),
+    ['title', 'note', 'comment', 'quote']);
+  assert.deepEqual(searchThoughts(nodes, '«revise lighting»').visible.map(n => n.id),
+    ['title', 'note']);
+  assert.equal(JSON.stringify(nodes), before);
+});
+
+test('unordered Persian annotation keywords match spaced compounds without joining fields', () => {
+  const nodes = [
+    node('comment', 'Reference', '', [annotation('بخش یک', 'طرح کتاب های کودک')]),
+    node('split', 'Reference', '', [annotation('کتابهای', 'کودک')]),
+  ];
+  assert.deepEqual(searchThoughts(nodes, 'کودک کتابهای').visible.map(n => n.id), ['comment']);
+  assert.equal(searchThoughts(nodes, '«کودک کتابهای»').total, 0);
+});
+
+test('151 unordered annotation matches maintain honest 70/70/11 paging', () => {
+  const nodes = Array.from({ length: 151 }, (_, i) =>
+    node(String(i), 'Scene ' + i, '', [annotation('frame ' + i, 'lighting revise')]));
+  const pages = [0, 70, 140].map(offset => searchThoughts(nodes, 'revise lighting', SEARCH_PAGE_SIZE, offset));
+  assert.deepEqual(pages.map(p => [p.total, p.offset, p.visible.length]), [[151, 0, 70], [151, 70, 70], [151, 140, 11]]);
+  assert.deepEqual(pages.flatMap(p => p.visible.map(n => n.id)), nodes.map(n => n.id));
+});

@@ -1,7 +1,7 @@
 import type { GraphNode, Workspace } from './types';
 import { parseQuotedSearchPhrase } from './search-phrase';
 import { hasExplicitSearchQuery } from './search-query-state';
-import { anyAnnotationFieldMatches } from './search-annotations';
+import { anyAnnotationFieldMatches, annotationKeywordsMatch } from './search-annotations';
 
 export const SEARCH_PAGE_SIZE = 70;
 export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset: number; }
@@ -177,7 +177,10 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     // Comments and selected quotes are discoverable even when the note text
     // has since changed. Keep each field isolated for exact-phrase semantics
     // and leave prior title/path/notes ordering untouched.
-    if (rank < 0 && anyAnnotationFieldMatches(node.annotations, value => includes(compareText(value)))) rank = 9;
+    if (rank < 0 && anyAnnotationFieldMatches(node.annotations, value => {
+      const text = compareText(value);
+      return includes(text) || (!isPhrase && annotationKeywordsMatch(text, keywords));
+    })) rank = 9;
     if (rank >= 0) ranked[rank].push(node);
   }
   const total = ranked.reduce((count, bucket) => count + bucket.length, 0);
