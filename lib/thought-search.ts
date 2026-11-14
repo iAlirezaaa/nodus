@@ -8,6 +8,9 @@ export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset
 /** Compare mixed Persian/Arabic keyboard spellings without rewriting saved content. */
 function normalizeSearchText(value: string): string {
   const normalized = value.normalize('NFKC')
+    // Arabic hamzated/wasla alef and plain Persian alef are equivalent for
+    // finding ideas; preserve madda (آ) and all persisted spelling.
+    .replace(/[\u0623\u0625\u0671]/g, 'ا')
     .replace(/[\u064A\u0649]/g, 'ی')
     .replace(/\u0643/g, 'ک')
     .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
