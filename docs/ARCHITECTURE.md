@@ -465,3 +465,8 @@ In `components/NodusApp.tsx`, the search result renders its full derived `search
 ### ND-001 branch-only copied Unicode separators (2026-11-14)
 
 Search-only `normalizeSearchText` additionally removes U+200B, U+2060 and U+FEFF (invisible text-formatting separators frequently carried by copy/paste) while preserving U+200D, which is semantically important to emoji sequences. The search entry point distinguishes an explicitly pasted all-invisible query (including U+FEFF, normally stripped by JavaScript `trim`) from an intentionally blank browse. There is no persisted mutation, migration, added index, new shortcut or collaboration change; final acceptance still depends on the native application/browser/Sites release gates. See [ND-001 QA](ND-001-SEARCH-QA.md).
+
+
+### ND-001: page-index reconciliation after a shrinking search result set (branch only)
+
+The pure `searchThoughts` return value is the authoritative rendered page offset after result counts change; `NodusApp` now copies that resolved offset back into its transient `searchOffset` state using `searchOffsetCorrection`, unless the typed query is pending via `useDeferredValue`. This prevents a previously stale page index from reappearing when matches grow again and scrolls the result list to its top. This change introduces no data model field, persistence writes, collaboration operation, animation frame or schema change. It remains unverified in the actual app/browser and is not published; see [ND-001 QA](ND-001-SEARCH-QA.md).
