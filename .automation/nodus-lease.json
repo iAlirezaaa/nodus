@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261114T1015Z-hourly11",
   "acquired_at": "2026-11-14T10:15:14.810Z",
-  "heartbeat_at": "2026-11-14T10:15:14.810Z",
-  "expires_at": "2026-11-14T11:45:14.810Z",
+  "heartbeat_at": "2026-11-14T10:21:48.922Z",
+  "expires_at": "2026-11-14T11:51:48.922Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "Run 11 startup: inspect current CI and native source, implement one verified ND-001 correctness fix if needed; branch only until full gates",
+    "phase": "Scoped in development log; native 11/11 baseline; new blank-query Enter regression 11/13 RED, patched 13/13 GREEN; isolated TS5.8.3 PASS; prepare guarded code/test commit",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -33,7 +33,7 @@
     "observed_control_head": "860587959453c5a9ed0a1b265cee82742fb4107c",
     "site_source_verification": "NOT CHECKED: Sites tools/skill unavailable this run; historical identifiers retained; no change to live site",
     "active_run_id": "nodus-20261114T0413Z-nd001-native-validation",
-    "observed_at": "2026-11-14T10:15:14.810Z",
+    "observed_at": "2026-11-14T10:21:48.922Z",
     "source_code_commit": "024681412ab801b383372c86a70691bab6795cee",
     "test_helper_blob": "0fd6e873447b56b6ec5de9464f2147a2e21a70a8",
     "test_cases_blob": "72b2594b5f6a4132594193111ee0e3e3ba8bdf31",
@@ -103,7 +103,8 @@
     "current_task_id": "ND-001",
     "parser_blob": "91db2c206c4abf60eddcdb8a0ef10dcff3c22a5b",
     "integration_test_blob": "bc1a624c8d8caad9bba36d7f68024b087a3023e8",
-    "ci_findings": "Actions job runner_id=0, steps=[], empty logs; pre-runner failure; not a code-test failure"
+    "ci_findings": "Actions job runner_id=0, steps=[], empty logs; pre-runner failure; not a code-test failure",
+    "ci_retry": "Actions 43575205199 attempt 2 failure before runner: runner_id=0 steps=[]"
   },
   "last_completed_run": "nodus-20261114T0909Z-nd001-ci-gates-11",
   "updated_at": "2026-11-14T09:20:40.012Z"
