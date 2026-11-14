@@ -82,3 +82,18 @@ test('deep compact aliases and quoted joined Persian words have relevant preview
   const phrase = searchResultPreview(node('x'.repeat(180) + ' کتاب های کودک ثبت شد'), '«کتابهای کودک»');
   assert.ok(phrase?.text.includes('کتاب های کودک'), phrase?.text);
 });
+
+
+test('search preview keeps complete Unicode code points at both snippet boundaries', () => {
+  const nearStart = node('x'.repeat(153) + '😀' + 'x'.repeat(25) + 'نقشه');
+  const startPreview = searchResultPreview(nearStart, 'نقشه');
+  assert.equal(startPreview?.kind, 'note');
+  assert.ok(startPreview?.text.includes('😀'), startPreview?.text);
+  assert.equal([...(startPreview?.text ?? '')].some(ch => /^[\uD800-\uDFFF]$/u.test(ch)), false);
+
+  const nearEnd = node('x'.repeat(180) + 'target' + 'x'.repeat(63) + '😀' + 'tail');
+  const endPreview = searchResultPreview(nearEnd, 'target');
+  assert.equal(endPreview?.kind, 'note');
+  assert.ok(endPreview?.text.includes('target'));
+  assert.equal([...(endPreview?.text ?? '')].some(ch => /^[\uD800-\uDFFF]$/u.test(ch)), false);
+});

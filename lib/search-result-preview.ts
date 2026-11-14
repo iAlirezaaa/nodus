@@ -2,6 +2,7 @@ import type { GraphNode } from './types';
 import { normalizeSearchText } from './thought-search';
 import { parseQuotedSearchPhrase } from './search-phrase';
 import { annotationKeywordsMatch } from './search-annotations';
+import { searchExcerptBounds } from './search-excerpt-bounds';
 
 export type SearchResultPreviewKind = 'comment' | 'quote' | 'note' | 'file' | 'link';
 export interface SearchResultPreview { kind: SearchResultPreviewKind; text: string; }
@@ -55,8 +56,7 @@ export function searchResultPreview(
         break;
       }
     }
-    const start = Math.max(0, (index < 0 ? 0 : index) - 26);
-    const end = Math.min(source.length, start + 96);
+    const { start, end } = searchExcerptBounds(source, Math.max(0, (index < 0 ? 0 : index) - 26));
     return (start ? '…' : '') + source.slice(start, end).trim() + (end < source.length ? '…' : '');
   };
   const preview = (kind: SearchResultPreviewKind, value: string): SearchResultPreview => ({ kind, text: excerpt(value) });
