@@ -161,3 +161,28 @@ test('annotation-only hits retain their source explanation after priority alignm
   const quote = node('', [{ quote: 'camera storyboard', body: 'Reviewed' }]);
   assert.deepEqual(searchResultPreview(quote, 'storyboard'), { kind: 'quote', text: 'camera storyboard' });
 });
+
+
+test('direct filename is explained before a directly matching note (engine tier 4 before 5)', () => {
+  const n = node('Storyboard planning in notes', [], 'Storyboard-reference.pdf');
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'storyboard'), { kind: 'file', text: 'Storyboard-reference.pdf' });
+  assert.equal(JSON.stringify(n), before);
+});
+test('a direct URL hit outranks separated unordered words in a note', () => {
+  const n = node('lighting was revised after a lengthy camera review', [
+    { quote: 'draft', body: 'review lighting eventually' },
+  ], '', 'https://example.com/lighting-review?access_token=SECRET_PRIVATE#draft');
+  const original = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'lighting review'), { kind: 'link', text: 'example.com' });
+  assert.ok(!searchResultPreview(n, 'lighting review')?.text.includes('SECRET_PRIVATE'));
+  assert.equal(JSON.stringify(n), original);
+});
+test('unordered note terms remain a relevant explanation without a stronger direct hit', () => {
+  const n = node('Review the color pass before final lighting', [{ quote: 'lighting', body: 'review' }]);
+  assert.equal(searchResultPreview(n, 'lighting review')?.kind, 'note');
+});
+test('strong direct note beats an unordered filename fallback', () => {
+  const n = node('camera layout approved', [], 'camera_checklist_for_layout.pdf');
+  assert.equal(searchResultPreview(n, 'camera layout')?.kind, 'note');
+});

@@ -68,35 +68,41 @@ export function searchResultPreview(
   const folded = (value: string) => value.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF0-9])/gu, '$1');
   const persianPhraseNeedle = isPhrase && /[\u0600-\u06FF]/u.test(needle) ? folded(needle) : '';
   const keywords = needle.split(/[\s,;،؛]+/u).filter(Boolean);
-  const matches = (value: string) => {
+  // Keep the preview's *kind* consistent with searchThoughts' tiers:
+  // direct filename (4), note (5), URL (6), unordered/cross-field keywords (8),
+  // annotations (9). Unordered terms in a note must not override a stronger
+  // direct URL match; a filename must not lose to a directly matching note.
+  const matchesDirectly = (value: string) => {
     if (!value) return false;
     const normalized = compare(value);
     return normalized.includes(needle)
       || (persianPhraseNeedle.length > 0 && folded(normalized).includes(persianPhraseNeedle))
-      || (compactNeedle.length > 0 && compact(normalized).includes(compactNeedle))
-      || (!isPhrase && annotationKeywordsMatch(normalized, keywords));
+      || (compactNeedle.length > 0 && compact(normalized).includes(compactNeedle));
   };
-  // An annotation-only result must show the reason it was found, rather than
-  // unrelated opening note text or a generic node-kind label.
-  if (matches(note)) return preview('note', note);
-  if (node.asset?.name && matches(node.asset.name)) return preview('file', node.asset.name);
+  const matchesKeywords = (value: string) =>
+    Boolean(value) && !isPhrase && annotationKeywordsMatch(compare(value), keywords);
+  const filename = node.asset?.name ?? '';
+  if (matchesDirectly(filename)) return preview('file', filename);
+  if (matchesDirectly(note)) return preview('note', note);
   if (node.url) {
-    // URL search also checks valid percent-encoded text and form-style query
-    // spaces. Derive only a comparison value; never display a signed URL.
+    // Compare encoded links, but reveal only the hostname; never a signed path,
+    // query, fragment, user info, or saved URL.
     const rawUrl = node.url;
     const decoded = comparableSearchUrl(rawUrl);
-    if (matches(rawUrl) || matches(decoded)) {
-      // Never echo the query string, fragment or embedded credentials.
+    if (matchesDirectly(rawUrl) || matchesDirectly(decoded)) {
       let hostname = 'URL';
       try { hostname = new URL(rawUrl).hostname || 'URL'; } catch { /* Relative/legacy URL: generic label. */ }
       return preview('link', hostname);
     }
   }
-  // Comments and quotes are the last-ranked searchable fields. If a note,
-  // filename or saved URL also matches, explain that stronger hit instead.
+  // The search engine's unordered/cross-field fallback follows direct URL
+  // matches. Preserve a useful note when the entire term set is in one note.
+  if (matchesKeywords(note)) return preview('note', note);
+  if (matchesKeywords(filename)) return preview('file', filename);
+  // Comments and quotes have the lowest rank, and phrases remain field-local.
   for (const annotation of node.annotations ?? []) {
-    if (matches(annotation.body)) return preview('comment', annotation.body);
-    if (matches(annotation.quote)) return preview('quote', annotation.quote);
+    if (matchesDirectly(annotation.body) || matchesKeywords(annotation.body)) return preview('comment', annotation.body);
+    if (matchesDirectly(annotation.quote) || matchesKeywords(annotation.quote)) return preview('quote', annotation.quote);
   }
   return note ? preview('note', note) : null;
 }
