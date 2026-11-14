@@ -12,6 +12,11 @@ function normalizeSearchText(value: string): string {
     // Copied RTL/LTR directional marks alter display order, not search content.
     .replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, '')
     .replace(/\u200C/g, '')
+    // Arabic numeric percent, decimal and grouping marks equal their ASCII
+    // counterparts in search comparisons; never rewrite stored strings.
+    .replace(/\u066A/g, '%')
+    .replace(/\u066B/g, '.')
+    .replace(/\u066C/g, ',')
     .replace(/[\u0660-\u0669\u06F0-\u06F9]/g, digit =>
       String.fromCharCode(48 + digit.charCodeAt(0) - (digit.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660)))
     // Case-fold independently of the viewer’s UI locale (e.g. Turkish I/ı).
