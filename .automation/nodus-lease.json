@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-14T16:18:06.579Z",
-  "heartbeat_at": "2026-11-14T16:41:33.286Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-20261114T1644Z-nd001-reconcile-1794674727",
+  "acquired_at": "2026-11-14T16:45:27.719Z",
+  "heartbeat_at": "2026-11-14T16:45:27.719Z",
+  "expires_at": "2026-11-14T18:15:27.719Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001 exact-title/prefix relevance fix tested with exact-source V8, documentation committed; release BLOCKED; guarded lease released",
+    "phase": "Inspect current ND-001 work, native CI/checkout feasibility and actionable search issue; source mutations only after guarded lease",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -29,7 +29,7 @@
     "last_test": "5/5 checked-in exact-GitHub-source tests after mechanical TypeScript strip in V8 (baseline 1/5), 7/7 additional V8 regressions, isolated Node22 ranking fragment 3/3 and strict TypeScript5.8.3 fragment PASS; native full project Node suite, project TS5.9.3 and npm build NOT RUN",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Private GitHub clone DNS unavailable; port 4173 refused; no Sites skill/action; Actions runner_id=0",
-    "observed_control_head": "ea9ca3350363643e5d1613aa9f2c8eb5fa374e5e",
+    "observed_control_head": "98dfb187dc326aa3ea16550e17583d36b24f5a7e",
     "site_source_verification": "UNVERIFIED; historical Site IDs preserved only",
     "active_run_id": "nodus-20261114T1518Z-nd001-native-gates-1794669567937",
     "observed_at": "2026-11-14T16:41:33.286Z",
@@ -53,7 +53,7 @@
     "observed_feature_branch": "f9e66b97365a3925f098116e50209c5ec138e394",
     "observed_feature_tree": "9e00b0eaf98f41c829b3c91da248fac58e50bf54",
     "next_action": "Recover full repo checkout or working GH runner, native full tests/TS5.9.3/build; authentic 4173 browser desktop/390px FA/EN screenshots/IME/Undo/save reload; authenticated Sites tree reconciliation and independent review; guarded merge and publication; ND-002 after ND-001",
-    "run_id": "nodus-20261114T161806-nd001-resume",
+    "run_id": "nodus-20261114T1644Z-nd001-reconcile-1794674727",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -86,7 +86,7 @@
       "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
-    "site_current_head_tree": "UNVERIFIED; Sites skill list empty, browser denied originating context",
+    "site_current_head_tree": "UNVERIFIED",
     "source_branch": "fix/nd-001-search-clarity",
     "documentation_tree": "9e00b0eaf98f41c829b3c91da248fac58e50bf54",
     "corrected_test_commit": "31afe519178a5ed850ba571ca24ba9cf1e474f9a",
@@ -106,9 +106,9 @@
     "ci_retry": "Actions 43575205199 attempt 2 failure before runner: runner_id=0 steps=[]",
     "scope": {
       "task": "ND-001",
-      "problem": "Pending whole-project build and authentic app/Sites reconciliation; ensure search regression is real before extending",
-      "acceptance": "Native relevant tests, TypeScript; full suite/build, real 4173 FA/EN desktop/mobile screenshots and Sites current tree required before any release",
-      "slice": "Restore native CI, then correct a high-value search behavior while release blocked",
+      "problem": "ND-001 search improvements remain unpublished because CI runner/browser/build/Sites verification are blocked; check native gates and one concrete regression",
+      "acceptance": "Targeted behavioral tests and TypeScript; full suite+build, actual port 4173 FA/EN browser screenshot, current Sites tree, review required before release",
+      "slice": "Reconcile current branch and CI; implement a single independently testable ND-001 regression if native gates remain inaccessible; leave release blocked",
       "branch": "fix/nd-001-search-clarity"
     },
     "branch": "fix/nd-001-search-clarity",
@@ -116,5 +116,5 @@
     "last_completed_at": "2026-11-14T16:41:33.286Z"
   },
   "last_completed_run": "nodus-20261114T161806-nd001-resume",
-  "updated_at": "2026-11-14T16:41:33.286Z"
+  "updated_at": "2026-11-14T16:45:27.719Z"
 }
