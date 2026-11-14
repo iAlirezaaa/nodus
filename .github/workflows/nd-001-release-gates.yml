@@ -4,6 +4,20 @@ on:
   push:
     branches:
       - fix/nd-001-search-clarity
+    paths:
+      - '.github/workflows/nd-001-release-gates.yml'
+      - 'app/**'
+      - 'components/**'
+      - 'hooks/**'
+      - 'lib/**'
+      - 'tests/**'
+      - 'db/**'
+      - 'drizzle/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vite.config.*'
   workflow_dispatch:
 
 permissions:
