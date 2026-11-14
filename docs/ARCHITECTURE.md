@@ -456,3 +456,8 @@ The existing pure `lib/thought-search.ts` URL matcher first decodes the complete
 ### Search-result path presentation (ND-001, branch-only 2026-11-13)
 
 In `components/NodusApp.tsx`, the search result renders its full derived `searchPaths.get(node.boardId)` (or an explicit unknown-location fallback) as a separate `dir="auto"` line above the note/type preview. `app/globals.css` allows nested paths to wrap without clipping and uses 12px text for path, 11px for preview, 11px for result count. These are read-only presentation changes: neither `searchThoughts` nor the saved workspace protocol changed. Feature branch `fix/nd-001-search-clarity`; real UI/build/Sites release gates remain blocked.
+
+
+### ND-001 branch-only copied Unicode separators (2026-11-14)
+
+Search-only `normalizeSearchText` additionally removes U+200B, U+2060 and U+FEFF (invisible text-formatting separators frequently carried by copy/paste) while preserving U+200D, which is semantically important to emoji sequences. The search entry point distinguishes an explicitly pasted all-invisible query (including U+FEFF, normally stripped by JavaScript `trim`) from an intentionally blank browse. There is no persisted mutation, migration, added index, new shortcut or collaboration change; final acceptance still depends on the native application/browser/Sites release gates. See [ND-001 QA](ND-001-SEARCH-QA.md).
