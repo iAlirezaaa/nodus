@@ -91,8 +91,10 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     const foldedTitle = persianPhraseNeedle ? foldPersianSpaces(title) : '';
     const path = normalizedPaths?.get(node.boardId);
     let rank = -1;
-    if (title === needle || (persianPhraseNeedle.length > 0 && foldedTitle === persianPhraseNeedle) || (compactNeedle.length > 0 && compactTitle === compactNeedle)) rank = 0;
-    else if (title.startsWith(needle) || (persianPhraseNeedle.length > 0 && foldedTitle.startsWith(persianPhraseNeedle)) || (compactNeedle.length > 0 && compactTitle.startsWith(compactNeedle))) rank = 1;
+    // Exact normalized titles must win over punctuation/spacing-insensitive
+    // aliases. Compact matches remain discoverable at the substring tier.
+    if (title === needle) rank = 0;
+    else if (title.startsWith(needle)) rank = 1;
     else if (includes(title, compactTitle)) rank = 2;
     else if (path && includes(path.normalized, path.compact)) rank = 3;
     else {
