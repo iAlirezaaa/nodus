@@ -38,3 +38,23 @@ test('empty balanced phrases stay empty rather than browsing all nodes', () => {
 test('do not erase internal punctuation, case or separate words', () => {
   assert.equal(parseQuotedSearchPhrase('\u200F"A, B!"\u200E'), 'A, B!');
 });
+
+test('single straight quotes delimit a copied English phrase', () => {
+  assert.equal(parseQuotedSearchPhrase("'Forest Lighting'"), 'Forest Lighting');
+});
+test('single curly quotes delimit a copied Persian phrase with bidi marks', () => {
+  assert.equal(parseQuotedSearchPhrase('\u2067‘فصل اول’\u2069'), 'فصل اول');
+});
+test('apostrophes inside the phrase stay intact', () => {
+  assert.equal(parseQuotedSearchPhrase("'don't stop'"), "don't stop");
+  assert.equal(parseQuotedSearchPhrase('‘I’m ready’'), 'I’m ready');
+});
+test('an unbalanced or mismatched single quote stays literal', () => {
+  assert.equal(parseQuotedSearchPhrase("'Forest Lighting"), null);
+  assert.equal(parseQuotedSearchPhrase('‘Forest Lighting\''), null);
+  assert.equal(parseQuotedSearchPhrase("don't"), null);
+});
+test('single empty quotes remain a zero-match explicit phrase', () => {
+  assert.equal(parseQuotedSearchPhrase("''"), '');
+  assert.equal(parseQuotedSearchPhrase('‘’'), '');
+});
