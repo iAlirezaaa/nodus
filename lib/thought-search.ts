@@ -42,6 +42,9 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     ? (value: string) => normalizeSearchText(value).replace(/\s+/gu, ' ').trim()
     : normalizeSearchText;
   const needle = compareText(isPhrase ? (phrase[1] ?? phrase[2] ?? phrase[3]) : rawQuery);
+  // An explicit query that normalizes to nothing must not become an
+  // empty-query browse of every private thought in this workspace.
+  if (rawQuery && !needle) return { visible: [], total: 0, offset: 0 };
   const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : SEARCH_PAGE_SIZE;
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;
   // A board path and query are immutable during a search. Reuse their
