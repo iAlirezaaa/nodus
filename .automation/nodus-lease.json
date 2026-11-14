@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261114T0909Z-nd001-ci-gates-11",
   "acquired_at": "2026-11-14T09:11:08.886Z",
-  "heartbeat_at": "2026-11-14T09:11:08.886Z",
-  "expires_at": "2026-11-14T10:41:08.886Z",
+  "heartbeat_at": "2026-11-14T09:16:19.615Z",
+  "expires_at": "2026-11-14T10:46:19.615Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001 checking current release gates; no code mutation yet",
+    "phase": "Scoped stale deferred-search activation fix; preparing guarded branch commit",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -18,7 +18,7 @@
     "deployment_status": "NO NEW DEPLOYMENT",
     "next_task": "ND-001 release gates; then ND-002",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "f6985b64ff6883903858fe27333313d495d47cc9",
+    "feature_branch_head": "1f1c1a3e29fde4e6644fa653cc86f60114c84517",
     "feature_branch_tree": "f6b73991106cb77a96ea41300ae3f614510f136f",
     "feature_branch": "fix/nd-001-search-clarity",
     "pending_verification": [
@@ -102,8 +102,9 @@
     "control_tree_repair": "pending",
     "current_task_id": "ND-001",
     "parser_blob": "91db2c206c4abf60eddcdb8a0ef10dcff3c22a5b",
-    "integration_test_blob": "bc1a624c8d8caad9bba36d7f68024b087a3023e8"
+    "integration_test_blob": "bc1a624c8d8caad9bba36d7f68024b087a3023e8",
+    "ci_findings": "Actions job runner_id=0, steps=[], empty logs; pre-runner failure; not a code-test failure"
   },
   "last_completed_run": "nodus-20261114T0814Z-nd001-gate-recovery-11",
-  "updated_at": "2026-11-14T09:11:08.886Z"
+  "updated_at": "2026-11-14T09:16:19.615Z"
 }
