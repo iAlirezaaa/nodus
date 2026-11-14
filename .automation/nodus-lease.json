@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-14T00:15:00.000Z",
-  "heartbeat_at": "2026-11-14T00:24:00.000Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-nd001-20261114T0119Z-native-qa",
+  "acquired_at": "2026-11-14T01:17:23.950Z",
+  "heartbeat_at": "2026-11-14T01:17:23.950Z",
+  "expires_at": "2026-11-14T02:47:23.950Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND001_numeric_punctuation_native_6of6_branch_only_documented_lease_released",
+    "phase": "ND001_open_release_gates_native_checkout_recheck",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -30,7 +30,7 @@
     "last_test": "Native Node 22.16.0 isolated exact source/test GitHub blobs 6/6 pass, 1/6 baseline; TypeScript 5.8.3 helper-only strict pass; full repo tests/TS5.9.3/build not run",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "No supported private full checkout (container GitHub DNS unresolved), no Nodus listener at 127.0.0.1:4173, no connected browser or authorized Sites skill/actions; full repository tests/build and real UI screenshot not possible",
-    "observed_control_head": "95612aa38081d216ff9df55a272625e0387ac510",
+    "observed_control_head": "0d65dec419b50345e0eb784af468bb3fe7f0bf9c",
     "site_source_verification": "NOT VERIFIED in this run; historical version/deployment only",
     "active_run_id": "nodus-nd001-20261113T231700Z-hourly-11",
     "observed_at": "2026-11-14T00:24:00.000Z",
@@ -38,7 +38,7 @@
     "test_helper_blob": "0fd6e873447b56b6ec5de9464f2147a2e21a70a8",
     "test_cases_blob": "72b2594b5f6a4132594193111ee0e3e3ba8bdf31",
     "test_result": "6/6 real native Node targeted exact GitHub blobs; 1/6 red baseline; isolated strict tsc 5.8.3 pass",
-    "publication_status": "NOT ATTEMPTED; RELEASE BLOCKED",
+    "publication_status": "NOT ATTEMPTED",
     "search_source_blob": "b54febc5535a6014ce1ee773dfce5d7c31e9140c",
     "relevance_test_blob": "b0e54dfaabfac759b28a34b04d805d33d974bb84",
     "scoping_commit": "44d4ce44ccf1b12b71c6d96cc43b95d93f4259aa",
@@ -81,22 +81,18 @@
     "last_run_id": "nodus-nd001-20261113T231700Z-hourly-11",
     "scoped_task": {
       "id": "ND-001",
-      "problem": "Derived search can misrepresent user input or results in an unhandled edge case (inspect actual code and regression tests).",
-      "acceptance": "Reproduce failure against exact current code; minimal immutable fix; regression and existing search cases pass; preserve RTL/IME/keyboard and 70 paging; branch-only until full gates.",
-      "slice": "Targeted read-only search correctness improvement, regression tests, documentation and checkpoints.",
-      "branch": "fix/nd-001-search-clarity",
-      "base": {
-        "main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
-        "feature": "c237c2aabe1d078b0794628aaac38d055e534e88"
-      }
+      "problem": "Full release verification blocked; recover precise source and run actual tests while preserving search behavior",
+      "acceptance": "Native regression, TS5.9.3 and build where possible; do not ship UI without real screenshot and Sites tree",
+      "slice": "Inspect repo tree and obtain reliable complete checkout; fix actionable regression only if reproducible",
+      "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
-    "site_current_head_tree": "UNAVAILABLE, no Sites action",
+    "site_current_head_tree": "NOT VERIFIED",
     "source_branch": "fix/nd-001-search-clarity",
     "documentation_tree": "ced9e7c30cd693f1faa302b2a332e7a1be18d34c",
     "corrected_test_commit": "31afe519178a5ed850ba571ca24ba9cf1e474f9a",
     "test_blob": "67285cecec764527decb547329e96e8e392f46be"
   },
   "last_completed_run": "nodus-nd001-20261114T0015Z-hourly-12",
-  "updated_at": "2026-11-14T00:24:00.000Z"
+  "updated_at": "2026-11-14T01:17:23.950Z"
 }
