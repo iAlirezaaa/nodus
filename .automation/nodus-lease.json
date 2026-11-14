@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261114T1316Z-nd001-gates",
   "acquired_at": "2026-11-14T13:17:56.957Z",
-  "heartbeat_at": "2026-11-14T13:17:56.957Z",
-  "expires_at": "2026-11-14T14:47:56.957Z",
+  "heartbeat_at": "2026-11-14T13:27:31.636Z",
+  "expires_at": "2026-11-14T14:57:31.636Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "Acquired; inspect current source/CI and restore ND-001 full release gates before additional feature edits",
+    "phase": "ND-001 Arabic alef matching source+regression tests committed on branch; targeted validation underway; full release gates still blocked",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -18,8 +18,8 @@
     "deployment_status": "NO NEW DEPLOYMENT",
     "next_task": "Restore complete Nodus runtime, native CI and Sites access; finish ND-001 release gates before ND-002",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "845ac84e55bbc47f004fcf4e113bd7b719fed956",
-    "feature_branch_tree": "d9e77eafc48ef2542e1b78a0f1cec3981a8a4922",
+    "feature_branch_head": "a0a6e1fa776ec5a0c2d5d8b0dd6dd1f849f8bfeb",
+    "feature_branch_tree": "54a475a09964d72d977a8ea5ed6292a23ac9c923",
     "feature_branch": "fix/nd-001-search-clarity",
     "pending_verification": [
       "Full native Node test suite, TS5.9.3 and production build",
@@ -32,8 +32,8 @@
     "observed_control_head": "df0b5b5b143297d0f2a7e4d9aeae56f1fb6aa8db",
     "site_source_verification": "NOT CHECKED; no authorized Sites skill/tool; historical Site source/version/deployment IDs retained, not new",
     "active_run_id": "nodus-20261114T0413Z-nd001-native-validation",
-    "observed_at": "2026-11-14T13:17:56.957Z",
-    "source_code_commit": "dfb08ad6473138d0667e8665187aab7cf3061d8d",
+    "observed_at": "2026-11-14T13:27:31.636Z",
+    "source_code_commit": "a0a6e1fa776ec5a0c2d5d8b0dd6dd1f849f8bfeb",
     "test_helper_blob": "0fd6e873447b56b6ec5de9464f2147a2e21a70a8",
     "test_cases_blob": "72b2594b5f6a4132594193111ee0e3e3ba8bdf31",
     "test_result": "Native Node 22.16.0 exact checked-in helper/test blobs 16/16 passed; strict helper-only TS 5.8.3 passed; full tests, project TS5.9.3, build NOT RUN",
@@ -108,5 +108,5 @@
     "branch": "fix/nd-001-search-clarity"
   },
   "last_completed_run": "nodus-20261114T1213Z-nd001-run11",
-  "updated_at": "2026-11-14T13:17:56.957Z"
+  "updated_at": "2026-11-14T13:27:31.636Z"
 }
