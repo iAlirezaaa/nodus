@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex,nofollow"/><title>Growth UI fixture · Nodus</title>
+<style>
+  *{box-sizing:border-box}html,body{margin:0;height:100%;font:12px/1.5 system-ui,sans-serif;background:#101619;color:#dce8df}header{min-height:84px;padding:10px 18px;border-bottom:1px solid #354638;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}header strong{color:#b8d9a4;font-size:13px}header p{margin:3px 0 0;font-size:10px;color:#9eb3a9}.controls{display:flex;align-items:center;gap:14px}label{display:flex;align-items:center;gap:6px;white-space:nowrap}button{font:inherit;background:#263d2d;color:#e0f0d9;border:1px solid #5b7655;border-radius:6px;padding:6px 10px;cursor:pointer}main{height:calc(100% - 84px)}iframe{display:block;border:0;width:100%;height:100%;background:#101619}output{font:10px/1.6 ui-monospace,monospace;color:#bad69e}.mobile-frame{height:auto;min-height:100%;overflow:auto}.mobile-frame main{height:auto;min-width:422px;display:flex;justify-content:center;padding:16px}.mobile-frame iframe{width:390px;height:844px;flex:none;box-shadow:0 0 0 1px #415b47;border-radius:12px}@media(max-width:700px){header{min-height:112px;padding:10px 12px}.controls{gap:9px}main{height:calc(100% - 112px)}}
+</style></head><body>
+<header><div><strong>Growth UI test fixture</strong><p>Synthetic sample · Real app UI · 0 / 5 / 12 connections · Incoming hubs · Color and task progress</p><output id="growth-status">Opening synthetic workspace…</output></div><div class="controls"><label><input id="growth-mobile" type="checkbox"/>390 × 844 frame</label><button id="growth-reset" type="button">Reset test data</button></div></header>
+<main><iframe id="growth-session" title="Nodus growth nodes synthetic workspace" src="./growth-session.html"></iframe></main>
+<script type="module">
+  const frame=document.getElementById('growth-session');
+  document.getElementById('growth-mobile').addEventListener('change',event=>document.body.classList.toggle('mobile-frame',event.currentTarget.checked));
+  document.getElementById('growth-reset').addEventListener('click',()=>frame.contentWindow?.postMessage({type:'nodus-growth-fixture:reset'},location.origin));
+  window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==frame.contentWindow||event.data?.type!=='nodus-growth-fixture:status')return;const status=document.getElementById('growth-status');status.textContent=event.data.text;for(const key of ['writes','revision','nodes','edges'])status.dataset[key]=String(event.data[key]);});
+</script></body></html>

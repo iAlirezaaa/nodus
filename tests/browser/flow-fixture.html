@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>UI test fixture · Nodus</title>
+    <style>
+      #fixture-badge { pointer-events: none; }
+      #fixture-reset { pointer-events: auto; }
+      @media (max-width: 600px) {
+        #fixture-badge { top: 64px; bottom: auto !important; opacity: .86; }
+      }
+    </style>
+    <script type="module">
+      import RefreshRuntime from '/@react-refresh';
+      if (!window.__vite_plugin_react_preamble_installed__) {
+        RefreshRuntime.injectIntoGlobalHook(window);
+        window.$RefreshReg$ = () => {};
+        window.$RefreshSig$ = () => (type) => type;
+        window.__vite_plugin_react_preamble_installed__ = true;
+      }
+    </script>
+  </head>
+  <body>
+    <div id="fixture-root"></div>
+    <aside
+      id="fixture-badge"
+      role="status"
+      aria-live="polite"
+      dir="ltr"
+      style="position:fixed;bottom:7px;left:7px;z-index:2147483647;display:flex;align-items:center;gap:9px;max-width:calc(100vw - 14px);padding:6px 9px;border:1px solid #87a778;border-radius:7px;background:#15251ceF;color:#d8f1ce;font:10px/1.5 ui-monospace,monospace;box-shadow:0 3px 16px #0004;"
+    >
+      <output id="fixture-status">UI test fixture · initialising synthetic data</output>
+      <button
+        id="fixture-reset"
+        type="button"
+        style="padding:3px 6px;flex:none;border:1px solid #87a778;border-radius:4px;background:transparent;color:inherit;font:inherit;cursor:pointer;"
+      >Reset fixture</button>
+    </aside>
+    <script type="module" src="./flow-fixture.tsx"></script>
+  </body>
+</html>

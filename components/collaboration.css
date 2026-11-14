@@ -1,0 +1,49 @@
+.collaboration-panel { color: var(--foreground); padding: 4px 22px 24px; }
+.collab-intro { display: flex; align-items: center; gap: 14px; padding: 12px 0 22px; }
+.collab-emblem { width: 46px; height: 46px; border-radius: 15px; background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); display: grid; place-items: center; flex: none; }
+.collab-intro strong { font-size: 15px; font-weight: 600; }
+.collab-intro p { font-size: 11px; color: var(--muted); line-height: 1.8; margin: 5px 0 0; }
+.collab-columns { display: grid; grid-template-columns: minmax(180px,.85fr) minmax(0,1.4fr); gap: 24px; }
+.collab-rooms { border-inline-end: 1px solid var(--border); padding-inline-end: 20px; min-width: 0; }
+.collab-details { min-width: 0; }
+.collab-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; margin-bottom: 13px; }
+.collab-section-heading h3 { margin: 0; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.collab-room-list,.collab-members { list-style: none; padding: 0; margin: 8px 0 0; }
+.collab-room-list { max-height: 330px; overflow-y: auto; }
+.collab-room { width: 100%; display: flex; align-items: center; gap: 10px; border: 1px solid transparent; padding: 12px 10px; border-radius: 11px; text-align: start; margin-bottom: 5px; transition: background .15s; }
+.collab-room>svg { color: var(--muted); flex: none; }
+.collab-room>span { flex: 1; min-width: 0; }
+.collab-room strong,.collab-room small { display: block; }
+.collab-room strong { font-size: 11px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.collab-room small { font-size: 9px; margin-top: 4px; color: var(--muted); }
+.collab-room:hover { background: var(--surface-hover); }
+.collab-room.is-active { background: color-mix(in srgb, var(--accent) 8%, transparent); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+.collab-room.is-active>svg { color: var(--accent); }
+.collab-account { border-top: 1px solid var(--border); padding-top: 13px; margin-top: 16px; font-size: 10px; color: var(--muted); overflow-wrap: anywhere; text-align: start; }
+.collab-muted { color: var(--muted); font-size: 11px; line-height: 1.9; margin: 10px 0 18px; }
+.collab-muted>svg { vertical-align: middle; margin-inline-end: 7px; }
+.collab-form { display: flex; flex-direction: column; gap: 9px; }
+.collab-form label,.collab-link-label { display: block; font-size: 11px; color: var(--muted); }
+.collab-form .text-input,.collab-link .text-input { min-width: 0; height: 39px; font-size: 12px; }
+.collab-form>.primary-button { align-self: start; margin-top: 5px; }
+.collab-form .primary-button { white-space: nowrap; min-height: 37px; font-size: 11px; }
+.collab-owner { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font-size: 10px; white-space: nowrap; }
+.collab-link { display: flex; gap: 7px; margin-top: 7px; }
+.collab-link .text-input { flex: 1; font-family: ui-monospace,monospace; font-size: 10px; }
+.collab-link .secondary-button { padding-inline: 12px; flex: none; }
+.collab-access-note { padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px; font-size: 10px; line-height: 1.9; color: var(--muted); margin: 12px 0 20px; }
+.collab-members-heading { font-size: 11px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px; }
+.collab-members-heading span { color: var(--muted); font-size: 10px; }
+.collab-members { max-height: 210px; overflow-y: auto; margin-bottom: 18px; }
+.collab-members li { display: flex; align-items: center; gap: 9px; padding-block: 10px; border-bottom: 1px solid var(--border); }
+.collab-member-avatar { width: 29px; height: 29px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--surface-hover); color: var(--accent); font-size: 12px; }
+.collab-member-info { flex: 1; min-width: 0; }
+.collab-member-info strong { display: block; font-size: 10px; font-weight: 500; overflow-wrap: anywhere; text-align: start; }
+.collab-member-info small { color: var(--muted); font-size: 9px; }
+.collab-remove { color: var(--danger,#e9a09c); flex: none; }
+.collab-invite>div { display: flex; gap: 8px; }
+.collab-invite .text-input { flex: 1; }
+.collab-error { padding: 11px 13px; color: var(--danger,#edb7ae); border: 1px solid color-mix(in srgb, var(--danger,#edb7ae) 35%, transparent); border-radius: 10px; margin-bottom: 17px; font-size: 11px; line-height: 1.8; overflow-wrap: anywhere; }
+.collaboration-panel button:disabled { opacity: .45; cursor: default; }
+.collaboration-panel button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media(max-width:650px) { .collaboration-panel { padding-inline: 15px; } .collab-columns { grid-template-columns: 1fr; gap: 16px; } .collab-rooms { border-inline-end: 0; padding-inline-end: 0; border-bottom: 1px solid var(--border); padding-bottom: 14px; } .collab-room-list { max-height: 160px; } .collab-intro { padding-bottom: 15px; } .collab-room { min-height: 50px; } .collab-account { margin-top: 6px; padding-top: 10px; } .collab-form .text-input { font-size: 16px; } .collab-invite>div { flex-wrap: wrap; } .collab-invite .text-input { width: 100%; } }

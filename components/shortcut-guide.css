@@ -1,0 +1,34 @@
+.shortcut-guide { padding: 20px 24px 24px; }
+.shortcut-guide-intro { margin: 0 0 13px; color: var(--foreground); font-size: 13px; line-height: 1.9; }
+.shortcut-guide-mouse { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; margin-bottom: 20px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
+.shortcut-guide-mouse > svg { flex: none; margin-top: 3px; }
+.shortcut-guide-mouse p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.9; }
+.shortcut-guide-scopes { display: grid; gap: 20px; }
+.shortcut-guide-scope > header { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 8px; }
+.shortcut-guide-number { display: grid; place-items: center; width: 27px; height: 27px; flex: none; border: 1px solid var(--border-strong); border-radius: 8px; color: var(--accent); font: 10px/1 ui-monospace, monospace; direction: ltr; }
+.shortcut-guide-scope h3 { margin: 0; font-size: 13px; line-height: 1.8; font-weight: 650; }
+.shortcut-guide-scope header p { margin: 3px 0 0; font-size: 11px; line-height: 1.8; color: var(--muted); }
+.shortcut-guide-rows { margin: 0; }
+.shortcut-guide-rows > div { display: grid; grid-template-columns: minmax(65px, max-content) minmax(0, 1fr); gap: 13px; align-items: baseline; padding: 6px 0; }
+.shortcut-guide-rows dt, .shortcut-guide-rows dd { margin: 0; }
+.shortcut-guide-rows dt { text-align: end; }
+.shortcut-guide-rows dd { color: var(--foreground); font-size: 11px; line-height: 1.8; }
+.shortcut-guide kbd { display: inline-block; padding: 3px 7px; border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface); color: var(--muted); font: 10px/1.5 ui-monospace, monospace; white-space: nowrap; }
+.shortcut-guide-note { margin: 7px 0 0; padding-inline-start: 8px; border-inline-start: 2px solid var(--border-strong); color: var(--muted); font-size: 11px; line-height: 1.85; }
+.shortcut-guide-advanced { margin-top: 21px; border-top: 1px solid var(--border); }
+.shortcut-guide-advanced summary { display: flex; align-items: center; gap: 9px; min-height: 48px; padding: 13px 0 8px; color: var(--muted); font-size: 12px; cursor: pointer; list-style: none; }
+.shortcut-guide-advanced summary::-webkit-details-marker { display: none; }
+.shortcut-guide-advanced summary:hover, .shortcut-guide-advanced summary:focus-visible { color: var(--foreground); }
+.shortcut-guide-chevron { margin-inline-start: auto; transition: transform 160ms ease; }
+.shortcut-guide-advanced[open] .shortcut-guide-chevron { transform: rotate(180deg); }
+.shortcut-guide-advanced-content > p { margin: 6px 0 12px; font-size: 11px; line-height: 1.85; color: var(--muted); }
+.shortcut-guide-advanced .shortcut-guide-rows > div { grid-template-columns: 165px minmax(0, 1fr); border-top: 1px solid var(--border); padding-block: 9px; }
+@media (max-width: 650px) {
+  .shortcut-guide { padding: 17px; }
+  .shortcut-guide-scopes { gap: 22px; }
+  .shortcut-guide-rows > div { gap: 10px; }
+  .shortcut-guide-advanced .shortcut-guide-rows > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .shortcut-guide-advanced .shortcut-guide-rows dt { text-align: start; }
+  .shortcut-guide-rows dd, .shortcut-guide-scope header p, .shortcut-guide-note, .shortcut-guide-mouse p { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .shortcut-guide-chevron { transition: none; } }

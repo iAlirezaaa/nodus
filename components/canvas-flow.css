@@ -1,0 +1,60 @@
+/* Canvas-owned additions for focused inline writing. */
+.canvas[data-canvas]:focus-visible { outline: 1px solid color-mix(in srgb, var(--accent) 24%, transparent); outline-offset: -3px; }
+.thought-node.is-inline-editing { z-index: 8; border-color: var(--node-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--node-accent) 16%, transparent), var(--canvas-shadow); }
+.inline-title-editor { min-width: 0; margin-top: 8px; }
+.inline-title-input { display: block; width: calc(100% + 12px); min-width: 0; margin-inline: -6px; padding: 4px 6px; border: 1px solid color-mix(in srgb, var(--node-accent) 40%, var(--border)); border-radius: 7px; background: color-mix(in srgb, var(--node-accent) 5%, var(--surface)); color: var(--foreground); font-size: 16px; font-weight: 650; line-height: 1.55; outline: none; user-select: text; touch-action: auto; caret-color: var(--node-accent); }
+.inline-title-input:focus-visible { outline: none; border-color: var(--node-accent); }
+.inline-title-input::placeholder { color: var(--muted); opacity: .8; font-weight: 450; }
+.node-footer-actions { display: flex; align-items: center; gap: 7px; }
+.node-details { font-size: 9px; padding: 4px 3px; color: var(--muted); border-radius: 4px; }
+.node-details:hover, .node-details:focus-visible { color: var(--node-accent); background: var(--surface-hover); }
+.thought-node.compact .inline-title-input { font-size: 24px; }
+.thought-node.miniature.is-inline-editing { border-radius: 16px; }
+.thought-node.miniature .inline-title-input { font-size: 32px; }
+.node-key-hint { position: absolute; inset-inline-start: 0; top: calc(100% + 9px); display: flex; align-items: center; gap: 9px; width: max-content; max-width: 120%; padding: 4px 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 7px; color: var(--muted); box-shadow: 0 4px 14px #0000000b; font-size: 9px; line-height: 1.5; white-space: nowrap; pointer-events: none; user-select: none; }
+.node-key-hint > span { display: inline-flex; align-items: center; gap: 4px; }
+.node-key-hint kbd { font: 9px/1.2 ui-monospace, monospace; color: var(--foreground); background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 2px 3px; direction: ltr; }
+.thought-node.compact .node-key-hint { font-size: 13px; }
+.thought-node.compact .node-key-hint kbd { font-size: 12px; }
+.thought-node.miniature:not(.is-inline-editing) .node-key-hint { display: none; }
+@media (pointer: coarse) { .node-key-hint { display: none; } .inline-title-input { min-height: 40px; } }
+@media (prefers-reduced-motion: reduce) { .thought-node.is-inline-editing { transition: none; } }
+
+/* Optional node surfaces retain the same graph bounds and keyboard behavior. */
+.thought-node.appearance-sticky { border-radius: 5px 5px 17px 5px; border-color: color-mix(in srgb, var(--node-accent) 52%, var(--border)); background: linear-gradient(145deg, color-mix(in srgb, var(--node-accent) 17%, var(--surface)), color-mix(in srgb, var(--node-accent) 7%, var(--surface))); }
+.thought-node.appearance-outline { border-style: dashed; background: color-mix(in srgb, var(--bg) 90%, transparent); }
+.thought-node.appearance-outline:not(.selected):not(.connecting):not(:focus-visible) { box-shadow: none; }
+.node-task-toggle { display: inline-flex; align-items: center; gap: 4px; padding: 3px 5px; margin-block: -3px; min-width: 0; font-size: 9px; line-height: 1.4; border: 1px solid transparent; border-radius: 5px; color: var(--muted); white-space: nowrap; }
+.node-task-toggle svg { flex-shrink: 0; }
+.node-task-toggle:hover:not(:disabled), .node-task-toggle:focus-visible { color: var(--node-accent); border-color: color-mix(in srgb, var(--node-accent) 40%, var(--border)); background: var(--surface-hover); }
+.node-task-toggle.status-doing { color: var(--warning); }
+.node-task-toggle.status-done { color: var(--node-accent); }
+.thought-node.task-done h3 { text-decoration: line-through; text-decoration-thickness: 1px; color: var(--muted); }
+.node-task-progress { display: flex; align-items: center; gap: 7px; margin-top: 7px; min-height: 12px; font-size: 9px; line-height: 1.4; color: var(--muted); }
+.node-task-progress progress { display: block; flex: 1; min-width: 18px; width: 0; height: 4px; appearance: none; border: 0; border-radius: 3px; overflow: hidden; background: var(--border); accent-color: var(--node-accent); }
+.node-task-progress progress::-webkit-progress-bar { background: var(--border); }
+.node-task-progress progress::-webkit-progress-value { background: var(--node-accent); border-radius: 3px; }
+.node-task-progress progress::-moz-progress-bar { background: var(--node-accent); border-radius: 3px; }
+.node-task-progress span { flex-shrink: 0; }
+.thought-node.has-task-progress .node-excerpt { -webkit-line-clamp: 1; }
+.node-annotation-badge { display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--muted); font-size: 9px; padding: 4px; border-radius: 5px; }
+.node-annotation-badge:hover, .node-annotation-badge:focus-visible { color: var(--node-accent); background: var(--surface-hover); }
+.thought-node.compact .node-task-toggle { font-size: 11px; }
+.thought-node.compact .node-task-toggle svg { width: 16px; height: 16px; }
+.thought-node.compact .node-annotation-badge { font-size: 12px; }
+.thought-node.compact .node-footer-actions { gap: 5px; }
+
+/* Only new cards and a small budget of relevant connections move. */
+.canvas[data-motion='on'] .thought-node.is-entering { animation: nodus-node-entrance .18s ease-out both; }
+@keyframes nodus-node-entrance { from { opacity: .35; transform: translateY(3px) scale(.99); } to { opacity: 1; transform: none; } }
+.connection-signal { pointer-events: none; filter: drop-shadow(0 0 3px var(--edge-color)); }
+.connection.selected .connection-line { filter: drop-shadow(0 0 2px color-mix(in srgb, var(--edge-color) 30%, transparent)); }
+.connection.is-bending .connection-line { opacity: .9; }
+.connection-bend-handle { outline: none; pointer-events: all; touch-action: none; cursor: grab; }
+.connection-bend-handle:active { cursor: grabbing; }
+.connection .connection-bend-handle .connection-handle-hit { fill: transparent; stroke: none; pointer-events: all; }
+.connection .connection-bend-handle .connection-handle-dot { fill: var(--surface); stroke: var(--edge-color); stroke-width: 1.5; pointer-events: none; }
+.connection .connection-bend-handle:hover .connection-handle-dot, .connection .connection-bend-handle:focus-visible .connection-handle-dot { fill: var(--edge-color); stroke: var(--foreground); stroke-width: 2; }
+.canvas[data-motion='off'] .thought-node.is-entering { animation: none; }
+@media (prefers-reduced-motion: reduce) { .canvas .thought-node.is-entering { animation: none; } .connection-signal { display: none; } }
+@media (pointer: coarse) { .node-task-toggle { min-height: 28px; padding: 4px; } }
