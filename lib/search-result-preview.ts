@@ -3,6 +3,7 @@ import { normalizeSearchText } from './thought-search';
 import { parseQuotedSearchPhrase } from './search-phrase';
 import { annotationKeywordsMatch } from './search-annotations';
 import { searchExcerptBounds } from './search-excerpt-bounds';
+import { comparableSearchUrl } from './search-url-comparison';
 
 export type SearchResultPreviewKind = 'comment' | 'quote' | 'note' | 'file' | 'link';
 export interface SearchResultPreview { kind: SearchResultPreviewKind; text: string; }
@@ -87,14 +88,7 @@ export function searchResultPreview(
     // URL search also checks valid percent-encoded text and form-style query
     // spaces. Derive only a comparison value; never display a signed URL.
     const rawUrl = node.url;
-    const queryAt = rawUrl.indexOf('?');
-    const fragmentAt = rawUrl.indexOf('#');
-    const queryEnd = fragmentAt >= 0 ? fragmentAt : rawUrl.length;
-    const comparable = queryAt >= 0 && (fragmentAt < 0 || queryAt < fragmentAt)
-      ? rawUrl.slice(0, queryAt + 1) + rawUrl.slice(queryAt + 1, queryEnd).replace(/\+/g, ' ') + rawUrl.slice(queryEnd)
-      : rawUrl;
-    let decoded = comparable;
-    try { decoded = decodeURIComponent(comparable); } catch { /* Keep original on malformed percent escapes. */ }
+    const decoded = comparableSearchUrl(rawUrl);
     if (matches(rawUrl) || matches(decoded)) {
       // Never echo the query string, fragment or embedded credentials.
       let hostname = 'URL';

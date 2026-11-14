@@ -124,3 +124,15 @@ test('malformed URL escape falls back safely without hiding raw URL hits', () =>
     kind: 'link', text: 'example.com',
   });
 });
+
+test('a malformed URL escape cannot hide a valid encoded result explanation', () => {
+  for (const url of [
+    'https://example.com/%GG/%D9%86%D9%88%D8%AF?token=SECRET',
+    'https://example.com/%FF%D9%86%D9%88%D8%AF#PRIVATE',
+  ]) {
+    const n = node('', [], '', url);
+    const original = JSON.stringify(n);
+    assert.deepEqual(searchResultPreview(n, 'نود'), { kind: 'link', text: 'example.com' });
+    assert.equal(JSON.stringify(n), original);
+  }
+});

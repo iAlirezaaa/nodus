@@ -150,3 +150,11 @@ test('formatting-only pasted searches are not treated as blank workspace browsin
   assert.deepEqual(searchThoughts(nodes, ' \t ').visible.map(node => node.id), ['a', 'b']);
   assert.equal(JSON.stringify(nodes), before);
 });
+
+test('malformed URL segments do not hide valid encoded Persian search matches', () => {
+  const n = { ...thought('bad-encoded','An unrelated title'), url: 'https://example.com/%GG/%D9%86%D9%88%D8%AF' };
+  const found = searchThoughts([n], 'نود');
+  assert.equal(found.total, 1);
+  assert.deepEqual(found.visible.map(item => item.id), ['bad-encoded']);
+  assert.equal(searchThoughts([n], 'absent').total, 0);
+});

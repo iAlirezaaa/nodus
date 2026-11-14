@@ -1,5 +1,6 @@
 import type { GraphNode, Workspace } from './types';
 import { parseQuotedSearchPhrase } from './search-phrase';
+import { comparableSearchUrl } from './search-url-comparison';
 import { hasExplicitSearchQuery } from './search-query-state';
 import { anyAnnotationFieldMatches, annotationKeywordsMatch } from './search-annotations';
 
@@ -109,59 +110,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
           // domain must find a link even when its title omits the address.
           const rawUrl = node.url ?? '';
           const url = compareText(rawUrl);
-          // Decode destination text only for matching. Form-style + denotes
-          // a space in query parameters, but remains literal in paths/fragments.
-          // Never rewrite or fetch a saved URL.
-          let decodedUrl = url;
-          const queryAt = rawUrl.indexOf('?');
-          const fragmentAt = rawUrl.indexOf('#');
-          let comparableUrl = rawUrl;
-          if (queryAt >= 0 && (fragmentAt < 0 || queryAt < fragmentAt)) {
-            const queryEnd = fragmentAt >= 0 ? fragmentAt : rawUrl.length;
-            comparableUrl = rawUrl.slice(0, queryAt + 1)
-              + rawUrl.slice(queryAt + 1, queryEnd).replace(/\+/g, ' ')
-              + rawUrl.slice(queryEnd);
-          }
-          if (comparableUrl !== rawUrl || rawUrl.includes('%')) {
-            // One malformed imported escape must not suppress other valid
-            // percent-encoded words elsewhere in this saved destination.
-            // Decode complete URLs on the fast path; on error, decode only
-            // independent valid escape runs, keeping invalid bytes literal.
-            let comparableDecoded = comparableUrl;
-            let recovered = false;
-            try { comparableDecoded = decodeURIComponent(comparableUrl); recovered = true; }
-            catch {
-              comparableDecoded = comparableUrl.replace(/(?:%[0-9a-fA-F]{2})+/g, run => {
-                // A single invalid UTF-8 byte must not hide valid escapes
-                // immediately before or after it in the same encoded run.
-                // UTF-8 scalars take at most four bytes: bounded work per byte.
-                const escapes = run.match(/%[0-9a-fA-F]{2}/g) ?? [];
-                let decoded = '';
-                for (let i = 0; i < escapes.length;) {
-                  let fragment = '';
-                  let consumed = 0;
-                  for (let width = 1; width <= 4 && i + width <= escapes.length; width++) {
-                    try {
-                      fragment = decodeURIComponent(escapes.slice(i, i + width).join(''));
-                      consumed = width;
-                      break;
-                    } catch { /* Try the next byte width. */ }
-                  }
-                  if (consumed) {
-                    decoded += fragment;
-                    recovered = true;
-                    i += consumed;
-                  } else {
-                    decoded += escapes[i++];
-                  }
-                }
-                return decoded;
-              });
-            }
-            // Keep the historical raw fallback if every escaped run was
-            // invalid. Do not reinterpret + alone in a malformed destination.
-            if (recovered) decodedUrl = compareText(comparableDecoded);
-          }
+          const decodedUrl = compareText(comparableSearchUrl(rawUrl));
           if (includes(url) || (decodedUrl !== url && includes(decodedUrl))) rank = 6;
           else if (!isPhrase && (title + ' ' + note + ' ' + file).includes(needle)) rank = 7;
           else if (!isPhrase && keywords.length > 1) {
