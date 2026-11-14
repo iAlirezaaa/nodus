@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-14T20:19:09.806Z",
-  "heartbeat_at": "2026-11-14T20:31:14.030Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-20261114T211437-nd001-native-gate",
+  "acquired_at": "2026-11-14T21:14:37.164Z",
+  "heartbeat_at": "2026-11-14T21:14:37.164Z",
+  "expires_at": "2026-11-14T22:44:37.164Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001 percent-encoded safe URL preview code/tests/docs committed; V8 target tests 17/17, release Blocked; lease guarded released",
+    "phase": "Acquired ownership; inspect available runtime/CI/Sites before edit; release gated",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -30,7 +30,7 @@
     "last_test": "V8 exact-GitHub TS-stripped checked-in search preview cases 17/17 PASS with real normalization/parser/annotation/bounds and URL constructor shim; focused red 3/6 baseline, green 6/6. NOT native Node or TypeScript.",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Private git clone DNS fails; port 4173 refused; Sites skill list empty and connected Browser requires originating tab; CI pre-runner failure",
-    "observed_control_head": "647957ec816a48955614653145c2be8654134cf2",
+    "observed_control_head": "71faf34ad849f7b22c57fd00e18e4727dfa96891",
     "site_source_verification": "UNVERIFIED; history-only identifier eb8a9ad1f470447bf15634efbaa47531924901c5",
     "active_run_id": "nodus-20261114T1917Z-nd001-native-qa-11",
     "observed_at": "2026-11-14T18:25:21.731Z",
@@ -51,10 +51,10 @@
     "new_test_blob": "067125ad8688f635be8ec67d0a2cc99e69911108",
     "observed_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
-    "observed_feature_branch": "507bdc9001a72150b823aefc0522ce73f67a57ec",
-    "observed_feature_tree": "694d7a2366b2de590a41e6e0a496cc183ecdeb81",
+    "observed_feature_branch": "7d9194e3524398fb1f0c0cde901ce1673556ba91",
+    "observed_feature_tree": "4d9b52beb041013109af139cf06d9fda7c7d3d99",
     "next_action": "Unblock full QA+Sites reconciliation, verify active deployed result, then ND-002 focus mode",
-    "run_id": "nodus-20261114T201909Z-nd001-gate",
+    "run_id": "nodus-20261114T211437-nd001-native-gate",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -81,9 +81,9 @@
     "last_run_id": "nodus-nd001-20261113T231700Z-hourly-11",
     "scoped_task": {
       "id": "ND-001",
-      "problem": "Full native tests/build and Sites publication blocked; continue one actionable search issue if safely reproducible",
-      "acceptance": "Native relevant behavior+strict TS, preserve 70+ honest count and project paths; full app suite/build/real browser/Sites before merge/release",
-      "slice": "Inspect blocked run CI and search regressions; repair one user-visible defect on existing branch with targeted test",
+      "problem": "Unreleased search branch has blocked native full test/build and unverifiable Site tree; avoid repeated unverified micro-fixes",
+      "acceptance": "Recover native repo tests, strict project TypeScript/build and browser/Sites parity before release; only commit verified regression on existing feature branch",
+      "slice": "Investigate accessible execution environments and stalled GitHub Actions, then deliver one measured useful ND-001 gate/fix without changing main or live Site",
       "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
@@ -127,5 +127,5 @@
     "code_commit": "d565516e5b8288dcd3a900ac63aef4517a06cb20",
     "docs_commit": "7d9194e3524398fb1f0c0cde901ce1673556ba91"
   },
-  "updated_at": "2026-11-14T20:31:14.030Z"
+  "updated_at": "2026-11-14T21:14:37.164Z"
 }
