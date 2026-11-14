@@ -477,3 +477,8 @@ The pure `searchThoughts` return value is the authoritative rendered page offset
 ### ND-001: Arabic alef matching (branch only, 2026-11-14)
 
 The read-only search comparison normalizer in `lib/thought-search.ts` now folds Arabic `أ`, `إ`, `ٱ` to plain `ا` after NFKC so Persian/Arabic keyboard variants can find titles, notes, filenames, quoted phrases and root-to-board paths. Alef-madda `آ` remains distinct. Nothing in the Workspace model, saved text, graph, URL, document revisions or shared operations changes. This remains **In progress on `fix/nd-001-search-clarity`**, without a release until native full tests/build, browser input/390px screenshots and authenticated Sites tree reconciliation complete. See [QA](ND-001-SEARCH-QA.md).
+
+
+### ND-001 title ranking correction (unreleased feature branch, 2026-11-14T16:40:15.452Z)
+
+`lib/thought-search.ts` prioritizes normalized **literal title equality (rank 0)**, then literal prefix (rank 1), then substring or compact punctuation/space-folded alias (rank 2). This prevents compact aliases such as `Frame-12` from outranking an exact user query `Frame 12`, while preserving Persian joined/spaced search and all derived read-only matching. Title/path/file/note/annotation rank hierarchy, all-match total, bounded paging, and persisted document data remain unchanged. `tests/thought-search-title-ranking.test.ts` guards this behavior. Not a live release until full QA and Sites tree reconciliation; see `docs/ND-001-SEARCH-QA.md`.
