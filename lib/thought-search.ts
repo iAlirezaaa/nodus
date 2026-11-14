@@ -7,7 +7,7 @@ export const SEARCH_PAGE_SIZE = 70;
 export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset: number; }
 
 /** Compare mixed Persian/Arabic keyboard spellings without rewriting saved content. */
-function normalizeSearchText(value: string): string {
+export function normalizeSearchText(value: string): string {
   const normalized = value.normalize('NFKC')
     // Arabic hamzated/wasla alef and plain Persian alef are equivalent for
     // finding ideas; preserve madda (آ) and all persisted spelling.
