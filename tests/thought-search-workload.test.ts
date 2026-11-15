@@ -118,5 +118,31 @@ test('first search page stays single-pass while later pages can rescan bounded w
   const deep = searchThoughts(nodes, 'matching', 70, 910);
   assert.deepEqual(deep.visible.map(node => node.id),
     nodes.slice(910, 980).map(node => node.id));
-  assert.equal(titleReads, nodes.length * 3, 'deep page may classify twice but must keep ordering');
+  assert.equal(titleReads, nodes.length * 2 + 980,
+    'deep page must stop its second ranking pass after collecting the last needed item');
+});
+
+
+test('deep page stops after filling windows across relevance tiers without losing the total', () => {
+  const exact = Array.from({ length: 100 }, (_, i) => thought('exact-' + i, 'signal'));
+  const notes = Array.from({ length: 500 }, (_, i) => thought('note-' + i, 'Other', 'signal notes'));
+  const nodes = [...exact, ...notes];
+  const original = nodes.map(node => [node.id, node.title, node.text]);
+  let titleReads = 0;
+  for (const node of nodes) {
+    const originalTitle = node.title;
+    Object.defineProperty(node, 'title', {
+      enumerable: true,
+      get() { titleReads++; return originalTitle; },
+    });
+  }
+  const page = searchThoughts(nodes, 'signal', 70, 70);
+  assert.equal(page.total, 600, 'the first pass must still count all matches');
+  assert.equal(page.offset, 70);
+  assert.deepEqual(page.visible.map(node => node.id),
+    [...exact.slice(70), ...notes.slice(0, 40)].map(node => node.id));
+  assert.equal(titleReads, 600 + 140,
+    'the second pass should visit only the first 140 nodes to fill both windows');
+  assert.deepEqual(nodes.map(node => [node.id, node.title, node.text]), original,
+    'search must not change graph content');
 });

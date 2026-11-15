@@ -188,13 +188,18 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   if (requiresRescan) {
     pageBuckets = Array.from({ length: tierCounts.length }, () => []);
     const indexes = Array<number>(tierCounts.length).fill(0);
+    // Total matches are already counted. Stop ranking once every requested
+    // tier window is full, instead of revisiting unrelated trailing thoughts.
+    let remaining = windows.reduce((sum, window) => sum + window.take, 0);
     for (const node of nodes) {
       const tier = rankNode(node);
       if (tier < 0 || windows[tier].take === 0) continue;
       const position = indexes[tier]++;
       if (position >= windows[tier].skip &&
-          position < windows[tier].skip + windows[tier].take)
+          position < windows[tier].skip + windows[tier].take) {
         pageBuckets[tier].push(node);
+        if (--remaining === 0) break;
+      }
     }
   }
   const visible: GraphNode[] = [];
