@@ -343,7 +343,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
     setSearchOffset(corrected);
     if(searchResultsRef.current)searchResultsRef.current.scrollTop=0;
   },[dialog,searchOffset,searchPage.offset,searchPending]);
-  const focusResult=(n:GraphNode)=>{activateSearchResult(n,item=>navigate(item.boardId),item=>setSelected(item.id),()=>setDialog(null),item=>{requestAnimationFrame(()=>canvas.current?.revealNode(item.id));},item=>{const current=ws.exportDraft();return !!current&&current.boards.some(board=>board.id===item.boardId)&&current.nodes.some(node=>node.id===item.id&&node.boardId===item.boardId);});};
+  const focusResult=(n:GraphNode)=>{activateSearchResult(n,item=>navigate(item.boardId),item=>setSelected(item.id),()=>setDialog(null),item=>{requestAnimationFrame(()=>canvas.current?.revealNode(item.id));},item=>{const current=ws.exportDraft();return !!current&&current.boards.some(board=>board.id===item.boardId)&&current.nodes.some(node=>node.id===item.id&&node.boardId===item.boardId);},reason=>notice(reason==='stale'?L('این فکر حذف یا جابه‌جا شده؛ دوباره جست‌وجو کن.','This thought moved or was deleted. Search again.'):L('ویرایش عنوان کامل نشد؛ پیش از رفتن به نتیجه بررسی‌اش کن.','The title edit could not finish. Review it before opening the result.')));};
   const branchNode=doc?.nodes.find(n=>n.id===branchSource);const branchCount=branchText.split('\n').filter(s=>s.trim()).length;
   const descendants=useMemo(()=>dialog==='delete-node'&&node&&doc?doc.nodes.length-deleteNode(doc,node.id).nodes.length-1:0,[dialog,node,doc]);
   const deleteSelectionSummary=useMemo(()=>{

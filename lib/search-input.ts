@@ -41,11 +41,18 @@ export function activateSearchResult<T>(
   closeSearch: () => void,
   reveal: (target: T) => void,
   isAvailable?: (target: T) => boolean,
+  onBlocked?: (reason: 'stale' | 'navigation') => void,
 ): boolean {
   // A search hit can become stale after a local edit or a room revision.
   // Validate its identity before navigation, selection and dialog dismissal.
-  if (isAvailable && !isAvailable(target)) return false;
-  if (!navigate(target)) return false;
+  if (isAvailable && !isAvailable(target)) {
+    onBlocked?.('stale');
+    return false;
+  }
+  if (!navigate(target)) {
+    onBlocked?.('navigation');
+    return false;
+  }
   select(target);
   closeSearch();
   reveal(target);

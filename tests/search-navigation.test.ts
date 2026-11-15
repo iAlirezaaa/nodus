@@ -93,3 +93,54 @@ test('missing containing board blocks an orphaned search result', () => {
   assert.equal(accepted, false);
   assert.equal(navigated, false);
 });
+
+test('stale search result explains its failure once without navigating or closing', () => {
+  const steps: string[] = [];
+  const ok = activateSearchResult(target,
+    () => { steps.push('navigate'); return true; },
+    () => steps.push('select'),
+    () => steps.push('close'),
+    () => steps.push('reveal'),
+    () => { steps.push('validate'); return false; },
+    reason => steps.push('blocked:' + reason));
+  assert.equal(ok, false);
+  assert.deepEqual(steps, ['validate', 'blocked:stale']);
+});
+
+test('declined inline-title navigation explains its failure without consuming Search', () => {
+  const steps: string[] = [];
+  const ok = activateSearchResult(target,
+    () => { steps.push('navigate'); return false; },
+    () => steps.push('select'),
+    () => steps.push('close'),
+    () => steps.push('reveal'),
+    () => { steps.push('validate'); return true; },
+    reason => steps.push('blocked:' + reason));
+  assert.equal(ok, false);
+  assert.deepEqual(steps, ['validate', 'navigate', 'blocked:navigation']);
+});
+
+test('successful activation has no failure notice, preserving navigation order', () => {
+  const steps: string[] = [];
+  const ok = activateSearchResult(target,
+    () => { steps.push('navigate'); return true; },
+    () => steps.push('select'),
+    () => steps.push('close'),
+    () => steps.push('reveal'),
+    () => { steps.push('validate'); return true; },
+    reason => steps.push('blocked:' + reason));
+  assert.equal(ok, true);
+  assert.deepEqual(steps, ['validate', 'navigate', 'select', 'close', 'reveal']);
+});
+
+test('a thrown navigation error does not pretend to show a handled failure or close Search', () => {
+  const steps: string[] = [];
+  assert.throws(() => activateSearchResult(target,
+    () => { steps.push('navigate'); throw new Error('draft could not save'); },
+    () => steps.push('select'),
+    () => steps.push('close'),
+    () => steps.push('reveal'),
+    undefined,
+    reason => steps.push('blocked:' + reason)), /draft could not save/);
+  assert.deepEqual(steps, ['navigate']);
+});
