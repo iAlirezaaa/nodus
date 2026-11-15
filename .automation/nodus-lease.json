@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-15T06:20:33.962Z",
-  "heartbeat_at": "2026-11-15T06:30:04.719Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-20261115T0715Z-nd001-native-verify-11",
+  "acquired_at": "2026-11-15T07:15:34.680Z",
+  "heartbeat_at": "2026-11-15T07:15:34.680Z",
+  "expires_at": "2026-11-15T08:45:34.680Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001 reproducible Node24 fail-fast verification driver implemented, native isolated smoke tested, docs committed; release blocked; lease guarded released",
+    "phase": "lease acquired; ND-001 exact-source full native verification recovery; source unchanged",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -54,7 +54,7 @@
     "observed_feature_branch": "b4bf03e4e3d92fb77d5db0b66bd6038f21809b86",
     "observed_feature_tree": "10d8b2208540c76d2e05745e50dc05f8688d52a7",
     "next_action": "Get native Node24 checkout to run verify:release; real 4173 UI screenshot; authenticated Site tree, then independent review+guarded main/Site publish",
-    "run_id": "nodus-20261115T0619Z-nd001-runtime-11",
+    "run_id": "nodus-20261115T0715Z-nd001-native-verify-11",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -107,9 +107,9 @@
     "ci_retry": "Actions 43575205199 attempt 2 failure before runner: runner_id=0 steps=[]",
     "scope": {
       "task": "ND-001",
-      "problem": "Long-running search branch cannot ship while release gates remain unverified",
-      "acceptance": "Reconstruct native full tests/TypeScript/build on exact branch source where feasible; verify real UI or record exact blocker; preserve branch and source integrity",
-      "slice": "Recover full verification without speculative feature creep",
+      "problem": "Prolonged release block: full native tests / TypeScript / production build never run on accumulated search branch; CI never gets runner.",
+      "acceptance": "Recover exact GitHub tree to local isolated workspace, run native suite, TypeScript and build on Node24 where available; investigate and fix concrete failures only with regression tests; preserve 4173 and do not publish without Site/tree and real browser gates.",
+      "slice": "Reconstruct exact feature tree through authorized GitHub connector, execute release gates, repair first reproducible failure if any.",
       "branch": "fix/nd-001-search-clarity"
     },
     "branch": "fix/nd-001-search-clarity",
@@ -132,5 +132,5 @@
     "tests_completed": "31/31 exact GitHub checked-in Search-preview tests in V8 with TS stripping and URLShim; not native Node"
   },
   "last_completed_run": "nodus-20261115T0619Z-nd001-runtime-11",
-  "updated_at": "2026-11-15T06:30:04.719Z"
+  "updated_at": "2026-11-15T07:15:34.680Z"
 }
