@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261115T161900Z-nd001-path-shortcircuit-12",
   "acquired_at": "2026-11-15T16:17:58.132Z",
-  "heartbeat_at": "2026-11-15T16:17:58.132Z",
-  "expires_at": "2026-11-15T17:47:58.132Z",
+  "heartbeat_at": "2026-11-15T16:22:50.045Z",
+  "expires_at": "2026-11-15T17:52:50.045Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -93,13 +93,13 @@
     "source_branch": "fix/nd-001-search-clarity",
     "documentation_tree": "2d226b5e9eadba677091846d6fde7b9702c80a3b",
     "corrected_test_commit": "31afe519178a5ed850ba571ca24ba9cf1e474f9a",
-    "test_blob": "d05e018fc56ab83ad2568102977a7e0406cab063",
+    "test_blob": "4f1372e299a22b8d007362153a2ab0edfd8366ac",
     "staged_commit": "ef573ebd43d0bb054e1e1f643066e1b1dcb8ea89",
     "staged_tree": "309789887f03bab82d09c66a3cddb246d50630e8",
     "release_status": "Blocked",
     "helper_blob": "8d75b73a65abde4a4d8e00d84479d0e21741e831",
     "qa_screenshot": "NONE",
-    "ci_run": "43729715587",
+    "ci_run": "43734948303",
     "source_tree_repair": "3255700e9b03d1d0da8059440f9d114bf58d5b23",
     "control_tree_repair": "pending",
     "current_task_id": "ND-001",
@@ -120,18 +120,18 @@
     "search_excerpt_helper_blob": "11afb0d56a8adbb8077ed976ba9eabd4e79421a9",
     "search_excerpt_test_blob": "d5b32a16db6cf74dd84716e6c562c73926b24237",
     "completed_at": "2026-11-15T13:17:52.662Z",
-    "code_commit": "fcdececd9c514f614b7a0f185839d6d21f9a2fd6",
-    "code_blob": "c011db7acf87031b34cc1b12ebdae9b60781c91b",
+    "code_commit": "1bc24fc2fb49c79403e2acaf3a7a50cf3d3c23bb",
+    "code_blob": "5aacd641ea6ec73cf11fa01bb6bb4c9df7666b25",
     "observed_control_tree": "e0d62fcec0e3bc286fab6888065ac8f89ceb4386",
-    "status": "ND-001 In progress; publication Blocked; feature branch only",
-    "code_tree": "afffdbea974e4a58ffea9629268386487fd5a836",
+    "status": "ND-001 In progress; branch only",
+    "code_tree": "bdcf735f49112207b760a1d68bbb1dc5cc23a887",
     "native_full_suite": "NOT RUN",
     "ts_project": "NOT RUN",
     "build": "NOT RUN",
     "browser_4173": "REFUSED",
     "current_site_tree": "UNVERIFIED",
     "site_version": "NO NEW VERSION",
-    "tests_completed": "3/3 original priority cases red; 8/8 first patch green; 1 leading-space case red on intermediate patch; 9/9 targeted V8 exact final source with shims, NOT native Node, full suite, TS or build; five new checked-in tests, not executed",
+    "tests_completed": "11/11 exact checked-in lazy+workload V8 transpiled + dependency stubs; 600 old/new comparisons; isolated tsc5.8.3 PASS; no full native suite/project tsc/build/browser",
     "candidate_source_blob": "776d6db139ec2204ce7c52e0ea490d04671b533f",
     "candidate_test_blob": "32517458a9160b46a25f5bf0ff508493002af318",
     "last_run_scoping": "Recover real Node/build runtime and Sites tree, then one narrow improvement if blockers persist",
@@ -149,7 +149,7 @@
       "base_feature": "a19ed4ab5283a1ab4b5eb55fce406d508f2a588e",
       "sites_tree": "UNVERIFIED"
     },
-    "pre_edit_scope_commit": "4f491ef04402f2cd372377ba886063057b37be79",
+    "pre_edit_scope_commit": "1934172984cda8862e4a1d493b63d4dfddd2b31f",
     "pre_edit_scope_tree": "668b9695780bfab15d91b0f7e6737305c823f432",
     "isolated_verification": "8960 deterministic old/new page comparisons + 3/3 checked-in tests V8, URLs/annotations stubs; NOT native Node/TS/build/browser",
     "verified_tests": "3/3 exact committed tests in V8 with TS stripping and stubbed URL/annotation deps; 8960 V8 old/new result comparisons, 2/3 old red; isolated TS5.8.3 cache-only PASS"
@@ -165,7 +165,7 @@
     "docs_commit": "6ff625ee37f1c852a6c97f0f9ff35fbf54e8c025",
     "release": "Blocked"
   },
-  "updated_at": "2026-11-15T16:17:58.132Z",
+  "updated_at": "2026-11-15T16:22:50.045Z",
   "completed_at": "2026-11-15T15:27:04.275Z",
   "last_completed_at": "2026-11-15T15:27:04.275Z",
   "current_run": {
@@ -180,5 +180,5 @@
     "base_feature": "6ff625ee37f1c852a6c97f0f9ff35fbf54e8c025",
     "sites_tree": "UNVERIFIED"
   },
-  "status": "ND-001 In progress; scoped; release Blocked"
+  "status": "ND-001 In progress; release Blocked"
 }
