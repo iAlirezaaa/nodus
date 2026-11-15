@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261115T151617Z-nd001-release-gates-11",
   "acquired_at": "2026-11-15T15:16:17.753Z",
-  "heartbeat_at": "2026-11-15T15:16:17.753Z",
-  "expires_at": "2026-11-15T16:46:17.753Z",
+  "heartbeat_at": "2026-11-15T15:21:14.476Z",
+  "expires_at": "2026-11-15T16:51:14.476Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "Scoped: repair release gates first; investigate native full repo checks, CI pre-runner failure, Sites verification and one bounded ND-001 defect if gates remain blocked",
+    "phase": "Before source edit: scoped lazy normalized path caching, current Sites/tree and native release gates blocked",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "HISTORICAL eb8a9ad1f470447bf15634efbaa47531924901c5, NOT freshly checked",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -141,9 +141,9 @@
       "run_id": "nodus-20261115T151617Z-nd001-release-gates-11",
       "scoped_at": "2026-11-15T15:16:17.753Z",
       "task": "ND-001",
-      "problem": "Unreleased search clarity has never passed native full project tests/TypeScript/build or actual browser/Sites reconciliation; deep paging now needs stress testing against exact source",
-      "acceptance": "Run full native tests, TS and production build if checkout available; compare actual GitHub/Sites trees where authorized; if unavailable, deliver one red-green pure search regression only on existing branch with precise failed gates and no publication",
-      "slice": "Release gate recovery, CI diagnosis, and bounded ND-001 code/QA change only if justified",
+      "problem": "Search eagerly normalizes every project's full path, even unused boards, on every query; large nested workspaces pay unnecessary O(all boards) string processing before ranking.",
+      "acceptance": "Normalize only paths for boards actually referenced by candidate nodes; cache once per board through both ranking passes. Preserve result totals, order, 70-item pages, stale offsets, FA/EN title/path matches and document immutability; focused red/green tests. No release before complete verification.",
+      "slice": "Replace eager boardPaths Map conversion with on-demand memoized path lookup in lib/thought-search.ts; add workload regressions. No UI/storage/permission changes.",
       "branch": "fix/nd-001-search-clarity",
       "base_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
       "base_feature": "a19ed4ab5283a1ab4b5eb55fce406d508f2a588e",
@@ -163,7 +163,7 @@
     "docs_commit": "a19ed4ab5283a1ab4b5eb55fce406d508f2a588e",
     "release": "Blocked"
   },
-  "updated_at": "2026-11-15T15:16:17.753Z",
+  "updated_at": "2026-11-15T15:21:14.476Z",
   "completed_at": "2026-11-15T14:28:51.750Z",
   "last_completed_at": "2026-11-15T14:28:51.750Z"
 }
