@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-15T15:16:17.753Z",
-  "heartbeat_at": "2026-11-15T15:27:04.275Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-20261115T161900Z-nd001-path-shortcircuit-12",
+  "acquired_at": "2026-11-15T16:17:58.132Z",
+  "heartbeat_at": "2026-11-15T16:17:58.132Z",
+  "expires_at": "2026-11-15T17:47:58.132Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -165,7 +165,20 @@
     "docs_commit": "6ff625ee37f1c852a6c97f0f9ff35fbf54e8c025",
     "release": "Blocked"
   },
-  "updated_at": "2026-11-15T15:27:04.275Z",
+  "updated_at": "2026-11-15T16:17:58.132Z",
   "completed_at": "2026-11-15T15:27:04.275Z",
-  "last_completed_at": "2026-11-15T15:27:04.275Z"
+  "last_completed_at": "2026-11-15T15:27:04.275Z",
+  "current_run": {
+    "run_id": "nodus-20261115T161900Z-nd001-path-shortcircuit-12",
+    "scoped_at": "2026-11-15T16:17:58.132Z",
+    "task": "ND-001",
+    "problem": "Search normalizes project paths even for direct title matches, doing unused work per keystroke and again on deep result-page scans.",
+    "acceptance": "Direct exact/prefix/substring title matches never access any project path; path-dependent results retain exact rank, count, order, deep-page offset, Persian/English support and no persisted writes. Add red/green regressions using current checked-in test source; keep feature branch only until full release gates.",
+    "slice": "Defer pathFor(node.boardId) until title matching fails inside rankNode, with targeted workloads; do not modify UI, graph, permission, storage or deployment.",
+    "branch": "fix/nd-001-search-clarity",
+    "base_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
+    "base_feature": "6ff625ee37f1c852a6c97f0f9ff35fbf54e8c025",
+    "sites_tree": "UNVERIFIED"
+  },
+  "status": "ND-001 In progress; scoped; release Blocked"
 }
