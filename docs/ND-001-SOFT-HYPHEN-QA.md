@@ -1,0 +1,19 @@
+# ND-001 — invisible soft-hyphen copy/paste search QA
+
+Date: 2026-11-15 20:24 UTC. Branch `fix/nd-001-search-clarity`, code/test commit [`91a62580ad096899a8b4352f05a66eb7c7a9716d`](https://github.com/iAlirezaaa/nodus/commit/91a62580ad096899a8b4352f05a66eb7c7a9716d), source tree `6021a8c8f95f03fa569ca663e26c0fe2867bfaaf`; main `26fafac05c320ed5db30a0ee908dd816714acdd9` unchanged.
+
+## Problem and patch
+
+U+00AD SOFT HYPHEN is an invisible discretionary line-break character commonly copied from PDFs/web pages. It prevented a visually identical ordinary search from matching saved Persian or Latin text. Search-only normalization now ignores U+00AD along with other invisible copy/paste separators; saved node titles, notes, project path, URLs, persistence and edit/keyboard/collaboration behavior are unchanged. Search is still reached through the existing Ctrl/Cmd+K / «فکرت را پیدا کن» dialog; there is no new UI control.
+
+## Evidence obtained in this run
+
+- Exact prior GitHub source blob `41af4f3a0ce2ec9e55aa8d2229c8da8f3c3d63da`: **0/3** direct normalizer comparisons recognized Persian, Latin and nested-label soft-hyphen equivalents. Exact changed source blob `154531c5c46af7e643b54473dff7ce0965c293b8`: **3/3** passed, emoji ZWJ, Persian digit and bidi normalizer invariants unchanged. This is extracted V8 normalizer code, not the repository-native runner.
+- Exact current GitHub `lib/thought-search.ts` plus exact `lib/search-phrase.ts` and `lib/search-query-state.ts` were executed in an isolated V8 harness after mechanical TypeScript syntax erasure: **15/15 direct assertions passed**, including title, note, quoted phrase, reciprocal search, nested complete path, root isolation, 151 matches paged 70/70/11, ordering, immutability, emoji and digits. URL/annotation helper functions were stubbed but not exercised. This is **not native Node test execution or full-app TypeScript**.
+- Node.js **22.16.0**: **2/2** targeted tests passed against a manually transcribed standalone normalizer excerpt, and global TypeScript **5.8.3** `--strict --noEmit` passed on that excerpt. The excerpt is not an installed Nodus checkout. The five **new committed native tests** in `tests/thought-search-soft-hyphen.test.ts` (blob `35b96315b7d38158d78accb5e5b24e11b483d96b`) have **NOT** run with the actual project loader. No historic counts were carried forward.
+- [Actions run 43757601417](https://github.com/iAlirezaaa/nodus/actions/runs/43757601417) ended **failure** with job `steps=null` and `logs_url=null` before runnable test steps; no Node24 full suite, installed TypeScript 5.9.3 or production build ran in this CI attempt. Cause of runner allocation failure is not confirmed.
+- Local `git ls-remote` could not resolve `github.com` for the private repository; no complete authorized checkout. `skills__list` returned no Sites skill; connected Browser cannot access tabs without an originating context. The localhost **4173** port had no responsive application. **No actual FA/EN desktop/390px screenshot**, IME/focus/Enter/Tab/Undo/save/reload/real accounts test, authenticated Site head/tree comparison, independent UI review, or deployment/version ID. Screenshot **NONE**; current Site tree **UNVERIFIED**.
+
+## Gate and next action
+
+**ND-001 In progress / release Blocked / branch only.** The current branch has a usable read-only search fix, but the release checks required by `docs/DEVELOPMENT_LOOP.md` remain incomplete. Do not merge to `main`, publish to Site `appgprj_6af58606fb9c81918541f056a898c1a2`, alter audience or touch user data. Recover full authorized checkout, run native full tests, TypeScript 5.9.3 and production build, validate FA/EN app at `http://127.0.0.1:4173/` with mobile/desktop screenshots, compare authenticated Sites/GitHub source trees, independent review, then guarded merge and matching deployment. ND-002 follows release of ND-001.

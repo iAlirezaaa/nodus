@@ -65,6 +65,9 @@ Inline titles, inspector edits, duplication title changes, and project renaming 
 
 ### Workspace search (derived, read-only)
 
+**Soft hyphens in pasted content (ND-001, branch only).** The search-only normalizer removes invisible U+00AD discretionary line breaks from titles, notes, quoted query text and derived nested paths; original graph strings and attachments stay unchanged. Registered regression tests live in `tests/thought-search-soft-hyphen.test.ts`. This is not yet present in the stable Site; see [QA](ND-001-SOFT-HYPHEN-QA.md).
+
+
 **Sparse legacy record recovery (ND-001, branch only).** Derived search compares missing legacy node titles and notes as empty strings rather than throwing and losing results for valid nodes; path ancestry uses the localized untitled fallback when an imported board has no title. This changes no canonical graph record, SQL/R2 data, ownership, revision, selection, shortcuts, room protocol, or write path. The canonical validator remains responsible for malformed persistent records. [Red/green focused QA](ND-001-SPARSE-SEARCH-QA.md). Release/real-browser gates remain blocked.
 
 
