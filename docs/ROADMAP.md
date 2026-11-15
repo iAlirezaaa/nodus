@@ -1,6 +1,6 @@
 # رودمپ Nodus
 
-آخرین به‌روزرسانی: ۲۰۲۶-۱۱-۱۴ · مالک: Hades · مخزن: [iAlirezaaa/nodus](https://github.com/iAlirezaaa/nodus)
+آخرین به‌روزرسانی: ۲۰۲۶-۱۱-۱۵ · مالک: Hades · مخزن: [iAlirezaaa/nodus](https://github.com/iAlirezaaa/nodus)
 
 ## هدف محصول
 
@@ -273,3 +273,8 @@ Branch fix/nd-001-search-clarity; code/test commit d565516e5b8288dcd3a900ac63aef
 ### 2026-11-15 00:25 UTC — ND-001: جلوگیری از پیش‌نمایش خالی پس از نویسهٔ بسیار بلند (فقط برنچ)
 
 **In progress؛ Release Blocked.** پیش‌نمایش نتیجهٔ جست‌وجو وقتی یک نویسهٔ ترکیبی بیش از ۹۶ واحد UTF-16 پیش از عبارت پیدا شده قرار دارد، دیگر بی‌دلیل خالی نمی‌ماند؛ به مرز بعدی نویسه می‌رود و محتوای قابل‌خواندن را بدون نصف‌کردن نویسه نشان می‌دهد. متن ذخیره‌شده، نتایج و شمارش/صفحه‌بندی ۷۰تایی، مسیر پروژه، میان‌برها و URL خصوصی تغییری نکرده‌اند. سورس/تست: [7e3e7054](https://github.com/iAlirezaaa/nodus/commit/7e3e7054a3ff8ced989aea54952cc446f18a0528)، tree `151a8926296450bf70f4942b674fd3654446506f`. بازتولید کد قدیمی **۱/۲**؛ اجرای محلی Node روی تست‌های کمکی بازسازی‌شده **۱۲/۱۲**، TypeScript مستقل 5.8.3 موفق؛ تست یکپارچهٔ جدید commit شده ولی کامل اجرا نشده. [QA دقیق](ND-001-EXCERPT-EDGE-QA.md). [CI 43658014211](https://github.com/iAlirezaaa/nodus/actions/runs/43658014211) پیش از اجرای گام‌ها شکست خورد. تست کامل/TS5.9.3/build، مرورگر واقعی 4173، اسکرین‌شات و تطبیق head/tree فعلی Sites انجام نشده‌اند. نسخه/انتشار جدید: **ندارد**؛ main و Site و داده‌های مالک تغییری نکردند. بعد: بازیابی gateهای یکپارچه و نشر محافظت‌شده؛ سپس ND-002.
+
+
+### 2026-11-15 01:24 UTC — ND-001: malformed URL query-space regression (branch only)
+
+**In progress; release Blocked.** The `+` query-space comparison remains available even beside malformed percent escapes, so matching saved URL searches are no longer accidentally lost. Code/tests [e6c8b070](https://github.com/iAlirezaaa/nodus/commit/e6c8b0704bc49b992439aceacc500be9869032d2), tree `4ac4199824c2178f90996914e1b53b4ada193c34`; exact-code native Node 22 unit **11/11 pass**, standalone TS5.8.3 PASS, integrated test committed but full suite NOT RUN. [QA](ND-001-QUERY-PLUS-QA.md). [Actions 43662774461](https://github.com/iAlirezaaa/nodus/actions/runs/43662774461) pre-runner failure (0 steps); app TS5.9.3/build and real 4173 FA/EN desktop/mobile screenshots, Site head/tree verification and independent review remain Blocked. Main/live Site/data/audience unchanged; deployment/version NONE. Next recover release gates before ND-002.
