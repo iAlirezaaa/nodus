@@ -196,3 +196,27 @@ test('very long combining sequence before matching note still produces a readabl
   assert.ok((result?.text.length ?? 0) <= 98);
   assert.equal(text, 'a' + '\u0301'.repeat(180) + 'target suffix');
 });
+
+
+test('URL-only unordered words have a safe link explanation, not an empty preview', () => {
+  const link = node('', [], '', 'https://example.com/media/blue-hour?tag=storyboard');
+  assert.deepEqual(searchResultPreview(link, 'storyboard blue'), { kind: 'link', text: 'example.com' });
+  assert.equal(searchResultPreview(link, 'missing blue'), null);
+});
+
+test('unordered URL search never echoes credentials, query tokens, or fragments', () => {
+  const url = 'https://user:pw@example.com/files/blue?access_token=SECRET_PRIVATE#draft';
+  const link = node('', [], '', url);
+  assert.deepEqual(searchResultPreview(link, 'blue secret_private'), { kind: 'link', text: 'example.com' });
+  assert.equal(link.url, url);
+});
+
+test('unordered encoded Persian URL hit receives a safe decoded-match explanation', () => {
+  const link = node('', [], '', 'https://example.com/%D9%86%D9%88%D8%AF?tag=project');
+  assert.deepEqual(searchResultPreview(link, 'project نود'), { kind: 'link', text: 'example.com' });
+});
+
+test('a direct note retains priority over unordered URL words', () => {
+  const link = node('blue secret_private discussion', [], '', 'https://example.com/a/blue?token=secret_private');
+  assert.equal(searchResultPreview(link, 'blue secret_private')?.kind, 'note');
+});

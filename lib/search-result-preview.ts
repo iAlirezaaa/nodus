@@ -89,7 +89,8 @@ export function searchResultPreview(
     // query, fragment, user info, or saved URL.
     const rawUrl = node.url;
     const decoded = comparableSearchUrl(rawUrl);
-    if (matchesDirectly(rawUrl) || matchesDirectly(decoded)) {
+    if (matchesDirectly(rawUrl) || matchesDirectly(decoded)
+      || matchesKeywords(rawUrl) || (decoded !== rawUrl && matchesKeywords(decoded))) {
       let hostname = 'URL';
       try { hostname = new URL(rawUrl).hostname || 'URL'; } catch { /* Relative/legacy URL: generic label. */ }
       return preview('link', hostname);
