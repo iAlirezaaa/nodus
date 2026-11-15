@@ -16,10 +16,8 @@ export function searchResultPreview(
 ): SearchResultPreview | null {
   const phrase = parseQuotedSearchPhrase(query);
   const isPhrase = phrase !== null;
-  const compare = (value: string) => {
-    const normalized = normalizeSearchText(value);
-    return isPhrase ? normalized.replace(/\s+/gu, ' ').trim() : normalized;
-  };
+  // Mirror engine whitespace comparison for accurate source labels/excerpts.
+  const compare = (value: string) => normalizeSearchText(value).replace(/\s+/gu, ' ').trim();
   const needle = compare(isPhrase ? phrase : query.trim());
   // The empty Search dialog is a browse view: retain its ordinary note preview.
   const excerpt = (value: string) => {

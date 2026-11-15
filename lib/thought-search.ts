@@ -61,9 +61,9 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   const isPhrase = phrase !== null;
   // Normalize pasted line breaks/tabs only inside balanced quoted phrases.
   // Unquoted matching and saved graph data remain unchanged.
-  const compareText = isPhrase
-    ? (value: string) => normalizeSearchText(value).replace(/\s+/gu, ' ').trim()
-    : normalizeSearchText;
+  // Repeated spaces, newlines and copied tabs are visual boundaries, not
+  // different search terms. Keep phrase field isolation and stored data intact.
+  const compareText = (value: string) => normalizeSearchText(value).replace(/\s+/gu, ' ').trim();
   const needle = compareText(isPhrase ? phrase : rawQuery);
   // An explicit query that normalizes to nothing must not become an
   // empty-query browse of every private thought in this workspace.
