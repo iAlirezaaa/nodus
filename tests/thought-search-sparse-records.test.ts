@@ -41,7 +41,7 @@ test('missing legacy board titles use fallback without losing valid nested ances
     nodes: Object.freeze([{ id: 'owner', title: '', text: '', boardId: 'root', childBoardId: 'child' } as GraphNode]),
   });
   const original = JSON.stringify(doc);
-  const paths = buildBoardPaths(doc, 'بدون عنوان');
+  const paths = buildBoardPaths(doc as unknown as Pick<Workspace, 'boards' | 'nodes'>, 'بدون عنوان');
   assert.equal(paths.get('root'), 'بدون عنوان');
   assert.equal(paths.get('child'), 'بدون عنوان / بدون عنوان');
   assert.equal(paths.get('sibling'), 'Studio');
