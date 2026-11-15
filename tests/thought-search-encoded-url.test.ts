@@ -39,3 +39,11 @@ test('encoded destination phrases retain exact 151-hit totals and bounded stable
   assert.deepEqual(pages.flatMap(page => page.visible.map(n => n.id)), nodes.map(n => n.id));
   assert.equal(JSON.stringify(nodes), before);
 });
+
+test('a malformed query escape does not suppress a quoted phrase or rewrite the saved link', () => {
+  const node = link('malformed', 'https://example.com/?q=blue+hour&invalid=%GG');
+  const original = JSON.stringify(node);
+  assert.deepEqual(searchThoughts([node], '"blue hour"').visible.map(n => n.id), ['malformed']);
+  assert.equal(searchThoughts([node], '"blue hour"').total, 1);
+  assert.equal(JSON.stringify(node), original);
+});

@@ -47,7 +47,8 @@ export function comparableSearchUrl(rawUrl: string): string {
       return result;
     });
   }
-  // This deliberately retains the historical raw fallback when every escape
-  // is invalid, including the old query-+ behavior on malformed links.
-  return recovered ? decoded : rawUrl;
+  // Invalid percent escapes must not cancel valid form-style query spaces.
+  // If no scalar was decoded, retain malformed bytes but use the already
+  // derived comparison string (only query + becomes space, never stored URL).
+  return recovered ? decoded : comparable;
 }

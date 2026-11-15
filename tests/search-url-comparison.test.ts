@@ -20,9 +20,17 @@ test('query plus represents a space, including before a fragment', () => {
 test('path and fragment plus signs remain literal', () => {
   assert.equal(comparableSearchUrl('https://example.com/blue+hour#nice+day'), 'https://example.com/blue+hour#nice+day');
 });
-test('an entirely malformed escape retains the raw original even with query plus', () => {
+test('a malformed escape does not suppress valid query plus-space comparison', () => {
   const raw = 'https://example.com/?q=blue+hour&invalid=%GG';
-  assert.equal(comparableSearchUrl(raw), raw);
+  assert.equal(comparableSearchUrl(raw), 'https://example.com/?q=blue hour&invalid=%GG');
+});
+test('invalid escapes beside valid Persian bytes preserve both query-space and decoded text', () => {
+  const raw = 'https://example.com/?q=%D9%86%D9%88%D8%AF+%GG';
+  assert.equal(comparableSearchUrl(raw), 'https://example.com/?q=نود %GG');
+});
+test('malformed query escapes do not alter path or fragment plus signs', () => {
+  const raw = 'https://example.com/blue+hour?q=scene+one&invalid=%GG#fine+light';
+  assert.equal(comparableSearchUrl(raw), 'https://example.com/blue+hour?q=scene one&invalid=%GG#fine+light');
 });
 test('plain ASCII and Unicode links do not change', () => {
   for (const url of ['https://example.com/story-board', 'https://example.com/نود'])
