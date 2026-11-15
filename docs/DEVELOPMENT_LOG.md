@@ -1222,3 +1222,14 @@ Executed **6/6** native isolated Node22 helper/harness scenarios, source hash ma
 ### 2026-11-15T15:21:14.476Z — ND-001 lazy board-path ranking scope (before edit)
 
 User impact: prevent unused/nested board path normalization from slowing every Search query. Acceptance: read only the paths belonging to searched nodes and memoize once per board across deep-page rescans; unchanged ranked result order, count, Unicode matches, 70-page behavior and stored graph. Continue `fix/nd-001-search-clarity` from `a19ed4ab5283a1ab4b5eb55fce406d508f2a588e` / `c58acd87509434ff7f9202510322801373d6d16e`. This run edits only the derived search helper and regression tests; complete native repository/TypeScript/build/browser/Sites gates remain required, not assumed. Scoped QA: [ND-001-LAZY-PATH-QA.md](ND-001-LAZY-PATH-QA.md).
+
+
+### 2026-11-15T15:26:33.810Z — ND-001 lazy path comparison cache implemented (not released)
+
+**Goal/where:** Search dialog across personal spaces and nested projects; avoid eager normalization of unused board paths, especially during deep-page results. Scope had been committed before code at [49897ab](https://github.com/iAlirezaaa/nodus/commit/49897ab55dba8979c220841a2570cbadf5880896). No extra control or storage migration.
+
+**Implementation:** `fcdececd9c514f614b7a0f185839d6d21f9a2fd6`, tree `afffdbea974e4a58ffea9629268386487fd5a836`, on `fix/nd-001-search-clarity`. Derived path comparison is now cached once per visited board, including missing board IDs, across both ranking passes; search title/notes/path results, correct 70-page total and ordering remain as before. Three focused regressions committed. [QA](ND-001-LAZY-PATH-QA.md).
+
+**Executed:** 8,960 V8 old-vs-new result comparisons PASS; old 2/3 new test cases FAIL, final 3/3 PASS on exact GitHub blobs after TS-syntax erasure and stubbed URL/annotation dependencies. In 3,001 synthetic paths with 151 matching nodes in one board, old enumerated all paths, new enumerated none and looked up that board once. Isolated non-repository TypeScript 5.8.3 cache-block type probe PASS; do not count this as project TS. Exact source blob 776d6db1..., test blob 32517458.... GitHub Actions [43729715587](https://github.com/iAlirezaaa/nodus/actions/runs/43729715587) failure before runner (0 steps); native complete tests NOT RUN, project TS5.9.3 NOT RUN, production build NOT RUN. No screenshot: 4173 refused and no originating browser/Sites skill. Site current HEAD/tree UNKNOWN. No real user-account or collaboration test. No deployment or Site version, `main` and owner data unchanged.
+
+**Status:** ND-001 **In progress**, release **Blocked**, code and docs **branch only**. Next: recover full native Node24/build and actual browser, reconcile Sites tree, independent UI review then guarded merge/deploy. ND-002 afterward.
