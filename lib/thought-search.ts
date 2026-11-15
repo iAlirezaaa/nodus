@@ -64,6 +64,12 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     return { visible: [], total: 0, offset: 0 };
   const cap = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : SEARCH_PAGE_SIZE;
   let start = cap > 0 && Number.isFinite(offset) ? Math.floor(Math.max(0, offset) / cap) * cap : 0;
+  if (!needle) {
+    const total = nodes.length;
+    if (total === 0) start = 0;
+    else if (cap > 0 && start >= total) start = Math.floor((total - 1) / cap) * cap;
+    return { visible: cap > 0 ? nodes.slice(start, start + cap) : [], total, offset: start };
+  }
   // A board path and query are immutable during a search. Reuse their
   // normalized forms across all ranking tiers without touching saved text.
   const compactNormalized = (value: string) => value.replace(/[\s\/\\._-]+/g, '');
@@ -86,21 +92,14 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   const hasPersianKeywords = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
   // Count every hit, but keep only the prefix needed by the requested page.
   // Retaining every matching node defeats bounded paging on large projects.
-  const ranked: GraphNode[][] = Array.from({ length: 10 }, () => []);
-  const tierCounts = Array<number>(ranked.length).fill(0);
-  // A page at offset N never needs more than N + cap entries from any tier.
-  // The document length also bounds stale/out-of-range requested offsets.
-  const retainPerTier = cap ? Math.min(nodes.length, start + cap) : 0;
+  const tierCounts = Array<number>(10).fill(0);
+  // Only the first page of each tier is cached. Deep-page results are
+  // collected in a second pass after all tier sizes are known.
   const includes = (value: string, compactValue?: string): boolean =>
     value.includes(needle) ||
     (persianPhraseNeedle.length > 0 && foldPersianSpaces(value).includes(persianPhraseNeedle)) ||
     (compactNeedle.length > 0 && (compactValue ?? compactNormalized(value)).includes(compactNeedle));
-  for (const node of nodes) {
-    if (!needle) {
-      tierCounts[0]++;
-      if (ranked[0].length < retainPerTier) ranked[0].push(node);
-      continue;
-    }
+  const rankNode = (node: GraphNode): number => {
     const title = compareText(node.title);
     const compactTitle = compactNormalized(title);
     const path = normalizedPaths?.get(node.boardId);
@@ -145,25 +144,51 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
       const text = compareText(value);
       return includes(text) || (!isPhrase && annotationKeywordsMatch(text, keywords));
     })) rank = 9;
-    if (rank >= 0) {
-      tierCounts[rank]++;
-      if (ranked[rank].length < retainPerTier) ranked[rank].push(node);
-    }
+    return rank;
+  };
+  const cached: GraphNode[][] = Array.from({ length: tierCounts.length }, () => []);
+  for (const node of nodes) {
+    const tier = rankNode(node);
+    if (tier < 0) continue;
+    tierCounts[tier]++;
+    if (cached[tier].length < cap) cached[tier].push(node);
   }
   const total = tierCounts.reduce((count, size) => count + size, 0);
   // A stale page is not meaningful when the last matching thought disappears.
   if (total === 0) start = 0;
   else if (cap > 0 && start >= total) start = Math.floor((total - 1) / cap) * cap;
-  const visible: GraphNode[] = [];
+  // Determine the exact relevance-tier slices only after total counts are
+  // known; even an out-of-range offset must not retain all matching nodes.
+  const windows = tierCounts.map(() => ({ skip: 0, take: 0 }));
   let seen = 0;
-  for (let tier = 0; tier < ranked.length; tier++) {
-    const bucket = ranked[tier];
-    const fullTierSize = tierCounts[tier];
-    if (cap > 0 && visible.length < cap && start < seen + fullTierSize) {
-      const first = Math.max(0, start - seen);
-      visible.push(...bucket.slice(first, first + cap - visible.length));
+  for (let tier = 0; tier < tierCounts.length; tier++) {
+    const first = Math.max(start, seen);
+    const end = Math.min(start + cap, seen + tierCounts[tier]);
+    if (cap > 0 && end > first)
+      windows[tier] = { skip: first - seen, take: end - first };
+    seen += tierCounts[tier];
+  }
+  const requiresRescan = windows.some((window, tier) =>
+    window.take > 0 && window.skip + window.take > cached[tier].length);
+  let pageBuckets = cached;
+  if (requiresRescan) {
+    pageBuckets = Array.from({ length: tierCounts.length }, () => []);
+    const indexes = Array<number>(tierCounts.length).fill(0);
+    for (const node of nodes) {
+      const tier = rankNode(node);
+      if (tier < 0 || windows[tier].take === 0) continue;
+      const position = indexes[tier]++;
+      if (position >= windows[tier].skip &&
+          position < windows[tier].skip + windows[tier].take)
+        pageBuckets[tier].push(node);
     }
-    seen += fullTierSize;
+  }
+  const visible: GraphNode[] = [];
+  for (let tier = 0; tier < windows.length; tier++) {
+    const { skip, take } = windows[tier];
+    if (!take) continue;
+    const first = requiresRescan ? 0 : skip;
+    visible.push(...pageBuckets[tier].slice(first, first + take));
   }
   return { visible, total, offset: start };
 }

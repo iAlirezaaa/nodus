@@ -80,3 +80,43 @@ test('bounded ranking preserves exact mixed-tier totals and every page beyond 70
   assert.deepEqual(searchThoughts(nodes, 'magic', 0, 200), { visible: [], total: expected.length, offset: 0 });
   assert.equal(JSON.stringify(nodes), original, 'search must not mutate or persist any graph data');
 });
+
+test('deep and stale paging across thousands of mixed-rank results remains complete', () => {
+  const notes = Array.from({ length: 5001 }, (_, i) => thought('note-' + i, 'Other', 'magic ideas ' + i));
+  const exact = Array.from({ length: 109 }, (_, i) => thought('exact-' + i, 'magic'));
+  const prefixes = Array.from({ length: 182 }, (_, i) => thought('prefix-' + i, 'magic outline ' + i));
+  const paths = new Map([['nested', 'Studio / magic research']]);
+  const nested = Array.from({ length: 103 }, (_, i) => thought('path-' + i, 'Other', '', undefined, 'nested'));
+  const nodes = [...notes, ...nested, ...prefixes, ...exact];
+  const original = JSON.stringify(nodes);
+  const ordered = [...exact, ...prefixes, ...nested, ...notes].map(node => node.id);
+  for (const requested of [0, 70, 140, 350, 1330, 4970, 999999, Number.MAX_VALUE]) {
+    const page = searchThoughts(nodes, 'magic', 70, requested, paths);
+    const offset = Math.min(Math.floor(requested / 70), Math.floor((ordered.length - 1) / 70)) * 70;
+    assert.equal(page.total, ordered.length);
+    assert.equal(page.offset, offset);
+    assert.deepEqual(page.visible.map(node => node.id), ordered.slice(offset, offset + 70));
+  }
+  assert.deepEqual(searchThoughts(nodes, 'magic', 0, 999999, paths),
+    { visible: [], total: ordered.length, offset: 0 });
+  assert.equal(JSON.stringify(nodes), original, 'paging may not write to the graph');
+});
+
+test('first search page stays single-pass while later pages can rescan bounded windows', () => {
+  let titleReads = 0;
+  const nodes = Array.from({ length: 1200 }, (_, i) => {
+    const node = thought('tracked-' + i, 'placeholder', 'matching notes');
+    Object.defineProperty(node, 'title', {
+      get() { titleReads++; return 'Other'; }, enumerable: true,
+    });
+    return node;
+  });
+  const first = searchThoughts(nodes, 'matching', 70, 0);
+  assert.equal(first.total, nodes.length);
+  assert.equal(first.visible.length, 70);
+  assert.equal(titleReads, nodes.length, 'first page should classify each thought once');
+  const deep = searchThoughts(nodes, 'matching', 70, 910);
+  assert.deepEqual(deep.visible.map(node => node.id),
+    nodes.slice(910, 980).map(node => node.id));
+  assert.equal(titleReads, nodes.length * 3, 'deep page may classify twice but must keep ordering');
+});
