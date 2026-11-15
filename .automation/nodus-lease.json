@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": "nodus-20261115-nd001-release-gate-13",
+  "owner_run_id": null,
   "acquired_at": "2026-11-15T01:16:30.345Z",
-  "heartbeat_at": "2026-11-15T01:23:17.657Z",
-  "expires_at": "2026-11-15T02:53:17.657Z",
+  "heartbeat_at": "2026-11-15T01:26:16.292Z",
+  "expires_at": null,
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -18,8 +18,8 @@
     "deployment_status": "NO NEW DEPLOYMENT",
     "next_task": "Recover full native checkout/project TS/build, 4173 real UI screenshot and current Sites source tree; independently review ND-001 before guarded merge and deploy; ND-002 after release",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "e42253dd2451d9e10dc3e0697a00ead79e0fe910",
-    "feature_branch_tree": "369e5a53a0f4f7ba29a7ec486be2b3ce6d843ade",
+    "feature_branch_head": "ea2bb3f10e6c7eb0e37a48181430e3050174d2dd",
+    "feature_branch_tree": "960e08a5d267febdde81f4a2e6c1d7adafa45539",
     "feature_branch": "fix/nd-001-search-clarity",
     "pending_verification": [
       "Full repository native Node tests",
@@ -27,9 +27,9 @@
       "Real FA/EN desktop and 390px Nodus UI/keyboard IME/Undo/save+reload at 127.0.0.1:4173 with actual screenshot",
       "Current authenticated Sites HEAD/tree equivalence, independent review and two-real-account evidence only if collaboration scope changes"
     ],
-    "last_test": "Native Node22.16 isolated exact code/tests 11/11; TS helper globally installed only (full TS/build blocked)",
+    "last_test": "Native Node 22.16.0 11/11 isolated helper tests PASS; strict standalone TypeScript 5.8.3 PASS. Full project tests, TypeScript 5.9.3 and build NOT RUN.",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
-    "last_blocker": "Private GitHub clone DNS unavailable; GH Actions 43658014211 failed with no runner steps; port 4173 no listener; Sites skill/current authenticated source access unavailable",
+    "last_blocker": "GitHub Actions 43662774461 failure before runner assignment, runner_id 0, steps 0; site 4173 no listener (curl HTTP000); Sites authenticated current source/tree and skill unavailable",
     "observed_control_head": "84644386a978d24227974a79670da7e30ce203a8",
     "site_source_verification": "UNVERIFIED - authenticated Sites source/skill not available this run; previous site SHA is historical only",
     "active_run_id": "nodus-20261115T001656Z-nd001-native-gate-11",
@@ -38,7 +38,7 @@
     "test_helper_blob": "0fd6e873447b56b6ec5de9464f2147a2e21a70a8",
     "test_cases_blob": "72b2594b5f6a4132594193111ee0e3e3ba8bdf31",
     "test_result": "Native Node22.16 original exact GitHub excerpt module 1/2 baseline red; patched exact committed source 12/12 local reconstructed checked-in helper cases +4/4 focused cases PASS; strict standalone TS5.8.3 PASS; integrated preview regression committed but NOT run full repo",
-    "publication_status": "Branch only; main/Site untouched",
+    "publication_status": "Branch only, no main merge/Site write",
     "search_source_blob": "cb90584dc1f4877e69bcd82e4dc256855bdfe96e",
     "relevance_test_blob": "b0e54dfaabfac759b28a34b04d805d33d974bb84",
     "scoping_commit": "5d2505a22bacb7afcf28de0446abd1ef985cd50d",
@@ -46,14 +46,14 @@
     "pending_test_hash": "eb948583c595a1207235b72ecd5350f573a092ac",
     "verification": "No actual browser screenshot or FA/EN mobile/Desktop/IME/Enter/Tab/Undo/save/reload; no authenticated current Sites comparison, independent UI review or two real accounts",
     "source_code_tree": "4ac4199824c2178f90996914e1b53b4ada193c34",
-    "documentation_commit": "e42253dd2451d9e10dc3e0697a00ead79e0fe910",
+    "documentation_commit": "ea2bb3f10e6c7eb0e37a48181430e3050174d2dd",
     "source_blob": "fb19f3155a0f32c13a2685d9ff76b7b9a3f37af9",
     "new_test_blob": "067125ad8688f635be8ec67d0a2cc99e69911108",
     "observed_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "observed_feature_branch": "e42253dd2451d9e10dc3e0697a00ead79e0fe910",
     "observed_feature_tree": "369e5a53a0f4f7ba29a7ec486be2b3ce6d843ade",
-    "next_action": "Recover native complete repo test/TypeScript5.9.3/build and real 4173 FA/EN desktop+390px screenshot, IME/keyboard/Undo/save-reload; compare authenticated current Sites tree, review, then guarded main/Site release of ND-001 before ND-002",
+    "next_action": "Restore full native test/TypeScript 5.9.3/build and real FA/EN desktop/mobile 4173 browser screenshot; reconcile current authenticated Sites HEAD/tree, independently review then guarded merge/Site release before ND-002",
     "run_id": "nodus-20261115-nd001-release-gate-13",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
@@ -77,7 +77,7 @@
     "source_old_blob": "71da339ec22e0d8b46829a4be9942d12fa2917be",
     "source_new_blob": "6431eba140bee94dc3d3f53ad502ffc937f73e72",
     "source_target": "fix/nd-001-search-clarity",
-    "screenshot": "NONE (127.0.0.1:4173 no listener)",
+    "screenshot": "NONE",
     "last_run_id": "nodus-20261115T001656Z-nd001-native-gate-11",
     "scoped_task": {
       "id": "ND-001",
@@ -113,12 +113,12 @@
       "branch": "fix/nd-001-search-clarity"
     },
     "branch": "fix/nd-001-search-clarity",
-    "last_completed_run": "nodus-20261114T231209-nd001-qa-12",
+    "last_completed_run": "nodus-20261115-nd001-release-gate-13",
     "last_completed_at": "2026-11-14T23:23:19.988Z",
     "search_excerpt_helper_blob": "5aa3b0e41671d3da5e41c326748aaa870273ef31",
     "search_excerpt_test_blob": "d5b32a16db6cf74dd84716e6c562c73926b24237",
-    "completed_at": "2026-11-15T00:27:45.779Z"
+    "completed_at": "2026-11-15T01:26:16.292Z"
   },
-  "last_completed_run": "nodus-20261115T001656Z-nd001-native-gate-11",
-  "updated_at": "2026-11-15T01:16:30.345Z"
+  "last_completed_run": "nodus-20261115-nd001-release-gate-13",
+  "updated_at": "2026-11-15T01:26:16.292Z"
 }
