@@ -67,3 +67,45 @@ test('title and path relevance remain stable with mixed Persian and Latin', () =
     ['path', 'title']);
   assert.equal(searchThoughts(nodes, 'missing', 70, 0, paths).total, 0);
 });
+
+
+test('direct title hits do not read any project path, even on a deep results page', () => {
+  const paths = new Map([['active', 'Studio / کتاب‌های زندگی']]);
+  let lookups = 0;
+  Object.defineProperty(paths, 'get', {
+    value: (id: string) => {
+      lookups++;
+      throw new Error('Direct title matches should not read project path: ' + id);
+    },
+  });
+  const exact = Array.from({ length: 80 }, (_, i) => thought('exact-' + i, 'active', 'کتاب‌ها'));
+  const prefix = Array.from({ length: 80 }, (_, i) => thought('prefix-' + i, 'active', 'کتاب‌های تازه ' + i));
+  const contains = Array.from({ length: 80 }, (_, i) => thought('contains-' + i, 'active', 'ایده کتاب‌های تازه ' + i));
+  const nodes = [...contains, ...prefix, ...exact];
+  const original = JSON.stringify(nodes);
+  const expected = [...exact, ...prefix, ...contains].map(node => node.id);
+  const page = searchThoughts(nodes, 'كتابها', 70, 140, paths);
+  assert.equal(page.total, 240);
+  assert.equal(page.offset, 140);
+  assert.deepEqual(page.visible.map(node => node.id), expected.slice(140, 210));
+  assert.equal(lookups, 0);
+  assert.equal(JSON.stringify(nodes), original, 'search must not save or mutate graph data');
+});
+
+test('project-path hits stay ranked after direct title results and resolve once', () => {
+  const paths = new Map([['active', 'Studio / forest lighting']]);
+  const originalGet = paths.get.bind(paths);
+  let lookups = 0;
+  Object.defineProperty(paths, 'get', {
+    value: (id: string) => { lookups++; return originalGet(id); },
+  });
+  const nodes = [
+    thought('path', 'active', 'Other'),
+    thought('prefix', 'active', 'forest lighting notes'),
+    thought('exact', 'active', 'forest lighting'),
+  ];
+  const result = searchThoughts(nodes, 'forest lighting', 70, 0, paths);
+  assert.deepEqual(result.visible.map(node => node.id), ['exact', 'prefix', 'path']);
+  assert.equal(result.total, 3);
+  assert.equal(lookups, 1, 'only the path-dependent result should need the shared project path');
+});

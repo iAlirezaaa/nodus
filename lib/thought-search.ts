@@ -115,15 +115,16 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   const rankNode = (node: GraphNode): number => {
     const title = compareText(node.title);
     const compactTitle = compactNormalized(title);
-    const path = pathFor(node.boardId);
-    let rank = -1;
-    // Exact normalized titles must win over punctuation/spacing-insensitive
-    // aliases. Compact matches remain discoverable at the substring tier.
-    if (title === needle) rank = 0;
-    else if (title.startsWith(needle)) rank = 1;
-    else if (includes(title, compactTitle)) rank = 2;
-    else if (path && includes(path.normalized, path.compact)) rank = 3;
-    else {
+    // A direct title match outranks every project path. Avoid even reading
+    // that path when its location cannot affect this thought's ranking.
+    const directTitleRank = title === needle ? 0
+      : title.startsWith(needle) ? 1
+      : includes(title, compactTitle) ? 2
+      : -1;
+    const path = directTitleRank < 0 ? pathFor(node.boardId) : undefined;
+    let rank = directTitleRank;
+    if (rank < 0 && path && includes(path.normalized, path.compact)) rank = 3;
+    if (rank < 0) {
       // Only normalize slower file/note/URL fields after title and path miss.
       // Cross-field and unordered-keyword tiers reuse the same values.
       const file = compareText(node.asset?.name ?? '');
