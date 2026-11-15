@@ -30,3 +30,20 @@ export function visibleSearchResultsForQuery<T>(typedQuery: string, displayedQue
 export function searchOffsetCorrection(requestedOffset: number, resolvedOffset: number, queryPending: boolean): number | null {
   return queryPending || requestedOffset === resolvedOffset ? null : resolvedOffset;
 }
+
+/** Complete a search-result transition only if leaving the current canvas is
+ * safe. A rejected inline-title commit must not close Search or select/reveal
+ * an item on a board that was never opened. Pure UI orchestration, no writes. */
+export function activateSearchResult<T>(
+  target: T,
+  navigate: (target: T) => boolean,
+  select: (target: T) => void,
+  closeSearch: () => void,
+  reveal: (target: T) => void,
+): boolean {
+  if (!navigate(target)) return false;
+  select(target);
+  closeSearch();
+  reveal(target);
+  return true;
+}

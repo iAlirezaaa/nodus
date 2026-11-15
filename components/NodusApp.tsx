@@ -24,7 +24,7 @@ import { useCanvasPreferences } from '@/hooks/use-canvas-preferences';
 import { useThoughtFlow } from '@/hooks/use-thought-flow';
 import { findDirectionalNode, getThoughtParent } from '@/lib/flow';
 import { SEARCH_PAGE_SIZE, buildBoardPaths, searchThoughts } from '@/lib/thought-search';
-import { firstSearchResultForEnter, shouldActivateSearchResult, visibleSearchResultsForQuery, searchOffsetCorrection } from '@/lib/search-input';
+import { firstSearchResultForEnter, shouldActivateSearchResult, visibleSearchResultsForQuery, searchOffsetCorrection, activateSearchResult } from '@/lib/search-input';
 import { searchResultPreview } from '@/lib/search-result-preview';
 import { hasExplicitSearchQuery } from '@/lib/search-query-state';
 import { graphShortcutScope, isEditableTarget, resolveGraphShortcut } from '@/lib/keyboard';
@@ -150,7 +150,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
     window.addEventListener('beforeunload',beforeUnload,true);
     return()=>window.removeEventListener('beforeunload',beforeUnload,true);
   },[]);
-  const navigate=useCallback((id:string)=>{if(!flow.finish())return;void ws.flush();flow.clear();setContextMenu(null);setActiveBoard(id);setSelected(null);setSelectedEdge(null);setConnectFrom(null);setAddMenu(false);setInspectorOpen(false);if(window.innerWidth<850)setSidebar(false);if(navigationFrame.current!==null)cancelAnimationFrame(navigationFrame.current);navigationFrame.current=requestAnimationFrame(()=>{navigationFrame.current=null;canvas.current?.focusSurface();});},[ws.flush,flow.finish,flow.clear,setSelected]);
+  const navigate=useCallback((id:string)=>{if(!flow.finish())return false;void ws.flush();flow.clear();setContextMenu(null);setActiveBoard(id);setSelected(null);setSelectedEdge(null);setConnectFrom(null);setAddMenu(false);setInspectorOpen(false);if(window.innerWidth<850)setSidebar(false);if(navigationFrame.current!==null)cancelAnimationFrame(navigationFrame.current);navigationFrame.current=requestAnimationFrame(()=>{navigationFrame.current=null;canvas.current?.focusSurface();});return true;},[ws.flush,flow.finish,flow.clear,setSelected]);
   useEffect(()=>()=>{if(navigationFrame.current!==null)cancelAnimationFrame(navigationFrame.current);if(toastTimer.current)clearTimeout(toastTimer.current);},[]);
   useEffect(()=>{
     if(flow.editing)return;
@@ -343,7 +343,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
     setSearchOffset(corrected);
     if(searchResultsRef.current)searchResultsRef.current.scrollTop=0;
   },[dialog,searchOffset,searchPage.offset,searchPending]);
-  const focusResult=(n:GraphNode)=>{navigate(n.boardId);setSelected(n.id);setDialog(null);requestAnimationFrame(()=>canvas.current?.revealNode(n.id));};
+  const focusResult=(n:GraphNode)=>{activateSearchResult(n,item=>navigate(item.boardId),item=>setSelected(item.id),()=>setDialog(null),item=>{requestAnimationFrame(()=>canvas.current?.revealNode(item.id));});};
   const branchNode=doc?.nodes.find(n=>n.id===branchSource);const branchCount=branchText.split('\n').filter(s=>s.trim()).length;
   const descendants=useMemo(()=>dialog==='delete-node'&&node&&doc?doc.nodes.length-deleteNode(doc,node.id).nodes.length-1:0,[dialog,node,doc]);
   const deleteSelectionSummary=useMemo(()=>{
