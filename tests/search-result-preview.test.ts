@@ -220,3 +220,26 @@ test('a direct note retains priority over unordered URL words', () => {
   const link = node('blue secret_private discussion', [], '', 'https://example.com/a/blue?token=secret_private');
   assert.equal(searchResultPreview(link, 'blue secret_private')?.kind, 'note');
 });
+
+test('title match takes precedence over unrelated matching file or note', () => {
+  const n = { ...node('StoryBoard note elsewhere', [], 'StoryBoard.pdf'), title: 'StoryBoard' };
+  assert.deepEqual(searchResultPreview(n, 'storyboard'), {kind:'title', text:''});
+});
+test('project path match outranks file and note, and is never duplicated in the snippet', () => {
+  const n = { ...node('Lighting note', [], 'lighting.pdf'), title:'Draft' };
+  assert.deepEqual(searchResultPreview(n, 'lighting', 'Studio / Lighting'), {kind:'project', text:''});
+});
+test('Persian project ancestry source is localized without changing content', () => {
+  const n={...node('Private description unrelated to the title'),title:'Draft'};
+  const before=JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'کتابها', 'ایده / کتاب‌ها'), {kind:'project',text:''});
+  assert.equal(JSON.stringify(n), before);
+});
+test('title wins even if project path also directly matches', () => {
+  assert.deepEqual(searchResultPreview({...node('Other notes'),title:'Lighting'},'lighting','Studio / Lighting'), {kind:'title',text:''});
+});
+test('file and comment matches retain their labels when title/path differ', () => {
+  const n={...node('Other notes',[{quote:'',body:'Review lighting'}],'lighting.pdf'),title:'Draft'};
+  assert.equal(searchResultPreview(n,'lighting','Studio / Props')?.kind,'file');
+  assert.equal(searchResultPreview(n,'review','Studio / Props')?.kind,'comment');
+});

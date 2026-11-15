@@ -5,13 +5,14 @@ import { annotationKeywordsMatch } from './search-annotations';
 import { searchExcerptBounds } from './search-excerpt-bounds';
 import { comparableSearchUrl } from './search-url-comparison';
 
-export type SearchResultPreviewKind = 'comment' | 'quote' | 'note' | 'file' | 'link';
+export type SearchResultPreviewKind = 'title' | 'project' | 'comment' | 'quote' | 'note' | 'file' | 'link';
 export interface SearchResultPreview { kind: SearchResultPreviewKind; text: string; }
 
 /** Derived explanation for a search hit. Never writes to the graph or drafts. */
 export function searchResultPreview(
-  node: Pick<GraphNode, 'text' | 'annotations' | 'asset' | 'url'>,
+  node: Pick<GraphNode, 'text' | 'annotations' | 'asset' | 'url'> & Partial<Pick<GraphNode, 'title'>>,
   query: string,
+  boardPath = '',
 ): SearchResultPreview | null {
   const phrase = parseQuotedSearchPhrase(query);
   const isPhrase = phrase !== null;
@@ -81,6 +82,11 @@ export function searchResultPreview(
   };
   const matchesKeywords = (value: string) =>
     Boolean(value) && !isPhrase && annotationKeywordsMatch(compare(value), keywords);
+  // The search engine ranks direct title and full project path before files
+  // and notes. Report those sources, not an unrelated note or attachment.
+  // The result row already renders title and project location independently.
+  if (matchesDirectly(node.title ?? '')) return { kind: 'title', text: '' };
+  if (matchesDirectly(boardPath)) return { kind: 'project', text: '' };
   const filename = node.asset?.name ?? '';
   if (matchesDirectly(filename)) return preview('file', filename);
   if (matchesDirectly(note)) return preview('note', note);
