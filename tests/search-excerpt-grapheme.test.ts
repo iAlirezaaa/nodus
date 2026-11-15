@@ -44,3 +44,29 @@ test('ASCII offsets and bounded Persian passage remain unchanged', () => {
   assert.ok(result.text.includes('دسته بندی'));
   assert.ok(result.text.length<=96);
 });
+
+
+test('oversized combining cluster before a search hit must not leave an empty excerpt', () => {
+  const content = 'a' + '\u0301'.repeat(180) + 'target suffix';
+  const bounds = searchExcerptBounds(content, content.indexOf('target') - 26);
+  assert.ok(bounds.end > bounds.start, 'matched result context must not be blank');
+  assert.ok(content.slice(bounds.start, bounds.end).includes('target'));
+  assert.ok(bounds.end - bounds.start <= 96);
+});
+
+test('successive oversized whole clusters are skipped while preserving Persian text', () => {
+  const first = 'a' + '\u0301'.repeat(130);
+  const second = 'b' + '\u0308'.repeat(120);
+  const content = first + second + 'سلام بوم';
+  const bounds = searchExcerptBounds(content, first.length - 9);
+  assert.ok(bounds.start >= first.length + second.length);
+  assert.ok(content.slice(bounds.start, bounds.end).includes('سلام'));
+  assert.ok(bounds.end - bounds.start <= 96);
+});
+
+test('one oversized grapheme never forces an unbounded or split preview', () => {
+  const content = 'z' + '\u0301'.repeat(200);
+  const bounds = searchExcerptBounds(content, 22);
+  assert.ok(bounds.end - bounds.start <= 96);
+  assert.equal(content.slice(bounds.start, bounds.end), '');
+});

@@ -186,3 +186,13 @@ test('strong direct note beats an unordered filename fallback', () => {
   const n = node('camera layout approved', [], 'camera_checklist_for_layout.pdf');
   assert.equal(searchResultPreview(n, 'camera layout')?.kind, 'note');
 });
+
+
+test('very long combining sequence before matching note still produces a readable bounded result snippet', () => {
+  const text = 'a' + '\u0301'.repeat(180) + 'target suffix';
+  const result = searchResultPreview(node(text), 'target');
+  assert.equal(result?.kind, 'note');
+  assert.ok(result?.text.includes('target'), result?.text);
+  assert.ok((result?.text.length ?? 0) <= 98);
+  assert.equal(text, 'a' + '\u0301'.repeat(180) + 'target suffix');
+});
