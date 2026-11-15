@@ -58,3 +58,25 @@ test('single empty quotes remain a zero-match explicit phrase', () => {
   assert.equal(parseQuotedSearchPhrase("''"), '');
   assert.equal(parseQuotedSearchPhrase('‘’'), '');
 });
+
+test('copied boundary ZWNJ does not turn Persian guillemets into unordered keywords', () => {
+  assert.equal(parseQuotedSearchPhrase('\u200C«سلام دنیا»'), 'سلام دنیا');
+  assert.equal(parseQuotedSearchPhrase('«سلام دنیا»\u200C'), 'سلام دنیا');
+  assert.equal(parseQuotedSearchPhrase('\u200D\u200F«سلام دنیا»\u200C'), 'سلام دنیا');
+});
+test('copied boundary joiner is ignored only outside English quotes', () => {
+  assert.equal(parseQuotedSearchPhrase('\u200D"Forest Lighting"\u200C'), 'Forest Lighting');
+  assert.equal(parseQuotedSearchPhrase('\u200C‘فصل اول’\u200D'), 'فصل اول');
+});
+test('an empty Persian quote wrapped in zero-width marks remains an explicit empty phrase', () => {
+  assert.equal(parseQuotedSearchPhrase('\u200C«»\u200C'), '');
+  assert.equal(parseQuotedSearchPhrase('\u200D""\u200D'), '');
+});
+test('joiners inside quotation remain verbatim while outside marks are removed', () => {
+  assert.equal(parseQuotedSearchPhrase('\u200D«کتاب\u200Cها»\u200C'), 'کتاب\u200Cها');
+  assert.equal(parseQuotedSearchPhrase('\u200C"👩‍💻 working"\u200D'), '👩‍💻 working');
+});
+test('an unbalanced ZWNJ-wrapped quote is still not an exact phrase', () => {
+  assert.equal(parseQuotedSearchPhrase('\u200C«سلام دنیا\u200D'), null);
+  assert.equal(parseQuotedSearchPhrase('\u200C«سلام دنیا» ادامه'), null);
+});
