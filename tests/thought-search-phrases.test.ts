@@ -43,8 +43,11 @@ test('balanced quotes preserve capped page totals, stable order and original dat
   assert.deepEqual(nodes,before);
 });
 
-test('unbalanced quote is literal, while an empty balanced quote behaves like empty search', () => {
+test('unbalanced quotes are literal; explicit empty quotes do not browse private thoughts', () => {
   const nodes = [thought('literal','"Forest Lighting'),thought('plain','Forest Lighting')];
   assert.deepEqual(searchThoughts(nodes,'"forest lighting').visible.map(n=>n.id),['literal']);
-  assert.deepEqual(searchThoughts(nodes,'""').visible.map(n=>n.id),['literal','plain']);
+  for (const query of ['""', '“”', '«»']) {
+    assert.deepEqual(searchThoughts(nodes,query),{visible:[],total:0,offset:0});
+  }
+  assert.deepEqual(searchThoughts(nodes,' ').visible.map(n=>n.id),['literal','plain']);
 });
