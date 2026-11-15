@@ -4,7 +4,7 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261115T141911Z-nd001-bounded-page-11",
   "acquired_at": "2026-11-15T14:21:49.451Z",
-  "heartbeat_at": "2026-11-15T14:21:49.451Z",
+  "heartbeat_at": "2026-11-15T14:24:35.804Z",
   "expires_at": "2026-11-15T15:51:49.451Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
@@ -151,7 +151,9 @@
       "base_feature_tree": "445cb1f2f4be72a3a052cc41da88708ce74fe69f",
       "sites_tree": "UNVERIFIED",
       "publication": "Blocked"
-    }
+    },
+    "pre_edit_scope_commit": "4f491ef04402f2cd372377ba886063057b37be79",
+    "pre_edit_scope_tree": "668b9695780bfab15d91b0f7e6737305c823f432"
   },
   "last_completed_run": {
     "run_id": "nodus-20261115-nd001-arabic-zwj-1794748364666",
