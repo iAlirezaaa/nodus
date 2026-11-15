@@ -63,6 +63,9 @@ Inline titles, inspector edits, duplication title changes, and project renaming 
 
 ### Workspace search (derived, read-only)
 
+**Sparse legacy record recovery (ND-001, branch only).** Derived search compares missing legacy node titles and notes as empty strings rather than throwing and losing results for valid nodes; path ancestry uses the localized untitled fallback when an imported board has no title. This changes no canonical graph record, SQL/R2 data, ownership, revision, selection, shortcuts, room protocol, or write path. The canonical validator remains responsible for malformed persistent records. [Red/green focused QA](ND-001-SPARSE-SEARCH-QA.md). Release/real-browser gates remain blocked.
+
+
 **Bounded deep-page rescan (ND-001; not released).** Search still visits every thought in the first pass to count all results and establish relevance-tier boundaries. A deep requested page can require a second pass; it now stops immediately after collecting the complete requested page windows across tiers. No additional saved node data, writes, controls, shortcuts, collaboration, or animation changes. [Focused QA](ND-001-RESCAN-WINDOWS-QA.md); browser/Sites and full-build gates remain blocked.
 
 **Direct title match fast path (ND-001, not yet released).** `searchThoughts` checks the exact, prefix and substring title ranks before it retrieves a board's memoized normalized path. Title hits do not access the project-path map; title misses still inspect the board path and reuse it in the lower-ranked cross-field comparison. This is only a derived, read-only ranking optimization; it cannot change saved graph content, revisions, workspace permissions or result-page totals. [Focused QA](ND-001-TITLE-PATH-SHORTCUT-QA.md). Full release and browser gates remain blocked.

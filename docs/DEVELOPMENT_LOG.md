@@ -1270,3 +1270,16 @@ Search now stops the deep-page second pass when all requested relevance-tier win
 **Acceptance and bounded slice:** In `lib/thought-search.ts`, use empty display/search text for missing legacy titles and notes, and `Untitled` for missing board titles, without modifying original objects. Add targeted native Node tests with sparse data next to existing search tests: one malformed record and one valid result, path fallback and 70+ pagination unchanged; preserve valid FA/EN ordering, Enter/Tab focus and data writes (not modified by this helper). Test current source red before patch and final source green; run TypeScript helper when available. Keep status **In progress / release Blocked** until full suite, TS5.9.3, build, 4173 browser screenshots and current Sites head/tree are independently verified.
 
 **Next checkpoint:** Source + tests + QA committed to this branch only; no audience, workspace, live Site or other project changes.
+
+
+## 2026-11-15T18:32:05.834Z — ND-001: sparse-record search crash guard implemented; no release
+
+**Run:** `nodus-20261115T181856Z-nd001-release-recovery-11`. Pre-edit scope [f213c876](https://github.com/iAlirezaaa/nodus/commit/f213c87637ca23d53a3a3856aa13e096489575d3). Branch `fix/nd-001-search-clarity`; code [2bd7523](https://github.com/iAlirezaaa/nodus/commit/2bd7523e8a7222a874686b52131ad29be23191b7), test type-boundary correction [7b69238](https://github.com/iAlirezaaa/nodus/commit/7b6923884a473a05b5a9da50278de1d123bad0eb), tree `97ffb4e2b34ac804a4b4d3694bc3ca7240ee26d8`. `main` remains `26fafac05c320ed5db30a0ee908dd816714acdd9` (tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`); current Site tree unknown.
+
+**Product improvement:** One sparse imported record (undefined title or note) no longer crashes the entire derived search; nested board names missing in legacy data use the untitled fallback. Existing 70-item paging, full project paths and saved graph objects are preserved. No UI control, schema, permission, selection, keyboard, animation or persistence changes. Found by reproducing the exception directly against the previous exact helper blob before editing.
+
+**Actual checks:** three committed new tests red on previous exact blob (0/3) and green on new exact blob (3/3) in V8 JS with TS syntax removed and non-target dependencies stubbed. 3,200 seeded valid-graph before/after comparisons matched exactly. Isolated TypeScript 5.8.3 strict probe passed, NOT project check. [QA evidence](ND-001-SPARSE-SEARCH-QA.md). Full Node24 suite, TS5.9.3 and production build NOT RUN. [Actions 43746828598](https://github.com/iAlirezaaa/nodus/actions/runs/43746828598) failed before runner allocation (runner_id 0; steps []), zero CI test steps.
+
+**Gate:** ND-001 **In progress**; publication **Blocked**. 4173 no usable app preview; real FA/EN desktop/mobile, IME/Enter/Tab/focus/Undo/save/reload and screenshot NONE. No current authenticated Sites HEAD/tree, no independent full-code review or two real-user sessions. No main merge, Site version/deployment, audience or owner-data change.
+
+**Next:** Restore full native tests/TS/build, real 4173 screenshots and authenticated Sites tree; reconcile, review and publish guarded ND-001 before ND-002.
