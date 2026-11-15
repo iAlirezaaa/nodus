@@ -45,6 +45,8 @@ The derived full-project-path search walker (`buildBoardPaths` in `lib/thought-s
 
 Task ancestry is an explicit same-board forest in `node.task.parentId`, independent of edges and containment. Status is `todo`, `doing`, or `done`. Progress counts completed descendants, excluding the parent itself; child completion does not automatically change the parent's status. Removing task status or deleting a task detaches surviving direct task children to roots. Deleting a containing project still removes its contained boards and nodes.
 
+Search-only Unicode comparison in `normalizeSearchText` also treats Arabic final ta marbuta (U+0629) and Persian final heh-with-yeh-above (U+06C0) as ordinary Persian heh (U+0647). This affects title/note and derived project-path matching, not canonical titles or storage. The branch-only regression and mandatory release checks are documented in [ND-001 final-heh QA](ND-001-HEH-ORTHOGRAPHY-QA.md); this behavior is not yet live.
+
 ### Personal root-space deletion
 
 `inspectPersonalSpace(document, rootBoardId)` accepts an existing board with `parentNodeId: null` and returns its root-inclusive `boardIds`, total `nodeCount`, and `projectCount` excluding the root. It indexes board ownership through containing nodes and walks the subtree iteratively. A malformed child pointer cannot pull another root into that subtree. Missing, foreign and nested targets return `null`; `deletePersonalSpace` treats the same cases as identity no-ops.
