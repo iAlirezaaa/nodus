@@ -113,7 +113,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     (persianPhraseNeedle.length > 0 && foldPersianSpaces(value).includes(persianPhraseNeedle)) ||
     (compactNeedle.length > 0 && (compactValue ?? compactNormalized(value)).includes(compactNeedle));
   const rankNode = (node: GraphNode): number => {
-    const title = compareText(node.title);
+    const title = compareText(node.title ?? '');
     const compactTitle = compactNormalized(title);
     // A direct title match outranks every project path. Avoid even reading
     // that path when its location cannot affect this thought's ranking.
@@ -130,7 +130,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
       const file = compareText(node.asset?.name ?? '');
       if (includes(file)) rank = 4;
       else {
-        const note = compareText(node.text);
+        const note = compareText(node.text ?? '');
         if (includes(note)) rank = 5;
         else {
           // Saved link destinations are user content, too; searching for a
@@ -237,14 +237,14 @@ export function buildBoardPaths(document: Pick<Workspace, 'boards' | 'nodes'>, u
     if (cursor && visited.has(cursor)) {
       const cycleStart = pending.indexOf(cursor);
       for (const id of pending.slice(cycleStart)) {
-        paths.set(id, boardById.get(id)!.title.trim() || untitled);
+        paths.set(id, boardById.get(id)?.title?.trim() || untitled);
       }
       pending.length = cycleStart;
     }
     let path = (cursor && paths.get(cursor)) || '';
     while (pending.length) {
       const id = pending.pop()!;
-      const title = boardById.get(id)?.title.trim() || untitled;
+      const title = boardById.get(id)?.title?.trim() || untitled;
       path = path ? path + ' / ' + title : title;
       paths.set(id, path);
     }
