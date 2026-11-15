@@ -40,7 +40,11 @@ export function activateSearchResult<T>(
   select: (target: T) => void,
   closeSearch: () => void,
   reveal: (target: T) => void,
+  isAvailable?: (target: T) => boolean,
 ): boolean {
+  // A search hit can become stale after a local edit or a room revision.
+  // Validate its identity before navigation, selection and dialog dismissal.
+  if (isAvailable && !isAvailable(target)) return false;
   if (!navigate(target)) return false;
   select(target);
   closeSearch();

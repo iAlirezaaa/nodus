@@ -42,3 +42,54 @@ test('works with same-board navigation without replacing target identity', () =>
   assert.equal(result, true);
   assert.strictEqual(selected[0], target);
 });
+
+
+test('removed search hit cannot navigate, change selection, close or reveal', () => {
+  const calls: string[] = [];
+  const accepted = activateSearchResult(target,
+    () => { calls.push('navigate'); return true; },
+    () => calls.push('select'),
+    () => calls.push('close'),
+    () => calls.push('reveal'),
+    item => { calls.push('validate:' + item.id); return false; });
+  assert.equal(accepted, false);
+  assert.deepEqual(calls, ['validate:thought-fa']);
+});
+
+test('same ID on a different board must not activate an old search hit', () => {
+  const latest = { boards: [{id:'other-board'}], nodes: [{id:target.id,boardId:'other-board'}] };
+  const before = JSON.stringify(latest);
+  const calls: string[] = [];
+  const accepted = activateSearchResult(target,
+    () => { calls.push('navigate'); return true; },
+    () => calls.push('select'), () => calls.push('close'), () => calls.push('reveal'),
+    item => latest.boards.some(b=>b.id===item.boardId)&&latest.nodes.some(n=>n.id===item.id&&n.boardId===item.boardId));
+  assert.equal(accepted, false);
+  assert.deepEqual(calls, []);
+  assert.equal(JSON.stringify(latest), before, 'validation must be read-only');
+});
+
+test('valid current nested-board hit preserves activation order and identity', () => {
+  const latest = {boards:[{id:'nested-fa'}],nodes:[{id:'thought-fa',boardId:'nested-fa'}]};
+  const calls: string[] = [];
+  let selected: unknown = null;
+  const accepted = activateSearchResult(target,
+    item => { calls.push('navigate:' + item.boardId); return true; },
+    item => { selected = item; calls.push('select'); },
+    () => calls.push('close'),
+    () => calls.push('reveal'),
+    item => { calls.push('validate'); return latest.boards.some(b=>b.id===item.boardId) && latest.nodes.some(n=>n.id===item.id&&n.boardId===item.boardId); });
+  assert.equal(accepted, true);
+  assert.strictEqual(selected, target);
+  assert.deepEqual(calls, ['validate','navigate:nested-fa','select','close','reveal']);
+});
+
+test('missing containing board blocks an orphaned search result', () => {
+  let navigated = false;
+  const accepted = activateSearchResult(target,
+    () => { navigated=true; return true; },
+    () => assert.fail('no selection'), () => assert.fail('no dismissal'), () => assert.fail('no reveal'),
+    item => [{id:item.id,boardId:item.boardId}].length > 0 && [].some((board:{id:string}) => board.id===item.boardId));
+  assert.equal(accepted, false);
+  assert.equal(navigated, false);
+});
