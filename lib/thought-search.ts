@@ -115,6 +115,10 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   // Count every hit, but keep only the prefix needed by the requested page.
   // Retaining every matching node defeats bounded paging on large projects.
   const tierCounts = Array<number>(10).fill(0);
+  // Deep pages need a second pass. Reuse each node's first-pass relevance
+  // as one byte rather than re-normalizing every visited field twice.
+  // The common first page allocates no rank array at all.
+  const cachedRanks = start > 0 ? new Uint8Array(nodes.length) : null;
   // Only the first page of each tier is cached. Deep-page results are
   // collected in a second pass after all tier sizes are known.
   const includes = (value: string, compactValue?: string): boolean =>
@@ -174,8 +178,10 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     return rank;
   };
   const cached: GraphNode[][] = Array.from({ length: tierCounts.length }, () => []);
-  for (const node of nodes) {
+  for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+    const node = nodes[nodeIndex];
     const tier = rankNode(node);
+    if (cachedRanks) cachedRanks[nodeIndex] = tier < 0 ? 255 : tier;
     if (tier < 0) continue;
     tierCounts[tier]++;
     if (cached[tier].length < cap) cached[tier].push(node);
@@ -204,9 +210,11 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     // Total matches are already counted. Stop ranking once every requested
     // tier window is full, instead of revisiting unrelated trailing thoughts.
     let remaining = windows.reduce((sum, window) => sum + window.take, 0);
-    for (const node of nodes) {
-      const tier = rankNode(node);
-      if (tier < 0 || windows[tier].take === 0) continue;
+    for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+      const node = nodes[nodeIndex];
+      // 255 is the non-match sentinel; all relevance tiers fit in one byte.
+      const tier = cachedRanks ? cachedRanks[nodeIndex] : rankNode(node);
+      if (tier === 255 || tier < 0 || windows[tier].take === 0) continue;
       const position = indexes[tier]++;
       if (position >= windows[tier].skip &&
           position < windows[tier].skip + windows[tier].take) {

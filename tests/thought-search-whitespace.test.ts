@@ -56,3 +56,34 @@ test('URL-only explanation keeps credentials and signed query private', () => {
   assert.deepEqual(preview, {kind: 'link', text: 'example.com'});
   assert.ok(!preview?.text.includes('PRIVATE_VALUE'));
 });
+
+test('deep page does not read a thought title twice while retaining exact 70-item windows', () => {
+  let titleReads = 0;
+  const nodes = Array.from({ length: 151 }, (_, index) => {
+    const entry = node(String(index), 'Deep search');
+    Object.defineProperty(entry, 'title', {
+      enumerable: true,
+      get: () => { titleReads++; return 'Deep search'; },
+    });
+    return entry;
+  });
+  const third = searchThoughts(nodes, 'deep', SEARCH_PAGE_SIZE, 140);
+  assert.equal(third.total, 151);
+  assert.equal(third.offset, 140);
+  assert.deepEqual(third.visible.map(item => item.id), nodes.slice(140).map(item => item.id));
+  assert.equal(titleReads, nodes.length, 'ranking must read each title only once across both passes');
+});
+
+test('deep page preserves tier priority across a title-to-notes boundary', () => {
+  const noteMatches = Array.from({ length: 101 }, (_, index) =>
+    node('note-' + index, 'Other', 'Find the idea here'));
+  const titleMatches = Array.from({ length: 71 }, (_, index) =>
+    node('title-' + index, 'Find'));
+  const entries = [...noteMatches, ...titleMatches];
+  const lastPage = searchThoughts(entries, 'find', SEARCH_PAGE_SIZE, 140);
+  assert.deepEqual(
+    [lastPage.total, lastPage.offset, lastPage.visible.length],
+    [172, 140, 32],
+  );
+  assert.deepEqual(lastPage.visible.map(item => item.id), noteMatches.slice(69).map(item => item.id));
+});
