@@ -5,7 +5,7 @@ import { annotationKeywordsMatch } from './search-annotations';
 import { searchExcerptBounds } from './search-excerpt-bounds';
 import { comparableSearchUrl } from './search-url-comparison';
 
-export type SearchResultPreviewKind = 'title' | 'project' | 'comment' | 'quote' | 'note' | 'file' | 'link';
+export type SearchResultPreviewKind = 'title' | 'project' | 'multiple' | 'comment' | 'quote' | 'note' | 'file' | 'link';
 export interface SearchResultPreview { kind: SearchResultPreviewKind; text: string; }
 
 /** Derived explanation for a search hit. Never writes to the graph or drafts. */
@@ -106,6 +106,23 @@ export function searchResultPreview(
   // matches. Preserve a useful note when the entire term set is in one note.
   if (matchesKeywords(note)) return preview('note', note);
   if (matchesKeywords(filename)) return preview('file', filename);
+  // A result may match only because its words span multiple search fields.
+  // Do not mislabel that result as a note containing just one of the words.
+  if (!isPhrase) {
+    const title = compare(node.title ?? '');
+    const project = compare(boardPath);
+    const file = compare(filename);
+    const description = compare(note);
+    const rawUrl = compare(node.url ?? '');
+    const decodedUrl = compare(comparableSearchUrl(node.url ?? ''));
+    const fields = [title, description, file, rawUrl, ...(decodedUrl !== rawUrl ? [decodedUrl] : []), project];
+    const directJoined = (title + ' ' + description + ' ' + file).includes(needle);
+    const splitKeywords = keywords.length > 1 && keywords.every(word =>
+      fields.some(field => field.includes(word)) ||
+      (/[\u0600-\u06FF]/u.test(word) && fields.some(field =>
+        field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1').includes(word))));
+    if (directJoined || splitKeywords) return { kind: 'multiple', text: '' };
+  }
   // Comments and quotes have the lowest rank, and phrases remain field-local.
   for (const annotation of node.annotations ?? []) {
     if (matchesDirectly(annotation.body) || matchesKeywords(annotation.body)) return preview('comment', annotation.body);

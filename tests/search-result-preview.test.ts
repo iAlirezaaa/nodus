@@ -243,3 +243,26 @@ test('file and comment matches retain their labels when title/path differ', () =
   assert.equal(searchResultPreview(n,'lighting','Studio / Props')?.kind,'file');
   assert.equal(searchResultPreview(n,'review','Studio / Props')?.kind,'comment');
 });
+
+test('multi-field title and note words disclose an honest combined source', () => {
+  const n = { ...node('Lighting note'), title: 'Camera' };
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'camera lighting'), {kind:'multiple', text:''});
+  assert.equal(JSON.stringify(n), before);
+});
+test('multi-field title and filename words avoid a false attachment excerpt', () => {
+  const n = { ...node('', [], 'reference.pdf'), title: 'Camera' };
+  assert.deepEqual(searchResultPreview(n, 'camera pdf'), {kind:'multiple',text:''});
+});
+test('multi-field Persian title and nested path words keep original spelling', () => {
+  const n = { ...node('ثبت شد'), title: 'پروژه' };
+  assert.deepEqual(searchResultPreview(n, 'کتابها پروژه', 'استودیو / کتاب ها'),
+    {kind:'multiple',text:''});
+  assert.equal(n.text, 'ثبت شد');
+});
+test('combined-field URL match never echoes signed URL data', () => {
+  const url = 'https://example.com/private?access_token=SECRET_PRIVATE';
+  const n = { ...node('unrelated description', [], '', url), title: 'Shot 12' };
+  assert.deepEqual(searchResultPreview(n, 'shot secret_private'), {kind:'multiple',text:''});
+  assert.equal(n.url, url);
+});
