@@ -81,12 +81,25 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     value.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF0-9])/gu, '$1');
   const persianPhraseNeedle = isPhrase && /[\u0600-\u06FF]/u.test(needle)
     ? foldPersianSpaces(needle) : '';
-  const normalizedPaths = needle && boardPaths
-    ? new Map(Array.from(boardPaths, ([id, path]) => {
-      const normalized = compareText(path);
-      return [id, { normalized, compact: compactNormalized(normalized) }] as const;
-    }))
+  // A workspace can have thousands of nested or currently empty boards.
+  // Only normalize locations belonging to encountered nodes, and do it once
+  // per board even when a deep result page needs a second ranking pass.
+  const normalizedPaths = boardPaths
+    ? new Map<string, { normalized: string; compact: string } | null>()
     : null;
+  const pathFor = (boardId: string) => {
+    if (!normalizedPaths || !boardPaths) return undefined;
+    if (normalizedPaths.has(boardId)) return normalizedPaths.get(boardId) ?? undefined;
+    const raw = boardPaths.get(boardId);
+    if (raw === undefined) {
+      normalizedPaths.set(boardId, null);
+      return undefined;
+    }
+    const normalized = compareText(raw);
+    const path = { normalized, compact: compactNormalized(normalized) };
+    normalizedPaths.set(boardId, path);
+    return path;
+  };
   // Separators apply only to the fallback: exact titles and paths retain punctuation.
   const keywords = needle.split(/[\s,;،؛]+/u).filter(Boolean);
   const hasPersianKeywords = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
@@ -102,7 +115,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   const rankNode = (node: GraphNode): number => {
     const title = compareText(node.title);
     const compactTitle = compactNormalized(title);
-    const path = normalizedPaths?.get(node.boardId);
+    const path = pathFor(node.boardId);
     let rank = -1;
     // Exact normalized titles must win over punctuation/spacing-insensitive
     // aliases. Compact matches remain discoverable at the substring tier.
