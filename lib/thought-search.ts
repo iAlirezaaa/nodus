@@ -126,8 +126,12 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     const compactTitle = compactNormalized(title);
     // A direct title match outranks every project path. Avoid even reading
     // that path when its location cannot affect this thought's ranking.
-    const directTitleRank = title === needle ? 0
-      : title.startsWith(needle) ? 1
+    // Quoted Persian text treats joined, spaced and ZWNJ spellings as one
+    // phrase. Use that same equivalence for exact/prefix relevance: an exact
+    // title must outrank an extended title, regardless of source order.
+    const foldedTitle = persianPhraseNeedle ? foldPersianSpaces(title) : '';
+    const directTitleRank = (title === needle || (persianPhraseNeedle.length > 0 && foldedTitle === persianPhraseNeedle)) ? 0
+      : (title.startsWith(needle) || (persianPhraseNeedle.length > 0 && foldedTitle.startsWith(persianPhraseNeedle))) ? 1
       : includes(title, compactTitle) ? 2
       : -1;
     const path = directTitleRank < 0 ? pathFor(node.boardId) : undefined;
