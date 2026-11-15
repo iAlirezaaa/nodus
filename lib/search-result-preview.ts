@@ -90,38 +90,38 @@ export function searchResultPreview(
   const filename = node.asset?.name ?? '';
   if (matchesDirectly(filename)) return preview('file', filename);
   if (matchesDirectly(note)) return preview('note', note);
-  if (node.url) {
-    // Compare encoded links, but reveal only the hostname; never a signed path,
-    // query, fragment, user info, or saved URL.
-    const rawUrl = node.url;
-    const decoded = comparableSearchUrl(rawUrl);
-    if (matchesDirectly(rawUrl) || matchesDirectly(decoded)
-      || matchesKeywords(rawUrl) || (decoded !== rawUrl && matchesKeywords(decoded))) {
-      let hostname = 'URL';
-      try { hostname = new URL(rawUrl).hostname || 'URL'; } catch { /* Relative/legacy URL: generic label. */ }
-      return preview('link', hostname);
-    }
-  }
-  // The search engine's unordered/cross-field fallback follows direct URL
-  // matches. Preserve a useful note when the entire term set is in one note.
+  // Keep the explanation aligned with searchThoughts' ranking:
+  // direct URL (tier 6) > contiguous cross-field (7) > unordered words (8).
+  const savedUrl = node.url ?? '';
+  const decodedUrl = savedUrl ? comparableSearchUrl(savedUrl) : '';
+  const linkPreview = (): SearchResultPreview => {
+    let hostname = 'URL';
+    try { hostname = new URL(savedUrl).hostname || 'URL'; } catch { /* Relative/legacy URL: generic label. */ }
+    // Never show a signed path, query, fragment, user info or saved URL.
+    return preview('link', hostname);
+  };
+  if (savedUrl && (matchesDirectly(savedUrl) || matchesDirectly(decodedUrl))) return linkPreview();
+  const title = compare(node.title ?? '');
+  const description = compare(note);
+  const file = compare(filename);
+  // This has a higher rank than unordered words in any individual field.
+  if (!isPhrase && (title + ' ' + description + ' ' + file).includes(needle))
+    return { kind: 'multiple', text: '' };
+  if (savedUrl && (matchesKeywords(savedUrl) || (decodedUrl !== savedUrl && matchesKeywords(decodedUrl))))
+    return linkPreview();
   if (matchesKeywords(note)) return preview('note', note);
   if (matchesKeywords(filename)) return preview('file', filename);
-  // A result may match only because its words span multiple search fields.
-  // Do not mislabel that result as a note containing just one of the words.
+  // Tier 8: words can be found across fields, including project ancestry.
   if (!isPhrase) {
-    const title = compare(node.title ?? '');
     const project = compare(boardPath);
-    const file = compare(filename);
-    const description = compare(note);
-    const rawUrl = compare(node.url ?? '');
-    const decodedUrl = compare(comparableSearchUrl(node.url ?? ''));
-    const fields = [title, description, file, rawUrl, ...(decodedUrl !== rawUrl ? [decodedUrl] : []), project];
-    const directJoined = (title + ' ' + description + ' ' + file).includes(needle);
+    const rawUrl = compare(savedUrl);
+    const decoded = compare(decodedUrl);
+    const fields = [title, description, file, rawUrl, ...(decoded !== rawUrl ? [decoded] : []), project];
     const splitKeywords = keywords.length > 1 && keywords.every(word =>
       fields.some(field => field.includes(word)) ||
       (/[\u0600-\u06FF]/u.test(word) && fields.some(field =>
         field.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF])/gu, '$1').includes(word))));
-    if (directJoined || splitKeywords) return { kind: 'multiple', text: '' };
+    if (splitKeywords) return { kind: 'multiple', text: '' };
   }
   // Comments and quotes have the lowest rank, and phrases remain field-local.
   for (const annotation of node.annotations ?? []) {

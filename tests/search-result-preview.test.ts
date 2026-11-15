@@ -266,3 +266,30 @@ test('combined-field URL match never echoes signed URL data', () => {
   assert.deepEqual(searchResultPreview(n, 'shot secret_private'), {kind:'multiple',text:''});
   assert.equal(n.url, url);
 });
+
+test('contiguous title+note result outranks unordered URL keyword explanation (tier 7 before 8)', () => {
+  const n = { ...node('hour', [], '', 'https://example.com/blue?tag=hour'), title: 'blue' };
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'blue hour'), { kind: 'multiple', text: '' });
+  assert.equal(JSON.stringify(n), before);
+});
+
+test('contiguous cross-field hit outranks unordered note explanation', () => {
+  const n = { ...node('hour blue'), title: 'blue' };
+  assert.deepEqual(searchResultPreview(n, 'blue hour'), { kind: 'multiple', text: '' });
+  assert.notEqual(searchResultPreview(n, '"blue hour"')?.kind, 'multiple', 'a quoted phrase cannot join fields');
+});
+
+test('contiguous cross-field hit outranks unordered filename explanation', () => {
+  const n = { ...node('hour', [], 'hour-blue.pdf'), title: 'blue' };
+  assert.deepEqual(searchResultPreview(n, 'blue hour'), { kind: 'multiple', text: '' });
+});
+
+test('strong direct filename, note and signed URL matches retain their safe source labels', () => {
+  const file = { ...node('hour', [], 'blue hour.pdf'), title: 'blue' };
+  const note = { ...node('blue hour revised'), title: 'blue' };
+  const link = { ...node('hour', [], '', 'https://example.com/blue%20hour?access_token=PRIVATE'), title: 'blue' };
+  assert.equal(searchResultPreview(file, 'blue hour')?.kind, 'file');
+  assert.equal(searchResultPreview(note, 'blue hour')?.kind, 'note');
+  assert.deepEqual(searchResultPreview(link, 'blue hour'), { kind: 'link', text: 'example.com' });
+});
