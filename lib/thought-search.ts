@@ -28,7 +28,7 @@ export function normalizeSearchText(value: string): string {
     .replace(/(?<=\p{Script=Arabic})\u200D(?=\p{Script=Arabic})/gu, '')
     // Invisible copy/paste separators must not break ordinary word search.
     // Preserve U+200D: it joins emoji sequences and is meaningful content.
-    .replace(/[\u200B\u2060\uFEFF]/gu, '')
+    .replace(/[\u00AD\u200B\u2060\uFEFF]/gu, '')
     // Arabic numeric percent, decimal and grouping marks equal their ASCII
     // counterparts in search comparisons; never rewrite stored strings.
     .replace(/\u066A/g, '%')
