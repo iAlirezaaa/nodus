@@ -102,7 +102,8 @@ export function searchResultPreview(
   };
   if (savedUrl && (matchesDirectly(savedUrl) || matchesDirectly(decodedUrl))) return linkPreview();
   const title = compare(node.title ?? '');
-  const description = compare(note);
+  // Keep original whitespace for the tier-7 check, matching searchThoughts.
+  const description = compare(node.text ?? '');
   const file = compare(filename);
   // This has a higher rank than unordered words in any individual field.
   if (!isPhrase && (title + ' ' + description + ' ' + file).includes(needle))

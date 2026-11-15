@@ -293,3 +293,9 @@ test('strong direct filename, note and signed URL matches retain their safe sour
   assert.equal(searchResultPreview(note, 'blue hour')?.kind, 'note');
   assert.deepEqual(searchResultPreview(link, 'blue hour'), { kind: 'link', text: 'example.com' });
 });
+
+test('tier-7 provenance respects original leading spaces rather than a trimmed note', () => {
+  const n = { ...node('  hour blue'), title: 'blue' };
+  // Engine tier 7 checks 'blue   hour blue', so the unordered note is tier 8.
+  assert.equal(searchResultPreview(n, 'blue hour')?.kind, 'note');
+});
