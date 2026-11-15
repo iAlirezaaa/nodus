@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261115T081217-nd001-nativegate",
   "acquired_at": "2026-11-15T08:12:17.025Z",
-  "heartbeat_at": "2026-11-15T08:12:17.025Z",
-  "expires_at": "2026-11-15T09:42:17.025Z",
+  "heartbeat_at": "2026-11-15T08:14:53.920Z",
+  "expires_at": "2026-11-15T09:44:53.920Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -107,9 +107,9 @@
     "ci_retry": "Actions 43575205199 attempt 2 failure before runner: runner_id=0 steps=[]",
     "scope": {
       "task": "ND-001",
-      "problem": "ND-001 accumulated search fixes cannot pass native full repository/TypeScript/build gates; release pending, main/Site must stay unchanged until validation.",
-      "acceptance": "Recover exact committed source in a native execution environment if possible and run npm run verify:release; repair one concrete failing regression with a targeted test; maintain data/IME/keyboard safety and only release after real browser 4173 screenshot and Sites tree verification.",
-      "slice": "Prioritize native test gate diagnosis and a bounded verified correctness repair on existing feature branch; record exact evidence and blocking gates.",
+      "problem": "Cross-field searches (e.g. a word in title and another in note/file/project path) produce valid results but preview incorrectly labels a nonmatching note as the sole source; current Sites release gates are unavailable.",
+      "acceptance": "Explain valid combined-field matches as Multiple fields / چند بخش rather than misleading Note. Preserve title/project/file/note/link/annotation stronger tiers, signed URL redaction, Persian keyword comparison and unchanged graph data. Add red-green tests; keep branch-only until full Node24 TypeScript/build, 4173 browser screenshot and Sites tree checks.",
+      "slice": "Implement one derived provenance kind for real cross-field matches and localize its existing Search result label; add targeted tests. Do not change persistence/keyboard or the release workflow.",
       "branch": "fix/nd-001-search-clarity"
     },
     "branch": "fix/nd-001-search-clarity",
@@ -121,7 +121,7 @@
     "code_commit": "8feea4aea180342801bf3d4ae61ff0b2c08282df",
     "code_blob": "8d2d6a8cd03958c36638ca2e117fe33076b9a675",
     "observed_control_tree": "e0d62fcec0e3bc286fab6888065ac8f89ceb4386",
-    "status": "lease-acquisition-pending; ND-001 scope recorded before edits",
+    "status": "scope recorded: multi-field search preview; code unchanged",
     "code_tree": "64570d8a10ad20459f20b57447a629aaffe05e21",
     "native_full_suite": "NOT RUN",
     "ts_project": "NOT RUN",
@@ -132,5 +132,5 @@
     "tests_completed": "36/36 checked-in preview cases on exact GitHub modules executed with V8 TypeScript syntax stripping and URL hostname shim; old 4/5 wrong-label scenarios, new 5/5 correct; native Node full suite/TS/build NOT RUN"
   },
   "last_completed_run": "nodus-20261115T0715Z-nd001-native-verify-11",
-  "updated_at": "2026-11-15T08:12:17.025Z"
+  "updated_at": "2026-11-15T08:14:53.920Z"
 }
