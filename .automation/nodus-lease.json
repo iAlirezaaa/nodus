@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-15T00:18:22.615Z",
-  "heartbeat_at": "2026-11-15T00:27:45.779Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-20261115-nd001-release-gate-13",
+  "acquired_at": "2026-11-15T01:16:30.345Z",
+  "heartbeat_at": "2026-11-15T01:16:30.345Z",
+  "expires_at": "2026-11-15T02:46:30.345Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -30,7 +30,7 @@
     "last_test": "12/12 focused native Node excerpt tests, 4/4 separate targeted tests, isolated helper TypeScript5.8.3 PASS; native whole repo suite/project TS5.9.3/build NOT RUN",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Private GitHub clone DNS unavailable; GH Actions 43658014211 failed with no runner steps; port 4173 no listener; Sites skill/current authenticated source access unavailable",
-    "observed_control_head": "fbb6a2a353d24365a09b1f470180df21cd9cdbe8",
+    "observed_control_head": "84644386a978d24227974a79670da7e30ce203a8",
     "site_source_verification": "UNVERIFIED - authenticated Sites source/skill not available this run; previous site SHA is historical only",
     "active_run_id": "nodus-20261115T001656Z-nd001-native-gate-11",
     "observed_at": "2026-11-14T18:25:21.731Z",
@@ -51,10 +51,10 @@
     "new_test_blob": "067125ad8688f635be8ec67d0a2cc99e69911108",
     "observed_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
-    "observed_feature_branch": "f6ba5eacbb0c04d0520abe7b9ceec9baf8ab2b21",
-    "observed_feature_tree": "38b6876c5248868cdf80500c3f7154e3b92d98be",
+    "observed_feature_branch": "e42253dd2451d9e10dc3e0697a00ead79e0fe910",
+    "observed_feature_tree": "369e5a53a0f4f7ba29a7ec486be2b3ce6d843ade",
     "next_action": "Recover native complete repo test/TypeScript5.9.3/build and real 4173 FA/EN desktop+390px screenshot, IME/keyboard/Undo/save-reload; compare authenticated current Sites tree, review, then guarded main/Site release of ND-001 before ND-002",
-    "run_id": "nodus-20261115T001656Z-nd001-native-gate-11",
+    "run_id": "nodus-20261115-nd001-release-gate-13",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -81,9 +81,9 @@
     "last_run_id": "nodus-20261115T001656Z-nd001-native-gate-11",
     "scoped_task": {
       "id": "ND-001",
-      "problem": "Unreleased search improvements need native app verification and useful correctness regression rather than further unsupported release claims",
-      "acceptance": "Restore executable full repo tests/TypeScript/build when possible; address an observed ND-001 search defect with exact-source tests; keep main/site unchanged until browser and Sites match confirmed",
-      "slice": "Inspect current search implementation, recover native QA via GitHub sources; make one small verified branch-only correction if evidenced, checkpoint blockers",
+      "problem": "ND-001 cannot safely ship because Actions jobs fail before any test steps, and real 4173/Sites verification is absent.",
+      "acceptance": "Determine exact failed gate and fix if source-related; run real native checks where possible; preserve all content and prevent unverified release.",
+      "slice": "Reconcile GitHub Actions startup failure and available native TypeScript/Node checks, implement a bounded verified reliability fix on existing feature branch only.",
       "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
@@ -120,5 +120,5 @@
     "completed_at": "2026-11-15T00:27:45.779Z"
   },
   "last_completed_run": "nodus-20261115T001656Z-nd001-native-gate-11",
-  "updated_at": "2026-11-14T23:23:19.988Z"
+  "updated_at": "2026-11-15T01:16:30.345Z"
 }
