@@ -35,13 +35,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
       - name: Install complete locked dependencies
         run: npm run install:ci
-      - name: Native full repository regression suite
-        run: node --import ./tests/server-loader.mjs --test tests/*.test.ts tests/*.test.mjs
-      - name: Project TypeScript 5.9.3
-        run: ./node_modules/.bin/tsc --noEmit
-      - name: Production build
-        run: npm run build
+      - name: Native full suite, TypeScript and production build (fail fast)
+        run: npm run verify:release
