@@ -19,6 +19,10 @@ export function normalizeSearchText(value: string): string {
     // Copied RTL/LTR directional marks alter display order, not search content.
     .replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, '')
     .replace(/\u200C/g, '')
+    // Some Persian/Arabic editors paste a zero-width JOINER between letters.
+    // Ignore it only for Arabic-script word comparison: joined emoji (e.g.
+    // woman technologist) and non-Arabic sequences must keep U+200D.
+    .replace(/(?<=\p{Script=Arabic})\u200D(?=\p{Script=Arabic})/gu, '')
     // Invisible copy/paste separators must not break ordinary word search.
     // Preserve U+200D: it joins emoji sequences and is meaningful content.
     .replace(/[\u200B\u2060\uFEFF]/gu, '')

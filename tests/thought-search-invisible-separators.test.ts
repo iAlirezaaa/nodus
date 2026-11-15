@@ -51,3 +51,39 @@ test('ordinary blank browsing and total versus bounded pages remain unchanged', 
   assert.equal(searchThoughts(nodes, '\t  ').total, 151);
   assert.equal(searchThoughts(nodes, '').visible.length, SEARCH_PAGE_SIZE);
 });
+
+
+test('Persian zero-width joiner between letters is search-equivalent to a half-space, without modifying the stored title', () => {
+  const n = thought('persian-zwj-title', 'پروژه\u200Dهای زمستانی');
+  const before = structuredClone(n);
+  assert.deepEqual(searchThoughts([n], 'پروژه‌های').visible.map(item => item.id), ['persian-zwj-title']);
+  assert.deepEqual(searchThoughts([n], 'پروژههای').visible.map(item => item.id), ['persian-zwj-title']);
+  assert.deepEqual(n, before);
+});
+
+test('copied joiner in a Persian query finds a clean note and nested project path', () => {
+  const note = thought('note', 'Untitled', { text: 'نقشه‌های فیلم' });
+  const nested = thought('path', 'Untitled', { boardId: 'nested' });
+  const paths = new Map([['nested', 'استودیو / پروژه‌های فیلم']]);
+  const originalNodes = JSON.stringify([note, nested]);
+  const originalPaths = JSON.stringify([...paths]);
+  assert.deepEqual(searchThoughts([note, nested], 'نقشه\u200Dهای').visible.map(n => n.id), ['note']);
+  assert.deepEqual(searchThoughts([note, nested], 'پروژه\u200Dهای', 70, 0, paths).visible.map(n => n.id), ['path']);
+  assert.deepEqual(searchThoughts([note, nested], '«پروژه\u200Dهای فیلم»', 70, 0, paths).visible.map(n => n.id), ['path']);
+  assert.equal(JSON.stringify([note, nested]), originalNodes);
+  assert.equal(JSON.stringify([...paths]), originalPaths);
+});
+
+test('Arabic-script joiner comparison keeps 151 hits across 70/70/11 pages', () => {
+  const nodes = Array.from({ length: 151 }, (_, i) => thought(String(i), 'ایده\u200Dهای ' + i));
+  const pages = [0, 70, 140].map(offset => searchThoughts(nodes, 'ایده‌های', 70, offset));
+  assert.deepEqual(pages.map(page => [page.total, page.offset, page.visible.length]), [[151, 0, 70], [151, 70, 70], [151, 140, 11]]);
+  assert.deepEqual(pages.flatMap(page => page.visible.map(n => n.id)), nodes.map(n => n.id));
+});
+
+test('joiners in emoji and at punctuation boundaries are not erased by Persian folding', () => {
+  const nodes = [thought('emoji', '👩‍💻'), thought('punctuation', 'کتاب\u200D!')];
+  assert.equal(searchThoughts(nodes, '👩💻').total, 0);
+  assert.equal(searchThoughts(nodes, 'کتاب!').total, 0);
+  assert.deepEqual(searchThoughts(nodes, '👩‍💻').visible.map(n => n.id), ['emoji']);
+});
