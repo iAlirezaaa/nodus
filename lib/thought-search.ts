@@ -80,13 +80,23 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   // Separators apply only to the fallback: exact titles and paths retain punctuation.
   const keywords = needle.split(/[\s,;،؛]+/u).filter(Boolean);
   const hasPersianKeywords = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
+  // Count every hit, but keep only the prefix needed by the requested page.
+  // Retaining every matching node defeats bounded paging on large projects.
   const ranked: GraphNode[][] = Array.from({ length: 10 }, () => []);
+  const tierCounts = Array<number>(ranked.length).fill(0);
+  // A page at offset N never needs more than N + cap entries from any tier.
+  // The document length also bounds stale/out-of-range requested offsets.
+  const retainPerTier = cap ? Math.min(nodes.length, start + cap) : 0;
   const includes = (value: string, compactValue?: string): boolean =>
     value.includes(needle) ||
     (persianPhraseNeedle.length > 0 && foldPersianSpaces(value).includes(persianPhraseNeedle)) ||
     (compactNeedle.length > 0 && (compactValue ?? compactNormalized(value)).includes(compactNeedle));
   for (const node of nodes) {
-    if (!needle) { ranked[0].push(node); continue; }
+    if (!needle) {
+      tierCounts[0]++;
+      if (ranked[0].length < retainPerTier) ranked[0].push(node);
+      continue;
+    }
     const title = compareText(node.title);
     const compactTitle = compactNormalized(title);
     const path = normalizedPaths?.get(node.boardId);
@@ -131,20 +141,25 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
       const text = compareText(value);
       return includes(text) || (!isPhrase && annotationKeywordsMatch(text, keywords));
     })) rank = 9;
-    if (rank >= 0) ranked[rank].push(node);
+    if (rank >= 0) {
+      tierCounts[rank]++;
+      if (ranked[rank].length < retainPerTier) ranked[rank].push(node);
+    }
   }
-  const total = ranked.reduce((count, bucket) => count + bucket.length, 0);
+  const total = tierCounts.reduce((count, size) => count + size, 0);
   // A stale page is not meaningful when the last matching thought disappears.
   if (total === 0) start = 0;
   else if (cap > 0 && start >= total) start = Math.floor((total - 1) / cap) * cap;
   const visible: GraphNode[] = [];
   let seen = 0;
-  for (const bucket of ranked) {
-    if (cap > 0 && visible.length < cap && start < seen + bucket.length) {
+  for (let tier = 0; tier < ranked.length; tier++) {
+    const bucket = ranked[tier];
+    const fullTierSize = tierCounts[tier];
+    if (cap > 0 && visible.length < cap && start < seen + fullTierSize) {
       const first = Math.max(0, start - seen);
       visible.push(...bucket.slice(first, first + cap - visible.length));
     }
-    seen += bucket.length;
+    seen += fullTierSize;
   }
   return { visible, total, offset: start };
 }
