@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-15T03:20:50.204Z",
-  "heartbeat_at": "2026-11-15T03:30:05.821Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-2026-11-15T041435670Z-nd001-gate",
+  "acquired_at": "2026-11-15T04:14:35.670Z",
+  "heartbeat_at": "2026-11-15T04:14:35.670Z",
+  "expires_at": "2026-11-15T05:44:35.670Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001 stale-hit guard committed and exact native tests passed; release gates blocked, lease released",
+    "phase": "ND-001 release-gate recovery: checking source & environment before any application edits",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -30,7 +30,7 @@
     "last_test": "Native Node22.16.0 20/20 existing exact-source search-input tests + new navigation guard tests PASS; strict standalone TS5.8.3 helper PASS; full repo tests, TS5.9.3, build, actual 4173 browser NOT RUN",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Port 4173 HTTP000; private GitHub DNS unavailable from container; no Sites skill; CI runner jobs show zero steps; full project install/test/TS/build and real browser/screenshot blocked",
-    "observed_control_head": "23c81793c9db7cd6b21f10ff26b853233ffce723",
+    "observed_control_head": "58b8a15d25ccee46a6c77d05495304dd37aa08a7",
     "site_source_verification": "Current authenticated Sites source/version HEAD/tree unavailable; historical baseline not current evidence",
     "active_run_id": "nodus-20261115T032050Z-nd001-release-gate-11",
     "observed_at": "2026-11-14T18:25:21.731Z",
@@ -51,10 +51,10 @@
     "new_test_blob": "067125ad8688f635be8ec67d0a2cc99e69911108",
     "observed_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
-    "observed_feature_branch": "fccfd7e4f7448ac5498e7bd7bdbbe1771d524c6c",
+    "observed_feature_branch": "fd89817e6322b4b41fdd2c2c0c9e2924f1b160e6",
     "observed_feature_tree": "369e5a53a0f4f7ba29a7ec486be2b3ce6d843ade",
     "next_action": "Recover full checkout/build, real 4173 browser screenshot and Sites current tree; independent review before guarded merge/deployment; then ND-002",
-    "run_id": "nodus-20261115T021234Z-nd001-gate-11",
+    "run_id": "nodus-2026-11-15T041435670Z-nd001-gate",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -81,9 +81,9 @@
     "last_run_id": "nodus-20261115T001656Z-nd001-native-gate-11",
     "scoped_task": {
       "id": "ND-001",
-      "problem": "Release gates remain blocked for long-lived search branch; avoid accumulating unverified fixes.",
-      "acceptance": "Reproduce full native test/TypeScript/build against exact GitHub branch source, verify UI on 4173 and Sites content or precisely record blocked gates; if defect found, fix with real regression.",
-      "slice": "Recover code checkout and native QA; fix a concrete issue only if fully scoped, keep unreleased branch.",
+      "problem": "Release still blocked; need real project-wide verification rather than incremental unverified tweaks",
+      "acceptance": "Run exact branch Node suite, project TypeScript/build and real 4173/browser/Sites reconciliation if available; isolate any concrete bug",
+      "slice": "Recover native full project verification, fix only evidenced issue; keep branch if release gates blocked",
       "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
@@ -121,5 +121,5 @@
     "code_commit": "3ccb2f57a39f4de0b21ce629f07ea677189334cd"
   },
   "last_completed_run": "nodus-20261115T032050Z-nd001-release-gate-11",
-  "updated_at": "2026-11-15T03:30:05.821Z"
+  "updated_at": "2026-11-15T04:14:35.670Z"
 }
