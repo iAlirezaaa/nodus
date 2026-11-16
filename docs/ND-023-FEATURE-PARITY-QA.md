@@ -26,3 +26,11 @@ Status: In progress. No features claimed released before verification.
 **Limitations:** Chromium is administratively blocked from navigating to `127.0.0.1:4173` or `file:`; the UI verification uses `page.set_content` plus mock storage, so real IndexedDB save/reload and actual hosted URL/browser QA were **not** verified here. The original React full test/build, authenticated sessions, real-time collaboration, cross-device sync, R2 storage and actual production user data remain untouched/not ported. Those capabilities fundamentally require a server; GitHub Pages cannot provide them.
 
 **Release classification:** this is a verified targeted client-only slice on a branch, not complete feature parity. Publishing to `gh-pages` and GitHub Actions confirmation is a separate guarded step.
+
+## GitHub Pages deployment confirmation — 2026-11-16
+
+- **Published `gh-pages` commit:** `099b9755292a00f4aecdee2c06d4c0007a886678`, tree `1833868acf143be22bfb54efe46853b0e8dbde6d`. `index.html` exact blob `4ba369259c2b2830ad88e5ad697ba550134e77a8` matches tested source branch `pages/index.html`.
+- **Pages workflow:** [run 43968961185](https://github.com/iAlirezaaa/nodus/actions/runs/43968961185) completed **success** for that exact commit; build and deploy jobs passed. GitHub repo `has_pages=true`.
+- **Expected public URL:** https://ialirezaaa.github.io/nodus/. Direct HTTP/browser loading of this URL was **not independently verified** from this environment (external fetch inaccessible); distinguish deployed-by-Actions from directly observed live UI.
+- **Status:** client-side parity slice **deployed via GitHub Pages**; full original-app parity **Blocked by static host requirements**. No Site auth, shared-room backend, D1/R2, true cross-device account sync, or production data migration. Original main and ChatGPT Site unchanged.
+- Next: validate actual URL and IndexedDB data retention after reload in a normal browser; continue parity on screenshots and bug reports. For authentic online collaboration choose a server-capable backend—GitHub Pages alone cannot provide it.

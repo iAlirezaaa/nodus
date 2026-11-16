@@ -52,3 +52,7 @@ Run `nodus-chat-20261116T215438984Z-nd023-parity`. Public Pages baseline `gh-pag
 QA: 15/15 Node tests; 24/24 exact bundled Chromium set_content UI checks with mocked storage; JS syntax and CSP hash checks pass. Real 4173 navigation blocked by Chromium policy and real browser IndexedDB persistence unverified. No false claims about full online collaboration. Source HTML blob `4ba369259c2b2830ad88e5ad697ba550134e77a8`; publication pending guarded gh-pages update/Actions/public verification.
 
 Next: restore native live-URL/IndexedDB and real IME QA; online shared rooms/files require an external server unavailable on GitHub Pages.
+
+## 2026-11-16 — ND-023 GitHub Pages deployment
+
+The tested client-only Pages bundle was published with guarded `gh-pages` update: `099b9755292a00f4aecdee2c06d4c0007a886678`, tree `1833868acf143be22bfb54efe46853b0e8dbde6d`, content blob `4ba369259c2b2830ad88e5ad697ba550134e77a8`. GitHub Pages build and deployment [run 43968961185](https://github.com/iAlirezaaa/nodus/actions/runs/43968961185) completed **success**. External browser opening of the public URL was inaccessible; real IndexedDB and native IME were **not** verified. The hosted React Site/main remain untouched. Online collaboration/account sync/file backend cannot be implemented by a GitHub Pages-only deployment. Next: on-device URL/IndexedDB verification, then continue parity fixes and missing behaviors on feature branch.
