@@ -6,6 +6,9 @@ The application has a React interface, a server API, a persistent SQL database a
 
 ## Development roadmap
 
+The current mobile/dense-canvas readability work is staged on `feat/nd-013-dense-graph-readability`. A [GitHub-hosted Nodus deployment](docs/GITHUB-HOSTING.md) requires a dynamic backend and authentication; it is not the same as exporting the frontend to GitHub Pages. Neither work is published by this branch.
+
+
 The [living roadmap](docs/ROADMAP.md) prioritizes usability, capabilities, visual design, personalization and animation, with acceptance criteria for each item. The [development loop](docs/DEVELOPMENT_LOOP.md) defines hourly work, isolated branches for special/large changes, verification, publication and source synchronization. The [development log](docs/DEVELOPMENT_LOG.md) records actual outcomes and the next checkpoint. The roadmap is updated whenever a capability becomes available; a feature being coded or verified is not yet a released feature.
 
 ## Working with a board
