@@ -140,7 +140,7 @@
 .canvas .node-neuron:is(.selected, .is-hovered, :focus-within) h3.neuron-label {
   display: -webkit-box;
   width: max-content;
-  max-width: min(244px, calc((100vw - 32px) * var(--canvas-inverse-zoom)));
+  max-width: min(244px, calc((var(--canvas-available-width, 100vw) - 32px) * var(--canvas-inverse-zoom)));
   overflow: hidden;
   white-space: normal;
   overflow-wrap: anywhere;
