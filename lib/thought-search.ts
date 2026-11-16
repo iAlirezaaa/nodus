@@ -3,6 +3,7 @@ import { parseQuotedSearchPhrase } from './search-phrase';
 import { comparableSearchUrl } from './search-url-comparison';
 import { hasExplicitSearchQuery } from './search-query-state';
 import { anyAnnotationFieldMatches, annotationKeywordsMatch } from './search-annotations';
+import { searchKeywords } from './search-keywords';
 
 export const SEARCH_PAGE_SIZE = 70;
 export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset: number; }
@@ -125,7 +126,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     return path;
   };
   // Separators apply only to the fallback: exact titles and paths retain punctuation.
-  const keywords = needle.split(/[\s,;،؛]+/u).filter(Boolean);
+  const keywords = searchKeywords(needle);
   const hasPersianKeywords = keywords.some(word => /[\u0600-\u06FF]/u.test(word));
   // Count every hit, but keep only the prefix needed by the requested page.
   // Retaining every matching node defeats bounded paging on large projects.
