@@ -313,3 +313,38 @@ test('a non-array legacy annotation collection cannot crash search preview', () 
     as unknown as Pick<GraphNode, 'text' | 'annotations' | 'asset' | 'url'>;
   assert.equal(searchResultPreview(n, 'lighting'), null);
 });
+
+
+test('separately quoted copied terms explain a deep note hit, not an unrelated opening', () => {
+  const n = node('x'.repeat(180) + ' Forest scene approved for Lighting');
+  const before = JSON.stringify(n);
+  const preview = searchResultPreview(n, '‘forest’ ‘lighting’');
+  assert.equal(preview?.kind, 'note');
+  assert.ok(preview?.text.includes('Forest'), preview?.text);
+  assert.ok(preview?.text.startsWith('…'));
+  assert.equal(JSON.stringify(n), before);
+});
+
+test('separately quoted terms split across title and note explain multiple fields', () => {
+  const n = { ...node('Lighting pass'), title: 'Forest' };
+  assert.deepEqual(searchResultPreview(n, "'forest' 'lighting'"), { kind: 'multiple', text: '' });
+  assert.deepEqual(searchResultPreview(n, '‘forest’ ‘lighting’'), { kind: 'multiple', text: '' });
+});
+
+test('quoted term matches in comments identify comment source without graph changes', () => {
+  const n = node('Unrelated note', [{quote:'draft',body:'Forest work needs Lighting review'}]);
+  const before = JSON.stringify(n);
+  const preview = searchResultPreview(n, '‘forest’ ‘lighting’');
+  assert.equal(preview?.kind, 'comment');
+  assert.ok(preview?.text.includes('Forest'));
+  assert.equal(JSON.stringify(n), before);
+});
+
+test('quoted term hits in signed URL remain host-only; balanced phrases remain exact', () => {
+  const n = node('', [], '', 'https://user:pw@example.com/forest-lighting?access_token=SECRET_PRIVATE#hidden');
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, '‘forest’ ‘lighting’'), {kind:'link',text:'example.com'});
+  assert.deepEqual(searchResultPreview(n, '"forest lighting"'), null, 'do not merge URL words into a quoted phrase');
+  assert.deepEqual(searchResultPreview(node('Forest Lighting'), '"forest lighting"')?.kind, 'note');
+  assert.equal(JSON.stringify(n), before);
+});

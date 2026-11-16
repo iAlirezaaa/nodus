@@ -2,6 +2,7 @@ import type { GraphNode } from './types';
 import { normalizeSearchText } from './thought-search';
 import { parseQuotedSearchPhrase } from './search-phrase';
 import { annotationKeywordsMatch } from './search-annotations';
+import { searchKeywords } from './search-keywords';
 import { searchExcerptBounds } from './search-excerpt-bounds';
 import { comparableSearchUrl } from './search-url-comparison';
 
@@ -66,7 +67,9 @@ export function searchResultPreview(
   const compactNeedle = isPhrase ? '' : compact(needle);
   const folded = (value: string) => value.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF0-9])/gu, '$1');
   const persianPhraseNeedle = isPhrase && /[\u0600-\u06FF]/u.test(needle) ? folded(needle) : '';
-  const keywords = needle.split(/[\s,;،؛]+/u).filter(Boolean);
+  // Use the same token boundaries as the search engine: separately quoted
+  // words are searchable terms, not punctuation in the matched content.
+  const keywords = searchKeywords(needle);
   // Keep the preview's *kind* consistent with searchThoughts' tiers:
   // direct filename (4), note (5), URL (6), unordered/cross-field keywords (8),
   // annotations (9). Unordered terms in a note must not override a stronger
