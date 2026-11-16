@@ -9,8 +9,11 @@ export function anyAnnotationFieldMatches(
   annotations: readonly SearchAnnotation[] | null | undefined,
   matchesField: (text: string) => boolean,
 ): boolean {
-  return (annotations ?? []).some(annotation =>
-    matchesField(annotation.quote) || matchesField(annotation.body));
+  // A malformed older import must not hide unrelated valid comments.
+  if (!Array.isArray(annotations)) return false;
+  return annotations.some(annotation => annotation != null && (
+    (typeof annotation.quote === 'string' && matchesField(annotation.quote)) ||
+    (typeof annotation.body === 'string' && matchesField(annotation.body))));
 }
 
 /** Match unordered, already-normalized query words only inside one field.

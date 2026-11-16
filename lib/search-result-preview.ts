@@ -72,14 +72,14 @@ export function searchResultPreview(
   // annotations (9). Unordered terms in a note must not override a stronger
   // direct URL match; a filename must not lose to a directly matching note.
   const matchesDirectly = (value: string) => {
-    if (!value) return false;
+    if (typeof value !== 'string' || !value) return false;
     const normalized = compare(value);
     return normalized.includes(needle)
       || (persianPhraseNeedle.length > 0 && folded(normalized).includes(persianPhraseNeedle))
       || (compactNeedle.length > 0 && compact(normalized).includes(compactNeedle));
   };
   const matchesKeywords = (value: string) =>
-    Boolean(value) && !isPhrase && annotationKeywordsMatch(compare(value), keywords);
+    typeof value === 'string' && Boolean(value) && !isPhrase && annotationKeywordsMatch(compare(value), keywords);
   // The search engine ranks direct title and full project path before files
   // and notes. Report those sources, not an unrelated note or attachment.
   // The result row already renders title and project location independently.
@@ -123,9 +123,12 @@ export function searchResultPreview(
     if (splitKeywords) return { kind: 'multiple', text: '' };
   }
   // Comments and quotes have the lowest rank, and phrases remain field-local.
-  for (const annotation of node.annotations ?? []) {
-    if (matchesDirectly(annotation.body) || matchesKeywords(annotation.body)) return preview('comment', annotation.body);
-    if (matchesDirectly(annotation.quote) || matchesKeywords(annotation.quote)) return preview('quote', annotation.quote);
+  for (const annotation of Array.isArray(node.annotations) ? node.annotations : []) {
+    if (!annotation || typeof annotation !== 'object') continue;
+    if (typeof annotation.body === 'string' && (matchesDirectly(annotation.body) || matchesKeywords(annotation.body)))
+      return preview('comment', annotation.body);
+    if (typeof annotation.quote === 'string' && (matchesDirectly(annotation.quote) || matchesKeywords(annotation.quote)))
+      return preview('quote', annotation.quote);
   }
   return note ? preview('note', note) : null;
 }

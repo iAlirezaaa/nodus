@@ -299,3 +299,17 @@ test('tier-7 provenance respects original leading spaces rather than a trimmed n
   // Engine tier 7 checks 'blue   hour blue', so the unordered note is tier 8.
   assert.equal(searchResultPreview(n, 'blue hour')?.kind, 'note');
 });
+
+
+test('malformed imported annotations are ignored while later valid comments still preview', () => {
+  const n = node('', [null, { body: 'Lighting approved' }] as unknown as { body: string; quote: string }[]);
+  const original = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'lighting'), { kind: 'comment', text: 'Lighting approved' });
+  assert.equal(JSON.stringify(n), original);
+});
+
+test('a non-array legacy annotation collection cannot crash search preview', () => {
+  const n = { text: '', annotations: {body: 'lighting', quote: 'lighting'}, asset: null, url: '' }
+    as unknown as Pick<GraphNode, 'text' | 'annotations' | 'asset' | 'url'>;
+  assert.equal(searchResultPreview(n, 'lighting'), null);
+});
