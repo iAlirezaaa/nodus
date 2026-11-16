@@ -14,17 +14,14 @@ export function parseQuotedSearchPhrase(query: string): string | null {
   // A single quote inside a word is an apostrophe, not another quote pair.
   // But separately quoted words are NOT one contiguous exact phrase.
   // Reject ambiguous nested punctuation rather than silently merging terms.
+  // Pasted content may mix straight and curly delimiters. Reject boundary
+  // quotes of either style, while keeping intra-word apostrophes of both
+  // styles (don't, I’m, L'atelier) inside one genuinely contiguous phrase.
+  const hasBoundaryQuote = (text: string) =>
+    /‘|(?<![\p{L}\p{N}])['’]|['’](?![\p{L}\p{N}])/u.test(text);
   const single = candidate.match(/^'([\s\S]*)'$/u);
-  if (single) {
-    const interior = single[1];
-    return /(?<![\p{L}\p{N}])'|'(?![\p{L}\p{N}])/u.test(interior) ? null : interior;
-  }
+  if (single) return hasBoundaryQuote(single[1]) ? null : single[1];
   const curlySingle = candidate.match(/^‘([\s\S]*)’$/u);
-  if (curlySingle) {
-    const interior = curlySingle[1];
-    return interior.includes('‘') ||
-      /(?<![\p{L}\p{N}])’|’(?![\p{L}\p{N}])/u.test(interior)
-      ? null : interior;
-  }
+  if (curlySingle) return hasBoundaryQuote(curlySingle[1]) ? null : curlySingle[1];
   return null;
 }

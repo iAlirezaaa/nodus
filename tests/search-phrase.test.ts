@@ -123,3 +123,21 @@ test('real intra-word apostrophes, empty phrases and direction wrappers still pa
   assert.equal(parseQuotedSearchPhrase("''"), '');
   assert.equal(parseQuotedSearchPhrase('‘’'), '');
 });
+
+test('mixed straight and curly single-quote fragments are not one exact phrase', () => {
+  for (const query of [
+    "‘Forest' 'Lighting’",
+    "'Forest’ ‘Lighting'",
+    "‘فصل' 'دوم’",
+    "'مرحله’ ‘اول'",
+  ]) assert.equal(parseQuotedSearchPhrase(query), null, query);
+});
+
+test('mixed in-word apostrophes and balanced Persian or English phrases survive', () => {
+  assert.equal(parseQuotedSearchPhrase("‘L'atelier’"), "L'atelier");
+  assert.equal(parseQuotedSearchPhrase("'Director’s cut'"), 'Director’s cut');
+  assert.equal(parseQuotedSearchPhrase('‘I’m ready’'), 'I’m ready');
+  assert.equal(parseQuotedSearchPhrase("'don't stop'"), "don't stop");
+  assert.equal(parseQuotedSearchPhrase('‘فصل اول’'), 'فصل اول');
+  assert.equal(parseQuotedSearchPhrase('‘Scene "One"’'), 'Scene "One"');
+});
