@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { canvasLabelDetail } from '../lib/canvas-label-detail.ts';
+
+test('small 20-node boards retain original labels even when zoomed far out', () => {
+  assert.equal(canvasLabelDetail(20, 0.2), 'compact');
+  assert.equal(canvasLabelDetail(20, 1), 'full');
+});
+test('a 100-node board becomes a connection overview only when labels are unreadable', () => {
+  assert.equal(canvasLabelDetail(100, 0.2), 'overview');
+  assert.equal(canvasLabelDetail(100, 0.449), 'overview');
+  assert.equal(canvasLabelDetail(100, 0.45), 'compact');
+  assert.equal(canvasLabelDetail(100, 0.85), 'compact');
+  assert.equal(canvasLabelDetail(100, 0.9), 'full');
+});
+test('a 500-node graph follows the same overview rule without counting hidden data', () => {
+  assert.equal(canvasLabelDetail(500, 0.25), 'overview');
+  assert.equal(canvasLabelDetail(500, 0.6), 'compact');
+  assert.equal(canvasLabelDetail(500, 1), 'full');
+});
+test('boards of 24 and 25 nodes have a predictable boundary', () => {
+  assert.equal(canvasLabelDetail(24, 0.3), 'compact');
+  assert.equal(canvasLabelDetail(25, 0.3), 'overview');
+  assert.equal(canvasLabelDetail(99, 0.85), 'full');
+});

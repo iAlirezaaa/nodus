@@ -5,6 +5,7 @@ import { fitViewport } from '@/lib/graph';
 import { graphShortcutScope, isEditableTarget, resolveGraphShortcut } from '@/lib/keyboard';
 import { connectionGeometry, connectionMayIntersectViewport, type EdgePoint, type EdgeRectangle } from '@/lib/edge-geometry';
 import { DEFAULT_CANVAS_DESIGN, type CanvasDesign, type LayoutGuide } from '@/lib/layouts';
+import { canvasLabelDetail } from '@/lib/canvas-label-detail';
 import { buildNodeGrowth, defaultNodeGrowth, projectCardNode, type NodeGrowth } from '@/lib/node-growth';
 import { nodeEnergy, type NodeEnergy } from '@/lib/node-energy';
 import { mergeNodeSelection, nodesInSelection, selectionRectangle } from '@/lib/node-selection';
@@ -759,7 +760,8 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   }
 
   const gridSize = 28 * (design.density === 'compact' ? .8 : design.density === 'spacious' ? 1.3 : 1);
-  return <div data-canvas data-node-style={design.nodeStyle} data-density={design.density} data-readable-overview={nodes.length <= 24} data-selection-count={selectedSet.size} data-multi-select-mode={!!props.multiSelectMode} data-label-detail={view.zoom < .7 ? 'compact' : 'full'} data-motion={motionAllowed ? 'on' : 'off'} data-magnetic={magnetic.status} data-magnetic-view={magnetic.hasPositions ? 'on' : 'off'} data-magnetic-dirty={magnetic.dirty} tabIndex={0} className={`canvas ${tool === 'hand' || space ? 'hand-mode' : ''} ${marquee || props.multiSelectMode ? 'multi-select-mode' : ''} ${connectFrom ? 'connect-mode' : ''} ${dragOver ? 'is-dragover' : ''}`} ref={surface}
+  const labelDetail = canvasLabelDetail(nodes.length, view.zoom);
+  return <div data-canvas data-node-style={design.nodeStyle} data-density={design.density} data-readable-overview={nodes.length <= 24} data-selection-count={selectedSet.size} data-multi-select-mode={!!props.multiSelectMode} data-label-detail={labelDetail} data-motion={motionAllowed ? 'on' : 'off'} data-magnetic={magnetic.status} data-magnetic-view={magnetic.hasPositions ? 'on' : 'off'} data-magnetic-dirty={magnetic.dirty} tabIndex={0} className={`canvas ${tool === 'hand' || space ? 'hand-mode' : ''} ${marquee || props.multiSelectMode ? 'multi-select-mode' : ''} ${connectFrom ? 'connect-mode' : ''} ${dragOver ? 'is-dragover' : ''}`} ref={surface}
     onPointerDown={event => start(event)} onPointerMove={move} onPointerMoveCapture={event => { if (event.pointerType !== 'touch' || event.isPrimary) reportPresence({ x: event.clientX, y: event.clientY }); }} onPointerUp={end} onPointerCancel={cancel}
     onPointerLeave={() => reportPresence(null)}
     onLostPointerCapture={event => { if (pointers.current.has(event.pointerId)) cancel(); }}

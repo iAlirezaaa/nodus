@@ -131,6 +131,37 @@
 .magnet-launch i[data-status='running'] { opacity: 1; box-shadow: 0 0 8px currentColor; }
 .magnet-launch:hover, .magnet-launch:focus-visible { border-color: var(--accent); color: var(--accent); }
 @media (max-width: 650px) { .magnet-launch { top: 26px; inset-inline-end: 66px; width: 39px; height: 39px; padding: 6px; } .magnet-launch > span, .magnet-launch > i { display: none; } }
+
+/* ND-013: at map distance, do not paint illegibly small labels over a dense
+   network. Keep the neuron core and all graph connections visible, and restore
+   the caption immediately on selection, keyboard focus or pointer hover. */
+.canvas[data-label-detail='overview'] .node-neuron:not(.selected):not(.is-hovered):not(:focus-within) :is(.neuron-caption, .node-growth-badge, .neuron-annotation) { visibility: hidden; }
+.canvas .node-neuron:is(.selected, .is-hovered, :focus-within) .neuron-caption { z-index: 4; }
+.canvas .node-neuron:is(.selected, .is-hovered, :focus-within) h3.neuron-label {
+  display: -webkit-box;
+  width: max-content;
+  max-width: min(244px, calc((100vw - 32px) * var(--canvas-inverse-zoom)));
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  font-size: 15px;
+  line-height: 1.65;
+  text-align: start;
+  border: 1px solid color-mix(in srgb, var(--node-accent) 45%, var(--border));
+  background: var(--surface-raised);
+  box-shadow: 0 4px 18px #00000026;
+}
+@media (pointer: coarse) {
+  /* 44 CSS px hit area without visually inflating dense clusters. */
+  .canvas .node-neuron .neuron-core::after {
+    width: max(calc(var(--neuron-size) + 12px), calc(44px * var(--canvas-inverse-zoom)));
+    height: max(calc(var(--neuron-size) + 12px), calc(44px * var(--canvas-inverse-zoom)));
+  }
+  .canvas .node-neuron:is(.selected, .is-hovered, :focus-within) h3.neuron-label { font-size: 16px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .canvas .thought-node, .canvas .thought-node * { transition: none !important; }
   .canvas .neuron-aura, .canvas .neuron-orbit, .canvas .node-living-frame, .canvas .node-life i, .canvas .node-life b, .canvas .neuron-core i, .canvas .connection-flow { animation: none !important; }
