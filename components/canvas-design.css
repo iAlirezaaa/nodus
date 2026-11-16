@@ -18,7 +18,7 @@
 .node-neuron.task-doing .neuron-core > svg { color: var(--warning); }
 .node-neuron.task-done .neuron-core { background: color-mix(in srgb, var(--node-accent) 18%, var(--surface)); }
 .neuron-core > svg { width: max(12px, calc(9px * var(--canvas-inverse-zoom))); height: max(12px, calc(9px * var(--canvas-inverse-zoom))); }
-.neuron-caption { position: absolute; left: 50%; top: calc(50% + var(--neuron-size) / 2 + 8px * var(--label-scale)); display: flex; flex-direction: column; align-items: center; width: max-content; transform: translateX(-50%) scale(var(--label-scale)); transform-origin: center top; pointer-events: none; }
+.neuron-caption { position: absolute; left: calc(50% + var(--neuron-caption-shift, 0px)); top: calc(50% + var(--neuron-size) / 2 + 8px * var(--label-scale)); display: flex; flex-direction: column; align-items: center; width: max-content; transform: translateX(-50%) scale(var(--label-scale)); transform-origin: center top; pointer-events: none; }
 .canvas .node-neuron h3.neuron-label { width: max-content; max-width: 190px; margin: 0; padding: 3px 7px; font-size: 13px; line-height: 1.65; font-weight: 550; text-align: center; letter-spacing: -.01em; border-radius: 7px; color: var(--foreground); background: color-mix(in srgb, var(--bg) 87%, transparent); pointer-events: auto; -webkit-line-clamp: 2; }
 .canvas[data-density='compact'] .node-neuron h3.neuron-label { max-width: 160px; font-size: 12px; }
 .canvas[data-density='spacious'] .node-neuron h3.neuron-label { max-width: 220px; font-size: 14px; }
@@ -145,7 +145,7 @@
   white-space: normal;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 5;
   font-size: 15px;
   line-height: 1.65;
   text-align: start;

@@ -5,7 +5,7 @@ import { fitViewport } from '@/lib/graph';
 import { graphShortcutScope, isEditableTarget, resolveGraphShortcut } from '@/lib/keyboard';
 import { connectionGeometry, connectionMayIntersectViewport, type EdgePoint, type EdgeRectangle } from '@/lib/edge-geometry';
 import { DEFAULT_CANVAS_DESIGN, type CanvasDesign, type LayoutGuide } from '@/lib/layouts';
-import { canvasLabelDetail } from '@/lib/canvas-label-detail';
+import { canvasLabelDetail, neuronCaptionShift } from '@/lib/canvas-label-detail';
 import { buildNodeGrowth, defaultNodeGrowth, projectCardNode, type NodeGrowth } from '@/lib/node-growth';
 import { nodeEnergy, type NodeEnergy } from '@/lib/node-energy';
 import { mergeNodeSelection, nodesInSelection, selectionRectangle } from '@/lib/node-selection';
@@ -777,7 +777,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     <div className={`canvas-world ${animating ? 'is-animating' : ''}`} style={{ transform: `translate3d(${view.x}px,${view.y}px,0) scale(${view.zoom})` }}>
       {guides.filter(guide => guide.x * view.zoom + view.x < size.width + 200 && (guide.x + guide.width) * view.zoom + view.x > -200 && guide.y * view.zoom + view.y < size.height + 200 && (guide.y + guide.height) * view.zoom + view.y > -200).map(guide => <div key={guide.id} className={`layout-guide layout-guide-${guide.kind}`} style={{ left: guide.x, top: guide.y, width: guide.width, height: guide.height, '--guide-color': colors[guide.color ?? design.accent] } as React.CSSProperties} aria-hidden="true"><span className="layout-guide-title">{guide.title}<small>{guide.subtitle}</small></span></div>)}
       <svg className="connections" aria-label={L('ارتباط‌ها', 'Connections')}>{visibleEdges.map(drawing => <Connection key={drawing.edge.id} drawing={drawing} selected={props.selectedEdgeId === drawing.edge.id} dispatch={edgeDispatch} language={language} signal={signalIds.has(drawing.edge.id)} energy={energyById.get((growthById.get(drawing.source.id)?.mass ?? 0) >= (growthById.get(drawing.target.id)?.mass ?? 0) ? drawing.source.id : drawing.target.id)!} handleScale={props.selectedEdgeId === drawing.edge.id ? 1 / view.zoom : 1} canBend={!!props.onEdgeBend} canDelete={!!props.onDeleteEdge} showLabel={design.connectionLabels} />)}</svg>
-      {visibleNodes.map(node => <NodeCard key={node.id} node={node} projected={projections.get(node.id)!} growth={growthById.get(node.id) ?? defaultNodeGrowth} hovered={expandedId === node.id} selected={selectedSet.has(node.id)} connecting={connectFrom === node.id} detail={detail} miniature={miniature} language={language} tabStop={rovingId === node.id}
+      {visibleNodes.map(node => <NodeCard key={node.id} node={node} projected={projections.get(node.id)!} growth={growthById.get(node.id) ?? defaultNodeGrowth} hovered={expandedId === node.id} selected={selectedSet.has(node.id)} connecting={connectFrom === node.id} detail={detail} miniature={miniature} language={language} tabStop={rovingId === node.id} captionShift={neural && (selectedSet.has(node.id) || expandedId === node.id || rovingId === node.id) ? neuronCaptionShift(projections.get(node.id)!.x + projections.get(node.id)!.width / 2, view.x, view.zoom, size.width) : 0}
         edit={props.inlineEdit?.nodeId === node.id ? props.inlineEdit : null} dispatch={cardDispatch} register={registerCard}
         neural={neural} density={design.density} dragging={moving?.id === node.id || !!moving?.group?.has(node.id)} pinned={magnetic.pinned.has(node.id)} presenceLabel={selectedByPeers.has(node.id) ? `${selectedByPeers.get(node.id)!.label}${selectedByPeers.get(node.id)!.count > 1 ? ` +${selectedByPeers.get(node.id)!.count - 1}` : ''}` : undefined} presenceColor={selectedByPeers.get(node.id)?.color}
         entering={motionAllowed && recentItems.nodes.has(node.id)} canToggleTask={!!props.onToggleTask} taskDone={taskProgress.get(node.id)?.done ?? 0} taskTotal={taskProgress.get(node.id)?.total ?? 0}
@@ -798,7 +798,7 @@ interface NodeCardProps {
   edit: InlineEditSession | null; dispatch: CardDispatch; register: (id: string, element: HTMLElement | null) => void;
   projectCount: number; projectMiniature: ProjectMiniature;
   entering: boolean; canToggleTask: boolean; taskDone: number; taskTotal: number;
-  neural: boolean; density: CanvasDesign['density']; dragging: boolean; pinned: boolean; presenceLabel?: string; presenceColor?: string;
+  neural: boolean; density: CanvasDesign['density']; dragging: boolean; pinned: boolean; captionShift: number; presenceLabel?: string; presenceColor?: string;
 }
 const NodeCard = memo(function NodeCard(props: NodeCardProps) {
   const { node, projected, growth, hovered, selected, connecting, detail, miniature, language, tabStop, edit, dispatch, register, projectCount, projectMiniature, entering, canToggleTask, taskDone, taskTotal, neural, dragging, presenceLabel, presenceColor } = props;
@@ -841,7 +841,7 @@ const NodeCard = memo(function NodeCard(props: NodeCardProps) {
   </article>;
 });
 
-const NeuronNode = memo(function NeuronNode({ node, projected, growth, hovered, selected, connecting, miniature, language, tabStop, edit, dispatch, register, entering, canToggleTask, taskDone, taskTotal, dragging, pinned, presenceLabel, presenceColor }: NodeCardProps) {
+const NeuronNode = memo(function NeuronNode({ node, projected, growth, hovered, selected, connecting, miniature, language, tabStop, edit, dispatch, register, entering, canToggleTask, taskDone, taskTotal, dragging, pinned, captionShift, presenceLabel, presenceColor }: NodeCardProps) {
   const L = (fa: string, en: string) => language === 'fa' ? fa : en;
   const Icon = kindIcons[node.kind], status = node.task?.status, annotations = node.annotations?.length ?? 0;
   const kindLabel = node.task ? node.task.parentId ? L('ساب‌تسک', 'Subtask') : L('تسک', 'Task') : kindName(node.kind, language);
@@ -849,7 +849,7 @@ const NeuronNode = memo(function NeuronNode({ node, projected, growth, hovered, 
   const nextStatusLabel = status === 'todo' ? L('در حال انجام', 'Doing') : status === 'doing' ? L('انجام شد', 'Done') : L('انجام‌نشده', 'To do');
   const registerElement = useCallback((element: HTMLElement | null) => register(node.id, element), [node.id, register]);
   return <article data-node={node.id} data-growth-scale={growth.scale.toFixed(3)} data-branches={growth.direct} data-connections={growth.connections} data-task-status={status} ref={registerElement} className={`thought-node node-neuron tone-${node.color} kind-${node.kind} appearance-${node.appearance ?? 'card'} ${selected ? 'selected' : ''} ${hovered ? 'is-hovered' : ''} ${connecting ? 'connecting' : ''} ${miniature ? 'miniature' : ''} ${edit ? 'is-inline-editing' : ''} ${status ? `task-${status}` : ''} ${entering ? 'is-entering' : ''} ${dragging ? 'is-node-dragging' : ''} ${presenceLabel ? 'has-peer-selection' : ''}`}
-    style={{ left: projected.x, top: projected.y, width: projected.width, height: projected.height, '--node-accent': colors[node.color], '--neuron-size': `${projected.width}px`, '--peer-color': presenceColor, ...lifeStyle(node.id, nodeEnergy(growth)) } as React.CSSProperties}
+    style={{ left: projected.x, top: projected.y, width: projected.width, height: projected.height, '--node-accent': colors[node.color], '--neuron-size': `${projected.width}px`, '--neuron-caption-shift': `${captionShift}px`, '--peer-color': presenceColor, ...lifeStyle(node.id, nodeEnergy(growth)) } as React.CSSProperties}
     tabIndex={tabStop && !edit ? 0 : -1} role="button" aria-label={`${node.title || L('بدون عنوان', 'Untitled')} · ${kindLabel}${status ? ` · ${statusLabel}` : ''}`} aria-pressed={selected}
     onFocus={event => { if (event.target === event.currentTarget) dispatch.focus(node.id); }}
     onPointerEnter={event => { if (event.pointerType !== 'touch') dispatch.hover(node.id, true); }} onPointerLeave={event => { if (event.pointerType !== 'touch') dispatch.hover(node.id, false); }}

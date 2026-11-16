@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canvasLabelDetail } from '../lib/canvas-label-detail.ts';
+import { canvasLabelDetail, neuronCaptionShift } from '../lib/canvas-label-detail.ts';
 
 test('small 20-node boards retain original labels even when zoomed far out', () => {
   assert.equal(canvasLabelDetail(20, 0.2), 'compact');
@@ -22,4 +22,21 @@ test('boards of 24 and 25 nodes have a predictable boundary', () => {
   assert.equal(canvasLabelDetail(24, 0.3), 'compact');
   assert.equal(canvasLabelDetail(25, 0.3), 'overview');
   assert.equal(canvasLabelDetail(99, 0.85), 'full');
+});
+
+test('neural captions stay within a 390px screen after zooming in', () => {
+  const shift = neuronCaptionShift(14, 195, 1.6, 390);
+  assert.ok(Math.abs(shift + 14) < 0.001);
+  assert.equal(neuronCaptionShift(14, 195, 0.3, 390), 0);
+});
+test('a label near either mobile edge receives a bounded world-space shift', () => {
+  const left = neuronCaptionShift(-480, 195, 0.3, 390);
+  const right = neuronCaptionShift(480, 195, 0.3, 390);
+  assert.ok(left > 0);
+  assert.ok(right < 0);
+  assert.ok(Number.isFinite(left) && Number.isFinite(right));
+});
+test('caption shift avoids invalid zoom and does not mutate the graph', () => {
+  assert.equal(neuronCaptionShift(14, 0, 0, 390), 0);
+  assert.equal(neuronCaptionShift(14, 0, 1, 30), 0);
 });
