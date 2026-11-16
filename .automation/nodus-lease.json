@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261116T1434Z-nd001-native-gates",
   "acquired_at": "2026-11-16T14:33:56.464Z",
-  "heartbeat_at": "2026-11-16T14:33:56.464Z",
-  "expires_at": "2026-11-16T16:03:56.464Z",
+  "heartbeat_at": "2026-11-16T14:37:13.016Z",
+  "expires_at": "2026-11-16T16:07:13.016Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -184,7 +184,7 @@
     }
   },
   "last_completed_run": "nodus-20261116T113022Z-nd001-gates",
-  "updated_at": "2026-11-16T14:33:56.464Z",
+  "updated_at": "2026-11-16T14:37:13.016Z",
   "completed_at": "2026-11-16T11:43:39.596Z",
   "last_completed_at": "2026-11-16T11:43:39.596Z",
   "current_run": {
@@ -194,7 +194,10 @@
     "scope": "recover release gates and exact source verification; no unverified deployment",
     "main_head": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "feature_head": "29392dc4e7e988d5ee587842d19c5ba172686f91",
-    "site_head": "UNVERIFIED"
+    "site_head": "UNVERIFIED",
+    "scoping_commit": "a9d28e073ff9c88c3fa4db1fa39c4e6475c4c838",
+    "observed_search_bug": "non-string title/notes/URL/board titles cause read-only search crash",
+    "old_normalizer_blob": "dd08dc08623e493d863e1a51436d1936d43f9b02"
   },
   "status": "ND-001 In progress; feature branch only; release Blocked"
 }
