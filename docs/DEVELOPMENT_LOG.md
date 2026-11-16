@@ -1414,3 +1414,14 @@ Run `nodus-auto-20261115T211335-nd001-11`. The pre-edit scope was committed at [
 
 **Status:** ND-001 **In progress** and publication **Blocked**; branch only. No main merge, Site upload, data change, external audience change, or deployment. **Next:** complete native release-gates and real UI/Sites reconciliation with independent review before guarded release; only then ND-002 focus mode.
 
+
+
+## 2026-11-16T03:22:29.027Z — ND-001 typographic-dash search parity: scope before editing
+
+**Run/ownership:** `nodus-auto-20261116T0318Z-nd001-release-gates-12`, guarded lease on `automation/nodus-control`. Main `26fafac05c320ed5db30a0ee908dd816714acdd9` tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`; feature `977a127aa51bcf06ba80545c3bd6759d3001ad9c` tree `9aa4634b0eec5cd52fb6614139f19b19f571b055`. Current Sites HEAD/tree **UNVERIFIED** (no Sites skill); historical source not parity evidence.
+
+**Problem reproduced with exact GitHub normalizer:** ordinary ASCII keyboard hyphen does not match common copied typography: `Storyboard–Review`, `Scene—12`, `Camera‑Angle`, `Lighting−Pass`, Persian `ایده–پردازی` (5/5 baseline mismatches). This affects search hits and source explanations on mixed FA/EN data.
+
+**Acceptance:** Treat U+2010..U+2015 and mathematical U+2212 as ordinary hyphens **for read-only search comparison** across title/note/project path/filename/annotations. Preserve quoted-phrase word boundaries, result relevance, complete count and 70/70/11 paging, original stored data/IDs, keyboard/IME/Undo/drag/save/collaboration, and emoji. Demonstrate exact-source baseline red and patched green; register native repo tests, isolated static TS where available. The existing Search panel is the control; no visual/UI change.
+
+**Bounded slice:** `lib/thought-search.ts` and a small `tests/thought-search-typographic-dashes.test.ts` regression on the **existing** `fix/nd-001-search-clarity` branch. Attempt release gates; if complete project Node24/TS5.9.3/build, real FA/EN 4173 browser and screenshot, authenticated Sites tree and independent review are unavailable, **In progress / release Blocked, branch only**. No deploy or main merge.
