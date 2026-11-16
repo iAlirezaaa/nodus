@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-16T01:19:04.000Z",
-  "heartbeat_at": "2026-11-16T01:25:55.000Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-auto-20261116T022020-nd001-verify",
+  "acquired_at": "2026-11-16T02:20:20.815Z",
+  "heartbeat_at": "2026-11-16T02:20:20.815Z",
+  "expires_at": "2026-11-16T03:50:20.815Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001 U+00AD outer quoted phrase boundary fixed; registered 4 native parser +1 integration test; native exact parser 26/26, isolated TypeScript 5.8.3 passed; full project/browser/Sites gates Blocked; guarded lease released",
+    "phase": "Acquired lease; inspecting full repo runtime and GitHub/Sites source parity before modifications",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "HISTORICAL eb8a9ad1f470447bf15634efbaa47531924901c5, NOT freshly checked",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -30,10 +30,10 @@
     "last_test": "Original exact GitHub parser blob red: 1/4 passed, 3 failed. Corrected exact GitHub parser blob 5dd161... and exact combined tests 056743... via git hash: native Node22 26/26; isolated TS 5.8.3 strict PASS. Registered full-search integration test NOT RUN.",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Local GitHub DNS unavailable, no complete private checkout; localhost 4173 connection refused; current Sites skill unavailable and Browser requires originating context",
-    "observed_control_head": "527ce94df0d3543336cc1fe323d0c4824d190ac5",
+    "observed_control_head": "4b90fd3ef70f8c4effc0ca3af6eef13be7db2e99",
     "site_source_verification": "UNVERIFIED",
     "active_run_id": null,
-    "observed_at": "2026-11-15T23:22:38.082Z",
+    "observed_at": "2026-11-16T02:20:20.815Z",
     "source_code_commit": "041754bbd6fb7342692ae1ef6c5c53d2b57f1e24",
     "test_helper_blob": "25472713ce16ce7fa6658f9c4408df1c4da97805",
     "test_cases_blob": "a826552b67f70144fe5fb9af39653fdb5259283b",
@@ -54,7 +54,7 @@
     "observed_feature_branch": "f9bf3a10e6b52c83521267b762791f759adcf524",
     "observed_feature_tree": "9c7d93c691c6129a2b7b806ec15b5d5b2ef5f6ca",
     "next_action": "Recover native complete checkout, run full project Node tests/TS5.9.3/build; real 4173 FA/EN desktop and 390px browser with screenshot, keyboard/IME/Undo/save/reload; authorized Sites head/tree reconciliation and independent review before guarded merge/deploy. ND-002 after stable release.",
-    "run_id": "nodus-auto-20261116T0119Z-nd001-gates-12",
+    "run_id": "nodus-auto-20261116T022020-nd001-verify",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -124,7 +124,7 @@
     "completed_at": "2026-11-16T01:25:55.000Z",
     "code_commit": "ae88e887ba62b5b418d1fb7698316a022c23f8f4",
     "code_blob": "5aacd641ea6ec73cf11fa01bb6bb4c9df7666b25",
-    "observed_control_tree": "80effad389db46a585eca3dfd5755d38eeb62e5b",
+    "observed_control_tree": "83f8dd653c714ef3f4c0c1d3fa8e0108c049fd0e",
     "status": "In progress; branch only; release Blocked",
     "code_tree": "15b5adb2abf552cb90657d9a8de32be6f3984610",
     "native_full_suite": "NOT RUN",
@@ -165,7 +165,7 @@
     "detected_regression": "Persian spaced quoted query ranked prefix before semantically exact title; targeted fix pending.",
     "control_head_before_release": "ae1013b3fce6c7f39178d9eaa39bf147beb1e577",
     "current_run_id": null,
-    "observed_feature": "478fba4cae13459160c3ae5dc576ff17e3300077"
+    "observed_feature": "a0559c228469a5158fb19cdf5b28eb9a3435226f"
   },
   "last_completed_run": {
     "run_id": "nodus-auto-20261116T0119Z-nd001-gates-12",
@@ -181,6 +181,9 @@
   "updated_at": "2026-11-15T21:26:02.264Z",
   "completed_at": "2026-11-16T01:25:55.000Z",
   "last_completed_at": "2026-11-16T01:25:55.000Z",
-  "current_run": null,
+  "current_run": {
+    "run_id": "nodus-auto-20261116T022020-nd001-verify",
+    "scope": "Restore native release test gates; if unavailable, a targeted ND-001 regression after red/green."
+  },
   "status": "ND-001 In progress; branch only; publication Blocked"
 }
