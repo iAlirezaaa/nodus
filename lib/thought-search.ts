@@ -47,6 +47,9 @@ export function normalizeSearchText(value: string): string {
     // Turkish/English casing remains locale-independent; non-Latin scripts
     // and emoji are untouched by these expansions.
     .toLowerCase()
+    // Russian Ё/ё is commonly typed as Е/е; compare either spelling without
+    // rewriting original graph text or merging other Cyrillic letters.
+    .replace(/ё/g, 'е')
     .replace(/œ/g, 'oe')
     .replace(/æ/g, 'ae')
     .replace(/ß/g, 'ss');
