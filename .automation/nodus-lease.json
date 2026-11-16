@@ -2,14 +2,14 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": "nodus-auto-20261116T211254431Z-nd001",
+  "owner_run_id": null,
   "acquired_at": "2026-11-16T21:12:54.431Z",
-  "heartbeat_at": "2026-11-16T21:22:48.700Z",
-  "expires_at": "2026-11-16T22:52:48.700Z",
+  "heartbeat_at": "2026-11-16T21:23:03.186Z",
+  "expires_at": null,
   "current_task_id": "ND-001 (existing feature-branch release gates; search clarity)",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
-    "phase": "ND-001 direct-page jump implemented, focused 4/4 Node tests + isolated TS pass; branch-only with full release gates BLOCKED",
+    "phase": "ND-001 deep result page navigation committed/docs readback complete; branch-only, full release gates blocked",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "HISTORICAL eb8a9ad1f470447bf15634efbaa47531924901c5, NOT freshly checked",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -116,11 +116,11 @@
       "site_head": "UNVERIFIED"
     },
     "branch": "fix/nd-001-search-clarity",
-    "last_completed_run": "nodus-auto-20261116T182259-nd001-gates",
+    "last_completed_run": "nodus-auto-20261116T211254431Z-nd001",
     "last_completed_at": "2026-11-16T11:43:39.596Z",
     "search_excerpt_helper_blob": "11afb0d56a8adbb8077ed976ba9eabd4e79421a9",
     "search_excerpt_test_blob": "d5b32a16db6cf74dd84716e6c562c73926b24237",
-    "completed_at": "2026-11-16T18:33:07.060Z",
+    "completed_at": "2026-11-16T21:23:03.186Z",
     "code_commit": "e81088fae568dadf271acffd30adefc34e51bd6f",
     "code_blob": "f98cffc10d76c860cac756b58e293ed8e3122844",
     "observed_control_tree": "83f8dd653c714ef3f4c0c1d3fa8e0108c049fd0e",
@@ -200,18 +200,14 @@
     "github_pages": "BLOCKED: static host cannot execute app auth/API/D1/R2; no GitHub Pages deployment",
     "native_tests": "9/9 focused Node22 tests PASS; complete native tests NOT RUN",
     "isolated_typecheck": "TypeScript 5.8.3 helper-only PASS, project 5.9.3 NOT RUN",
-    "browser": "5 Chromium synthetic CSS fixtures PASS with 390px/desktop; real Nodus 4173 authenticated browser NOT RUN"
+    "browser": "5 Chromium synthetic CSS fixtures PASS with 390px/desktop; real Nodus 4173 authenticated browser NOT RUN",
+    "final_feature_branch_head": "dc51e4742549556e497787995fd8d08190edaec6",
+    "final_feature_branch_tree": "f16ef91764361d2ab13fb1708e442732b2c75b2d"
   },
-  "last_completed_run": {
-    "run_id": "nodus-chat-20261116T205036881Z-nd013-pages",
-    "completed_at": "2026-11-16T21:12:14.494Z",
-    "task": "ND-013 / ND-023",
-    "status": "In progress (branch-only)",
-    "publication_status": "Blocked"
-  },
+  "last_completed_run": "nodus-auto-20261116T211254431Z-nd001",
   "updated_at": "2026-11-16T21:12:14.494Z",
   "completed_at": "2026-11-16T18:33:07.060Z",
-  "last_completed_at": "2026-11-16T19:28:52.490Z",
+  "last_completed_at": "2026-11-16T21:23:03.186Z",
   "current_run": null,
   "status": "idle"
 }
