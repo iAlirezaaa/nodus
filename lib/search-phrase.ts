@@ -7,6 +7,7 @@ export function parseQuotedSearchPhrase(query: string): string | null {
   // invisible separators outside the actual quotation marks. Only trim these
   // at the query boundary; text *inside* the quotes remains unchanged.
   const candidate = query.replace(/^[\s\u061C\u00AD\u200B\u200C\u200D\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]+|[\s\u061C\u00AD\u200B\u200C\u200D\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]+$/gu, '');
-  const phrase = candidate.match(/^(?:"([^"]*)"|“([^”]*)”|«([^»]*)»|'([\s\S]*)'|‘([\s\S]*)’)$/u);
-  return phrase ? (phrase[1] ?? phrase[2] ?? phrase[3] ?? phrase[4] ?? phrase[5] ?? '') : null;
+  // Also accept low-double opening quotes used in copied multilingual notes.
+  const phrase = candidate.match(/^(?:"([^"]*)"|“([^”]*)”|«([^»]*)»|'([\s\S]*)'|‘([\s\S]*)’|„([^“”]*)[“”])$/u);
+  return phrase ? (phrase[1] ?? phrase[2] ?? phrase[3] ?? phrase[4] ?? phrase[5] ?? phrase[6] ?? '') : null;
 }

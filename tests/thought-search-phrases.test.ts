@@ -51,3 +51,20 @@ test('unbalanced quotes are literal; explicit empty quotes do not browse private
   }
   assert.deepEqual(searchThoughts(nodes,' ').visible.map(n=>n.id),['literal','plain']);
 });
+
+test('copied low-double quotes find Russian nested locations without combining fields', () => {
+  const nodes = [thought('path', 'Scene', '', 'child'), thought('split', 'Ёрема', 'сцена'), thought('exact', 'Ёрема сцена')];
+  const paths = new Map([['child', 'Root / Проект Ёрема сцена']]);
+  const oldNodes = structuredClone(nodes);
+  assert.deepEqual(searchThoughts(nodes, '„Ерема сцена“', 70, 0, paths).visible.map(n => n.id), ['exact', 'path']);
+  assert.deepEqual(searchThoughts(nodes, '„Ерема сцена”', 70, 0, paths).visible.map(n => n.id), ['exact', 'path']);
+  assert.deepEqual(searchThoughts(nodes, '„Ерема кадр“', 70, 0, paths).visible.map(n => n.id), []);
+  assert.deepEqual(nodes, oldNodes);
+});
+
+test('low-double quoted search retains complete counts and deep pages', () => {
+  const nodes = Array.from({ length: 151 }, (_, index) => thought(String(index), 'Ёрема сцена ' + index));
+  const pages = [0, 70, 140].map(offset => searchThoughts(nodes, '„Ерема сцена“', SEARCH_PAGE_SIZE, offset));
+  assert.deepEqual(pages.map(page => [page.total, page.offset, page.visible.length]), [[151, 0, 70], [151, 70, 70], [151, 140, 11]]);
+  assert.deepEqual(pages.flatMap(page => page.visible.map(item => item.id)), nodes.map(item => item.id));
+});

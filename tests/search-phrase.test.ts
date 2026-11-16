@@ -94,3 +94,17 @@ test('invalid quote stays literal, and unmatched trailing text stays non-phrase'
   assert.equal(parseQuotedSearchPhrase('\u00AD«سلام دنیا\u00AD'), null);
   assert.equal(parseQuotedSearchPhrase('«سلام دنیا»\u00AD ادامه'), null);
 });
+
+test('low-double quotes copied from Word request one exact phrase', () => {
+  assert.equal(parseQuotedSearchPhrase('„Ёрема сцена“'), 'Ёрема сцена');
+  assert.equal(parseQuotedSearchPhrase('„Director’s cut”'), 'Director’s cut');
+});
+test('bidi-wrapped low-double phrases preserve all interior marks', () => {
+  assert.equal(parseQuotedSearchPhrase('\u2067„کتاب\u200Cها“\u2069'), 'کتاب\u200Cها');
+  assert.equal(parseQuotedSearchPhrase('„“'), '');
+});
+test('mismatched or unfinished low-double quotes are not falsely parsed', () => {
+  for (const value of ['„Ёрема сцена', '„Ёрема сцена’', 'prefix „Ёрема сцена“', '„Ёрема сцена“ suffix']) {
+    assert.equal(parseQuotedSearchPhrase(value), null);
+  }
+});
