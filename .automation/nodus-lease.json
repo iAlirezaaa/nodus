@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261116T113022Z-nd001-gates",
   "acquired_at": "2026-11-16T11:30:22.869Z",
-  "heartbeat_at": "2026-11-16T11:30:22.869Z",
-  "expires_at": "2026-11-16T13:00:22.869Z",
+  "heartbeat_at": "2026-11-16T11:39:41.664Z",
+  "expires_at": "2026-11-16T13:09:41.664Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
