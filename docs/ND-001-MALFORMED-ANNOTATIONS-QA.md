@@ -18,3 +18,7 @@ Acceptance: skip only malformed entries/fields and still match valid later comme
 - `main` head `26fafac05c320ed5db30a0ee908dd816714acdd9` tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`. Sites source/tree **UNVERIFIED**; historical version 11 is not parity evidence. New deployment/version: **NONE**. Production audience and data untouched.
 
 **Status:** ND-001 **In progress**, release **Blocked**, **feature-branch only**; not Verified or Released. Next: recover Nodus full checkout and authenticated Sites access, run full native/TS/build gates, browser screenshots and independent review, reconcile GitHub/Sites trees, then guarded integration and publication before ND-002.
+
+
+## Committed branch result
+Source+tests+docs commit: [dd7b4f64](https://github.com/iAlirezaaa/nodus/commit/dd7b4f64e3ad11b384b42eeb44643e503b7d5843), tree `463e7366ed89b42034c25b05e6c37029369fc7b2`. Exact committed helper blob `e8e7d987a8ecdc79914f4be81edb56145350b351`, preview `ba7648a22481893acb33e521cc14afed4e5f99a4`, focused test `e57169ae594ddde7b1e1b3a665117e4e787a3ea8`. Seven isolated V8 helper probes against committed source passed, complementing 5/5 local native Node22 and limited TS5.8.3. [CI 43860009045](https://github.com/iAlirezaaa/nodus/actions/runs/43860009045) failed without runnable test/build steps. Screenshot none, release version/deployment none; branch-only.
