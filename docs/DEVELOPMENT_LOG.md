@@ -1487,3 +1487,12 @@ Scope and acceptance were committed first in [22f9734](https://github.com/iAlire
 
 
 **Post-commit checkpoint, 2026-11-16 11:42 UTC:** [source+tests dd7b4f64](https://github.com/iAlirezaaa/nodus/commit/dd7b4f64e3ad11b384b42eeb44643e503b7d5843), tree `463e7366ed89b42034c25b05e6c37029369fc7b2`. Exact committed helper 7/7 V8 probes; previous 5/5 Native Node focused, isolated TS5.8.3 PASS. [Actions 43860009045](https://github.com/iAlirezaaa/nodus/actions/runs/43860009045) failed before any tests/build. Full Node, project TS and build NOT RUN; screenshot NONE; Site version NONE and current tree unverified. Only feature branch updated; no main/Site sync, no data changes. Next restore release gates.
+
+
+## 2026-11-16T14:37Z — ND-001 scoped recovery: malformed text fields, branch only
+
+**Problem:** Full Node/TypeScript/build/4173/Sites gates remain blocked. Imported or recovered records can also contain non-string title, note, asset filename, URL or board label; a read-only search currently calls `normalize()` or `trim()` on these and may crash an otherwise healthy workspace search. This is distinct from the previously fixed null/incomplete annotation problem.
+
+**Acceptance:** Search and result previews tolerate malformed text fields without modifying the graph; valid later items still match; 151 hits page as 70/70/11; path labels have a safe fallback; old behavior is demonstrated failing and new behavior passing with tests; no keyboard, persistence or collaboration protocol changes. Native whole-project suite, project TypeScript, production build and browser/Sites gates stay Blocked unless directly run.
+
+**This invocation:** inspect current source, add narrow search-only text guard and regression(s) on existing `fix/nd-001-search-clarity`, exercise original/modified logic and record exact source hashes. Base main `26fafac05c320ed5db30a0ee908dd816714acdd9`, tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`; feature head `29392dc4e7e988d5ee587842d19c5ba172686f91`, tree `0eb9355fc080d8690b89b693f2061130682831e0`; Site head/tree unknown (current authenticated Sites tools unavailable). No schema, storage or live-data change. Snapshot and deployment are withheld until complete gates and independent review.
