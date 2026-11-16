@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261116T182259-nd001-gates",
   "acquired_at": "2026-11-16T18:22:59.547Z",
-  "heartbeat_at": "2026-11-16T18:22:59.547Z",
-  "expires_at": "2026-11-16T19:52:59.547Z",
+  "heartbeat_at": "2026-11-16T18:29:09.686Z",
+  "expires_at": "2026-11-16T19:59:09.686Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -40,7 +40,7 @@
     "publication_status": "Blocked",
     "search_source_blob": "41af4f3a0ce2ec9e55aa8d2229c8da8f3c3d63da",
     "relevance_test_blob": "b0e54dfaabfac759b28a34b04d805d33d974bb84",
-    "scoping_commit": "9986af8a11c6db7e0f0fdf2bf3ce709a61a2005e",
+    "scoping_commit": "159c825007804494979ee2551e15a606b4dfcce8",
     "pending_source_hash": "262129e1f3b7852d4c3e64de29241ce07da8873e",
     "pending_test_hash": "eb948583c595a1207235b72ecd5350f573a092ac",
     "verification": "Targeted V8 source probes PASS; full native Node24 tests, project TS5.9.3, production build, real 4173 FA/EN browser screenshots/IME/Undo/save+reload and authenticated Site head/tree UNVERIFIED/BLOCKED",
@@ -186,10 +186,13 @@
     "scope_tree": "dea59c3a40787ffc7ca72165dc9c299433fac0cc",
     "source_head": "ff47d5bf5518ad40c5c4c6a19dc2f2e739c5d24e",
     "source_tree": "3f76b2cc5329269cd6299aec795de7c4848f375a",
-    "finished_at": "2026-11-16T17:31:37.251Z"
+    "finished_at": "2026-11-16T17:31:37.251Z",
+    "scoping_tree": "f5a7a26f40370165332ba6a0827146b2b9c4f03c",
+    "implementation": "search quoted-term keyword fallback; local Node4/4 + helper TS5.8.3 PASS before commit; full suite unverified",
+    "current_branch_head": "159c825007804494979ee2551e15a606b4dfcce8"
   },
   "last_completed_run": "nodus-nd001-20261116172144279-recovery",
-  "updated_at": "2026-11-16T18:22:59.547Z",
+  "updated_at": "2026-11-16T18:29:09.686Z",
   "completed_at": "2026-11-16T17:31:37.251Z",
   "last_completed_at": "2026-11-16T17:31:37.251Z",
   "current_run": {
