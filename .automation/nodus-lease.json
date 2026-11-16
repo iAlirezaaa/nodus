@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-16T16:23:23.696Z",
-  "heartbeat_at": "2026-11-16T16:32:57.586Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-nd001-20261116172144279-recovery",
+  "acquired_at": "2026-11-16T17:21:44.279Z",
+  "heartbeat_at": "2026-11-16T17:21:44.279Z",
+  "expires_at": "2026-11-16T18:51:44.279Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -53,7 +53,7 @@
     "observed_feature_branch": "05758ee8dd39eefcae549f45f0702f367dbbf9a9",
     "observed_feature_tree": "1bdb5d9a26ced9f09e11d088411622123df2ac25",
     "next_action": "Restore authorized full project checkout or GitHub runner and Sites access; run full release gates and source tree reconciliation, publish only if verified, then ND-002",
-    "run_id": "nodus-20261116-automation12-20261116T162323696Z",
+    "run_id": "nodus-nd001-20261116172144279-recovery",
     "red_green": "Original exact GitHub V8 helper: 6 of 8 direction-mark scenarios fail; patched source: 8/8 pass; browser/build still Blocked",
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
@@ -170,12 +170,12 @@
     "qa_doc": "docs/ND-001-BREADCRUMB-SEPARATORS-QA.md",
     "scope_this_run": {
       "task": "ND-001",
-      "problem": "Unquoted pasted project breadcrumbs with > / › failed to find slash-separated nested projects; full release gates unavailable",
-      "acceptance": "Exact-source V8 7/7; native project tests, TypeScript, build, browser screenshot and Sites tree still Blocked",
-      "slice": "Implemented source+preview compact breadcrumb comparison and regression tests",
+      "problem": "Full tests, TypeScript, build, browser and Sites tree still blocked; prior branch fixes unverified",
+      "acceptance": "Attempt native full test/type/build; preserve search behavior and data; no release without real 4173 UI, Sites equality and independent review",
+      "slice": "Recovery gates first; bounded search regression if feasible",
       "branch": "fix/nd-001-search-clarity",
       "main_head": "26fafac05c320ed5db30a0ee908dd816714acdd9",
-      "feature_initial_head": "4312922b58128b6b055f9185c414dac58301d688",
+      "feature_initial_head": "c4bf0711ee845817e1c56b7a6733aa1091a453fa",
       "site_tree": "UNVERIFIED"
     },
     "next": "Recover full checkout/tests/tsc/build, authorized Sites source tree and browser 4173 screenshot; independent review and guarded source/site release before ND-002",
@@ -189,17 +189,15 @@
   "completed_at": "2026-11-16T16:32:57.586Z",
   "last_completed_at": "2026-11-16T16:32:57.586Z",
   "current_run": {
-    "id": "nodus-20261116-automation12-20261116T162323696Z",
+    "id": "nodus-nd001-20261116172144279-recovery",
     "task": "ND-001",
-    "phase": "verify native gates and bounded search robustness",
-    "started_at": "2026-11-16T16:23:23.696Z",
+    "phase": "release gate recovery and narrowly scoped bug fix",
+    "started_at": "2026-11-16T17:21:44.279Z",
     "source_branch": "fix/nd-001-search-clarity",
-    "source_head": "05758ee8dd39eefcae549f45f0702f367dbbf9a9",
+    "source_head": "c4bf0711ee845817e1c56b7a6733aa1091a453fa",
     "main_head": "26fafac05c320ed5db30a0ee908dd816714acdd9",
-    "control_parent": "a84b50463e65d1d2efc301f63fd6f34e4161f6e4",
-    "status": "completed_branch_only",
-    "completed_at": "2026-11-16T16:32:57.586Z",
-    "verification": "Native isolated parser 26/26; checked-in parser 31/31 V8 shim; isolated TS5.8.3; release blocked"
+    "control_parent": "168b7db6443de96cee266029b8d91aaa3067e9c8",
+    "status": "in_progress"
   },
-  "status": "idle"
+  "status": "leased"
 }
