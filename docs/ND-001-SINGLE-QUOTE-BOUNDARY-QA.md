@@ -28,3 +28,5 @@ Code commit: [`26f2fd19a325e29ba5931e3cd0174cf66f0b5adb`](https://github.com/iAl
 - **No main merge, Site save/publish, data/audience change or new deployment/version.** Status stays `In progress` with release `Blocked`.
 
 **Next:** Restore authorized native checkout/CI runner and Sites source access. Run complete tests/TS5.9.3/build and real 4173 browser checks; compare Site/GitHub trees and obtain independent review before guarded merge/publication. Continue ND-002 only after release gates are resolved.
+
+**Current CI confirmation (same code commit):** [GitHub Actions run 43907969590](https://github.com/iAlirezaaa/nodus/actions/runs/43907969590), source `26f2fd19a325e29ba5931e3cd0174cf66f0b5adb`, concluded **failure with 0 steps exposed** for job `release-gates`; native suite, TS and build did **not start**. The runner failure is not evidence that the patch passed or failed its code checks. No rerun was requested.
