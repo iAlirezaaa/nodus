@@ -8,6 +8,23 @@ export function parseQuotedSearchPhrase(query: string): string | null {
   // at the query boundary; text *inside* the quotes remains unchanged.
   const candidate = query.replace(/^[\s\u061C\u00AD\u200B\u200C\u200D\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]+|[\s\u061C\u00AD\u200B\u200C\u200D\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]+$/gu, '');
   // Also accept low-double opening quotes used in copied multilingual notes.
-  const phrase = candidate.match(/^(?:"([^"]*)"|“([^”]*)”|«([^»]*)»|'([\s\S]*)'|‘([\s\S]*)’|„([^“”]*)[“”])$/u);
-  return phrase ? (phrase[1] ?? phrase[2] ?? phrase[3] ?? phrase[4] ?? phrase[5] ?? phrase[6] ?? '') : null;
+  const paired = candidate.match(/^(?:"([^"]*)"|“([^”]*)”|«([^»]*)»|„([^“”]*)[“”])$/u);
+  if (paired) return paired[1] ?? paired[2] ?? paired[3] ?? paired[4] ?? '';
+
+  // A single quote inside a word is an apostrophe, not another quote pair.
+  // But separately quoted words are NOT one contiguous exact phrase.
+  // Reject ambiguous nested punctuation rather than silently merging terms.
+  const single = candidate.match(/^'([\s\S]*)'$/u);
+  if (single) {
+    const interior = single[1];
+    return /(?<![\p{L}\p{N}])'|'(?![\p{L}\p{N}])/u.test(interior) ? null : interior;
+  }
+  const curlySingle = candidate.match(/^‘([\s\S]*)’$/u);
+  if (curlySingle) {
+    const interior = curlySingle[1];
+    return interior.includes('‘') ||
+      /(?<![\p{L}\p{N}])’|’(?![\p{L}\p{N}])/u.test(interior)
+      ? null : interior;
+  }
+  return null;
 }

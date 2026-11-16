@@ -108,3 +108,18 @@ test('mismatched or unfinished low-double quotes are not falsely parsed', () => 
     assert.equal(parseQuotedSearchPhrase(value), null);
   }
 });
+
+test('separately quoted tokens are not silently merged into one exact phrase', () => {
+  for (const value of ["'Forest' 'Lighting'", "‘فصل’ ‘دوم’", "'A' 'B'", "‘مرحله’ ‘اول’", "‘He said ‘hello’ today’"]) {
+    assert.equal(parseQuotedSearchPhrase(value), null, value);
+  }
+});
+
+test('real intra-word apostrophes, empty phrases and direction wrappers still parse', () => {
+  assert.equal(parseQuotedSearchPhrase("'don't stop'"), "don't stop");
+  assert.equal(parseQuotedSearchPhrase("'Director's cut'"), "Director's cut");
+  assert.equal(parseQuotedSearchPhrase('‘I’m ready’'), 'I’m ready');
+  assert.equal(parseQuotedSearchPhrase('\u2067‘فصل اول’\u2069'), 'فصل اول');
+  assert.equal(parseQuotedSearchPhrase("''"), '');
+  assert.equal(parseQuotedSearchPhrase('‘’'), '');
+});
