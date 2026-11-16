@@ -23,3 +23,19 @@ Build a second **local-first, single-device static edition**, with no remote bac
 No publicizing the private repository, touching the original hosting manifest, database, R2 objects, ChatGPT sign-in, other projects, port 4173, existing main or automation schedules. Any feature not delivered by static edition must be marked limited.
 
 Status: **In progress on branch; not published**.
+
+## Implementation and verification — 2026-11-16
+
+**Artifact:** `pages/index.html` (one independently self-contained HTML + CSS + JS file, no remote scripts, no server calls), exact git blob `74eb0a158bd9fc1b567e3d2c0953b9c26b474770`. GitHub Pages branch will contain only this static artifact, not the original Nodus server or lease.
+
+**Implemented:** interactive movable graph, curved connections, add/edit/child/next via Enter/Tab/F2, manual link, undo/redo, nested project navigation/breadcrumbs, search of title/note/nested paths including matches over 70, fit and zoom, bilingual FA/EN and light/dark, coarse/touch UI, local IndexedDB document save with explicit save state, standalone JSON backup/import with validation, small media data URLs up to 5 MB, reduced-motion CSS.
+
+**Preserved by isolation:** no access to canonical ChatGPT Site workspace or its accounts, no D1 or R2 keys; visitors' local projects remain in their own browser. No cloud sync, multi-user shared rooms, account collaboration, managed uploads or server-side backups. Clearing browser data can erase this local edition's workspace; export JSON first.
+
+**Actual checks:** `node --test logic.test.mjs` **7/7 pass**; `node --check app.js`, `node --check logic.mjs` pass. Real headless Chromium loaded the exact self-contained bundle with test-only in-memory IndexedDB stub: desktop 1280x800 and mobile 390x844 both ran creating 3 nodes by Enter/Tab, Persian search returned 1, 0 JavaScript page errors, no document horizontal overflow (client widths 1280/390), fake-store save indication. Captured local screenshots `/mnt/data/nodus_pages_real_static_desktop.png` and `/mnt/data/nodus_pages_real_static_mobile.png` — **not screenshots of a deployed URL**.
+
+**Blocked/not established:** native persisted reload across browser sessions because Chromium in this container refuses navigation to any URL, including `http://127.0.0.1:4173/`, with `ERR_BLOCKED_BY_ADMINISTRATOR`. Fixture uses in-memory IndexedDB double, therefore **does not prove actual IndexedDB durability**. Real touch hardware, 2-account access, full original Nodus test suite, original TypeScript build and original Site tree/audience also not tested. Original server build is irrelevant to this static edition; no claim is made. No Pages activation (repository API `has_pages=false`), Pages settings API unavailable through connected GitHub action. No DNS or publicly served site verified. Branch build only.
+
+**Github-only activation:** When the private repository is eligible for GitHub Pages (Pro/Team/Enterprise, or a separately authorized public repo), open `https://github.com/iAlirezaaa/nodus/settings/pages`, select **Deploy from a branch**, branch **gh-pages**, root **/**, **Save**. Verify the resulting URL `https://ialirezaaa.github.io/nodus/` from a public browser before claiming Released. Never change canonical repository visibility without explicit user approval.
+
+**Status:** static edition **Verified only for bounded Node/Chromium fixture behavior**; live deployment **Blocked**, no Released claim. Original main and Sites unchanged.
