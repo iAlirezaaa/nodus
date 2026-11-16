@@ -93,7 +93,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   }
   // A board path and query are immutable during a search. Reuse their
   // normalized forms across all ranking tiers without touching saved text.
-  const compactNormalized = (value: string) => value.replace(/[\s\/\\._-]+/g, '');
+  const compactNormalized = (value: string) => value.replace(/[\s\/\\._›>-]+/g, '');
   const compactNeedle = isPhrase ? '' : compactNormalized(needle);
   // A Persian quoted phrase may be typed with spaces, ZWNJ or joined
   // spellings. Fold those boundaries for comparisons within each field only.

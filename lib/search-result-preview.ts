@@ -62,7 +62,7 @@ export function searchResultPreview(
   const preview = (kind: SearchResultPreviewKind, value: string): SearchResultPreview => ({ kind, text: excerpt(value) });
   const note = typeof node.text === 'string' ? node.text.trim() : '';
   if (!needle) return query.trim() ? null : note ? preview('note', note) : null;
-  const compact = (value: string) => value.replace(/[\s\/\\._-]+/g, '');
+  const compact = (value: string) => value.replace(/[\s\/\\._›>-]+/g, '');
   const compactNeedle = isPhrase ? '' : compact(needle);
   const folded = (value: string) => value.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF0-9])/gu, '$1');
   const persianPhraseNeedle = isPhrase && /[\u0600-\u06FF]/u.test(needle) ? folded(needle) : '';
