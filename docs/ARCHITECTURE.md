@@ -45,7 +45,9 @@ The derived full-project-path search walker (`buildBoardPaths` in `lib/thought-s
 
 Task ancestry is an explicit same-board forest in `node.task.parentId`, independent of edges and containment. Status is `todo`, `doing`, or `done`. Progress counts completed descendants, excluding the parent itself; child completion does not automatically change the parent's status. Removing task status or deleting a task detaches surviving direct task children to roots. Deleting a containing project still removes its contained boards and nodes.
 
-Search-only Unicode comparison in `normalizeSearchText` also treats Arabic final ta marbuta (U+0629) and Persian final heh-with-yeh-above (U+06C0) as ordinary Persian heh (U+0647). This affects title/note and derived project-path matching, not canonical titles or storage. The branch-only regression and mandatory release checks are documented in [ND-001 final-heh QA](ND-001-HEH-ORTHOGRAPHY-QA.md); this behavior is not yet live.
+Search-only Unicode comparison in `normalizeSearchText` also treats Arabic final ta marbuta (U+0629) and Persian final heh-with-yeh-above (U+06C0) as ordinary Persian heh (U+0647).
+
+Russian Cyrillic `Ё/ё` is normalized to `е` after lowercasing for *read-only* Russian search matching, including derived full project locations and annotations, without rewriting saved spelling. It intentionally does not equate other Cyrillic characters. This is branch-only ND-001 work; [QA](ND-001-RUSSIAN-YO-QA.md) and full release gates are pending, not live. This affects title/note and derived project-path matching, not canonical titles or storage. The branch-only regression and mandatory release checks are documented in [ND-001 final-heh QA](ND-001-HEH-ORTHOGRAPHY-QA.md); this behavior is not yet live.
 
 ### Personal root-space deletion
 
