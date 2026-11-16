@@ -39,3 +39,11 @@ Status: **In progress on branch; not published**.
 **Github-only activation:** When the private repository is eligible for GitHub Pages (Pro/Team/Enterprise, or a separately authorized public repo), open `https://github.com/iAlirezaaa/nodus/settings/pages`, select **Deploy from a branch**, branch **gh-pages**, root **/**, **Save**. Verify the resulting URL `https://ialirezaaa.github.io/nodus/` from a public browser before claiming Released. Never change canonical repository visibility without explicit user approval.
 
 **Status:** static edition **Verified only for bounded Node/Chromium fixture behavior**; live deployment **Blocked**, no Released claim. Original main and Sites unchanged.
+
+## GitHub publishing branch prepared (not public) — final checkpoint
+
+- `gh-pages` branch created at GitHub commit `4b3ec8839f6bb1f56f2677b5c6c398ad7a4c61bb`, tree `0a75d4de97167cbca38093fef45e4255d67ed100`.
+- The **entire** current publishing tree contains only `index.html` (blob `74eb0a158bd9fc1b567e3d2c0953b9c26b474770`, 49,751 bytes). No server source, D1/R2 config, secrets, user files, auth headers or control-branch files are present.
+- Fresh GitHub repository API reported `has_pages: false`, `private: true` after the branch was created. This is not a deployed/publicly accessible Pages site. No deployment/version ID exists.
+- Required one-time GitHub UI action: `Settings → Pages → Build and deployment → Source: Deploy from a branch → gh-pages / (root) → Save`. For a **private** source repo, GitHub's paid plan eligibility may apply; don't make the private repo public or incur a paid tier without the owner's separate choice.
+- After enabling, fetch `https://ialirezaaa.github.io/nodus/` and verify CSP, FA/EN layout, 390px UI, real IndexedDB save/reload and manual backup before changing status to Released. Original Site remains unchanged.
