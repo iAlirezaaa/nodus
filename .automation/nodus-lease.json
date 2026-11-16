@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-16T11:30:22.869Z",
-  "heartbeat_at": "2026-11-16T11:43:39.596Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-20261116T1434Z-nd001-native-gates",
+  "acquired_at": "2026-11-16T14:33:56.464Z",
+  "heartbeat_at": "2026-11-16T14:33:56.464Z",
+  "expires_at": "2026-11-16T16:03:56.464Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -184,9 +184,17 @@
     }
   },
   "last_completed_run": "nodus-20261116T113022Z-nd001-gates",
-  "updated_at": "2026-11-16T11:43:39.596Z",
+  "updated_at": "2026-11-16T14:33:56.464Z",
   "completed_at": "2026-11-16T11:43:39.596Z",
   "last_completed_at": "2026-11-16T11:43:39.596Z",
-  "current_run": null,
+  "current_run": {
+    "id": "nodus-20261116T1434Z-nd001-native-gates",
+    "task": "ND-001",
+    "branch": "fix/nd-001-search-clarity",
+    "scope": "recover release gates and exact source verification; no unverified deployment",
+    "main_head": "26fafac05c320ed5db30a0ee908dd816714acdd9",
+    "feature_head": "29392dc4e7e988d5ee587842d19c5ba172686f91",
+    "site_head": "UNVERIFIED"
+  },
   "status": "ND-001 In progress; feature branch only; release Blocked"
 }
