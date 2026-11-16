@@ -91,8 +91,11 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
   // Latin word boundaries, punctuation and phrase order remain strict.
   const foldPersianSpaces = (value: string) =>
     value.replace(/([\u0600-\u06FF])\s+(?=[\u0600-\u06FF0-9])/gu, '$1');
-  const persianPhraseNeedle = isPhrase && /[\u0600-\u06FF]/u.test(needle)
+  // Share spacing-insensitive exact/prefix relevance between quoted and
+  // unquoted Persian titles. Other scripts retain their native boundaries.
+  const persianTitleNeedle = /[\u0600-\u06FF]/u.test(needle)
     ? foldPersianSpaces(needle) : '';
+  const persianPhraseNeedle = isPhrase ? persianTitleNeedle : '';
   // A workspace can have thousands of nested or currently empty boards.
   // Only normalize locations belonging to encountered nodes, and do it once
   // per board even when a deep result page needs a second ranking pass.
@@ -136,9 +139,9 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
     // Quoted Persian text treats joined, spaced and ZWNJ spellings as one
     // phrase. Use that same equivalence for exact/prefix relevance: an exact
     // title must outrank an extended title, regardless of source order.
-    const foldedTitle = persianPhraseNeedle ? foldPersianSpaces(title) : '';
-    const directTitleRank = (title === needle || (persianPhraseNeedle.length > 0 && foldedTitle === persianPhraseNeedle)) ? 0
-      : (title.startsWith(needle) || (persianPhraseNeedle.length > 0 && foldedTitle.startsWith(persianPhraseNeedle))) ? 1
+    const foldedTitle = persianTitleNeedle ? foldPersianSpaces(title) : '';
+    const directTitleRank = (title === needle || (persianTitleNeedle.length > 0 && foldedTitle === persianTitleNeedle)) ? 0
+      : (title.startsWith(needle) || (persianTitleNeedle.length > 0 && foldedTitle.startsWith(persianTitleNeedle))) ? 1
       : includes(title, compactTitle) ? 2
       : -1;
     const path = directTitleRank < 0 ? pathFor(node.boardId) : undefined;
