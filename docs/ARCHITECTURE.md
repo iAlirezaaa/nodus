@@ -65,6 +65,8 @@ Inline titles, inspector edits, duplication title changes, and project renaming 
 
 ### Workspace search (derived, read-only)
 
+**Soft-hyphen PDF quote boundaries (ND-001, branch only).** `lib/search-phrase.ts` discards U+00AD only if it is *outside* balanced search quotes at the outer query boundary. Inside quoted text, characters are retained for `normalizeSearchText` (which already removes U+00AD for comparison). Incomplete quotes or quotes embedded in other text remain unquoted. No saved data, document revision or UI shortcut is affected. [Native parser tests and remaining release gates](ND-001-PDF-QUOTE-BOUNDARY-QA.md).
+
 **Soft hyphens in pasted content (ND-001, branch only).** The search-only normalizer removes invisible U+00AD discretionary line breaks from titles, notes, quoted query text and derived nested paths; original graph strings and attachments stay unchanged. Registered regression tests live in `tests/thought-search-soft-hyphen.test.ts`. This is not yet present in the stable Site; see [QA](ND-001-SOFT-HYPHEN-QA.md).
 
 
