@@ -591,3 +591,9 @@ The existing Search uses a read-only comparison projection: after lowercasing `n
 
 
 **Copied smart apostrophes (ND-001, branch only; 2026-11-16).** `normalizeSearchText` folds U+2018 and U+2019 to the ordinary ASCII apostrophe only for search matching, so keyboard searches find typographic quotes in titles, notes, attachment filenames, nested project paths and individual annotation fields. Apostrophes remain punctuation rather than being removed, preserving quoted phrase boundaries and different words such as `dont` / `don't`. Existing graph text, IDs, URL, persistence, keyboard/IME and collaboration code are unchanged. Four repository-native regression tests were committed but the full Node/TypeScript/build and real UI/Sites gates remain blocked; see [QA](ND-001-APOSTROPHES-QA.md). No production release.
+
+
+### ND-001 unquoted Persian exact-title relevance (2026-11-16, branch only)
+
+`searchThoughts` now computes a spacing-folded Persian needle for both quoted and ordinary input when evaluating title tiers 0 (exact) and 1 (prefix). The existing `persianPhraseNeedle` remains quoted-only for later field-local phrase matching. This prevents a longer unquoted title with ordinary spaces from outranking its ZWNJ/joined equivalent exact title. Non-Persian title ranking, returned totals, 70-item page window, immutable stored graph and account/storage boundaries are unchanged. No canvas, focus, shortcut, server or animation changes. [Exact-source isolated QA](ND-001-UNQUOTED-PERSIAN-RANK-QA.md) passed 15/15 V8 checks; full project TypeScript/build, browser and Sites verification remain Blocked. Not released.
+
