@@ -18,6 +18,9 @@ export function normalizeSearchText(value: string): string {
     // Arabic ta marbuta and Persian final heh-with-yeh-above are often
     // pasted where ordinary Persian heh was intended. Compare only.
     .replace(/[\u0629\u06C0]/g, 'ه')
+    // Search pasted curly apostrophes with the ordinary keyboard apostrophe.
+    // Comparison only: saved titles, notes and attachments remain unchanged.
+    .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
     // Copied RTL/LTR directional marks alter display order, not search content.
     .replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, '')
