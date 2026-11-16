@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-nd001-20261116172144279-recovery",
   "acquired_at": "2026-11-16T17:21:44.279Z",
-  "heartbeat_at": "2026-11-16T17:21:44.279Z",
-  "expires_at": "2026-11-16T18:51:44.279Z",
+  "heartbeat_at": "2026-11-16T17:28:15.043Z",
+  "expires_at": "2026-11-16T18:58:15.043Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -66,7 +66,7 @@
     "fixture_commit": "7a30174aa9221c03f22f0a360d9df71f966e8b05",
     "run_plan": "Recover native test/build checkout; if blocked, implement one limited search reliability regression on existing feature branch, with explicit red/green and release gates",
     "local_test": "6/6 red on exact old GitHub blob; 6/6 green on exact new GitHub blob; TypeScript/project/build/Site still pending",
-    "scope_commit": "4524e607439aa86c66446d16d46a7ff134d7e2a3",
+    "scope_commit": "4e622b3da7a4b85a012ffe13534b62986a477f09",
     "pending_code_blob": "44d74a4e36b0c116bd63f88562c67cdd14555f96",
     "pending_test_blob": "b53393e66d28c60889ec6b43dacf0c479b2be0fe",
     "phrase_new_code_blob": "5b61f400d9833c2def267398ca40abd62719c5b1",
@@ -124,7 +124,7 @@
     "code_commit": "49918ff1313edbabfb40eb9bf1f7ea3822d5de13",
     "code_blob": "dd08dc08623e493d863e1a51436d1936d43f9b02",
     "observed_control_tree": "83f8dd653c714ef3f4c0c1d3fa8e0108c049fd0e",
-    "status": "LEASED; release NOT APPROVED",
+    "status": "LEASED; scoped; source and tests pending; no release",
     "code_tree": "9675b45cf18674e056c599ef7feaa66582f17696",
     "native_full_suite": "NOT RUN",
     "ts_project": "NOT RUN",
@@ -182,10 +182,11 @@
     "qa_result": "Exact committed source V8: 7/7 focused search+preview checks; prior 0/151 and new 151/151; new tests not executed natively; TS/build/UI/Sites NOT RUN",
     "native_focused_test": "Node22.16.0: 26/26 isolated focused cases against exact GitHub parser blob d87b4305d23cd0189359cad8bd63f3933587c39d; full checked-in suite NOT RUN",
     "ci_run_id": 43907969590,
-    "ci_status": "failure BEFORE STEPS (steps=[]), no native CI tests executed"
+    "ci_status": "failure BEFORE STEPS (steps=[]), no native CI tests executed",
+    "scope_tree": "dea59c3a40787ffc7ca72165dc9c299433fac0cc"
   },
   "last_completed_run": "nodus-20261116-automation12-20261116T162323696Z",
-  "updated_at": "2026-11-16T16:32:57.586Z",
+  "updated_at": "2026-11-16T17:28:15.043Z",
   "completed_at": "2026-11-16T16:32:57.586Z",
   "last_completed_at": "2026-11-16T16:32:57.586Z",
   "current_run": {
