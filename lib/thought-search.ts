@@ -9,6 +9,9 @@ export interface ThoughtSearchPage { visible: GraphNode[]; total: number; offset
 
 /** Compare mixed Persian/Arabic keyboard spellings without rewriting saved content. */
 export function normalizeSearchText(value: string): string {
+  // Restored/imported legacy records may violate typed text fields at runtime.
+  // Ignore malformed values in read-only comparisons; never coerce or save them.
+  if (typeof value !== 'string') return '';
   const normalized = value.normalize('NFKC')
     // Arabic hamzated/wasla alef and plain Persian alef are equivalent for
     // finding ideas; preserve madda (آ) and all persisted spelling.
@@ -164,7 +167,7 @@ export function searchThoughts(nodes: readonly GraphNode[], query: string, limit
         else {
           // Saved link destinations are user content, too; searching for a
           // domain must find a link even when its title omits the address.
-          const rawUrl = node.url ?? '';
+          const rawUrl = typeof node.url === 'string' ? node.url : '';
           const url = compareText(rawUrl);
           const decodedUrl = compareText(comparableSearchUrl(rawUrl));
           if (includes(url) || (decodedUrl !== url && includes(decodedUrl))) rank = 6;
@@ -270,14 +273,16 @@ export function buildBoardPaths(document: Pick<Workspace, 'boards' | 'nodes'>, u
     if (cursor && visited.has(cursor)) {
       const cycleStart = pending.indexOf(cursor);
       for (const id of pending.slice(cycleStart)) {
-        paths.set(id, boardById.get(id)?.title?.trim() || untitled);
+        const rawTitle = boardById.get(id)?.title;
+        paths.set(id, typeof rawTitle === 'string' && rawTitle.trim() ? rawTitle.trim() : untitled);
       }
       pending.length = cycleStart;
     }
     let path = (cursor && paths.get(cursor)) || '';
     while (pending.length) {
       const id = pending.pop()!;
-      const title = boardById.get(id)?.title?.trim() || untitled;
+      const rawTitle = boardById.get(id)?.title;
+      const title = typeof rawTitle === 'string' && rawTitle.trim() ? rawTitle.trim() : untitled;
       path = path ? path + ' / ' + title : title;
       paths.set(id, path);
     }

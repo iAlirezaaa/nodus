@@ -60,7 +60,7 @@ export function searchResultPreview(
     return (start ? '…' : '') + source.slice(start, end).trim() + (end < source.length ? '…' : '');
   };
   const preview = (kind: SearchResultPreviewKind, value: string): SearchResultPreview => ({ kind, text: excerpt(value) });
-  const note = node.text?.trim() ?? '';
+  const note = typeof node.text === 'string' ? node.text.trim() : '';
   if (!needle) return query.trim() ? null : note ? preview('note', note) : null;
   const compact = (value: string) => value.replace(/[\s\/\\._-]+/g, '');
   const compactNeedle = isPhrase ? '' : compact(needle);
@@ -90,7 +90,7 @@ export function searchResultPreview(
   if (matchesDirectly(note)) return preview('note', note);
   // Keep the explanation aligned with searchThoughts' ranking:
   // direct URL (tier 6) > contiguous cross-field (7) > unordered words (8).
-  const savedUrl = node.url ?? '';
+  const savedUrl = typeof node.url === 'string' ? node.url : '';
   const decodedUrl = savedUrl ? comparableSearchUrl(savedUrl) : '';
   const linkPreview = (): SearchResultPreview => {
     let hostname = 'URL';
