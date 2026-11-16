@@ -37,7 +37,7 @@ test('ordinary Russian queries find titles, notes and filenames with unchanged t
 test('reciprocal nested Russian project paths and comments are searchable without storage edits', () => {
   const owner = { ...node('parent', 'Container'), childBoardId: 'inner' };
   const leaf = node('leaf', 'Sketch', '', 'inner');
-  const commented = { ...node('comment', 'Other'), annotations: [{ id: 'a', quote: 'съёмка', body: 'Замечание: ёлка', createdAt: '2026-11-16' }] };
+  const commented: GraphNode = { ...node('comment', 'Other'), annotations: [{ id: 'a', field: 'text', start: 0, end: 6, quote: 'съёмка', body: 'Замечание: ёлка', color: 'sage', resolved: false, createdAt: '2026-11-16', updatedAt: '2026-11-16' }] };
   const document = { nodes: [owner, leaf, commented], boards: [board('root', 'Студия'), board('inner', 'Проект Ёрема', 'parent')] };
   const original = JSON.stringify(document);
   const paths = buildBoardPaths(document, 'Untitled');
