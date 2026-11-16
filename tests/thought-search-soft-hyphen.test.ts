@@ -57,3 +57,16 @@ test('emoji ZWJ, digit variants and explicit empty searches preserve old semanti
   assert.equal(normalizeSearchText('۱۲۳'), normalizeSearchText('123'));
   assert.deepEqual(searchThoughts([thought('a', 'Hello')], '""'), { visible: [], total: 0, offset: 0 });
 });
+
+test('copied soft-hyphen outside quotes retains exact field matching in English and Persian', () => {
+  const nodes = [
+    thought('en', 'Forest Lighting'),
+    thought('fa', 'پروژه نور'),
+    thought('split', 'Forest', 'root', 'Lighting'),
+    thought('extended', 'Forest Lighting supplementary'),
+  ];
+  const saved = JSON.stringify(nodes);
+  assert.deepEqual(searchThoughts(nodes, '\u00AD"Forest Lighting"\u00AD').visible.map(n => n.id), ['en', 'extended']);
+  assert.deepEqual(searchThoughts(nodes, '\u2067\u00AD«پروژه نور»\u00AD\u2069').visible.map(n => n.id), ['fa']);
+  assert.equal(JSON.stringify(nodes), saved);
+});

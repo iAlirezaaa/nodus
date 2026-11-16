@@ -80,3 +80,17 @@ test('an unbalanced ZWNJ-wrapped quote is still not an exact phrase', () => {
   assert.equal(parseQuotedSearchPhrase('\u200C«سلام دنیا\u200D'), null);
   assert.equal(parseQuotedSearchPhrase('\u200C«سلام دنیا» ادامه'), null);
 });
+
+test('PDF soft hyphen outside straight double quotes preserves exact phrase', () => {
+  assert.equal(parseQuotedSearchPhrase('\u00AD"Director notes"\u00AD'), 'Director notes');
+});
+test('Persian guillemet with copied soft hyphen and direction isolate', () => {
+  assert.equal(parseQuotedSearchPhrase('\u2067\u00AD«پروژه نور»\u00AD\u2069'), 'پروژه نور');
+});
+test('inside quoted soft hyphen is retained for comparison normalization', () => {
+  assert.equal(parseQuotedSearchPhrase('\u00AD"co\u00ADoperate 👩‍💻"\u00AD'), 'co\u00ADoperate 👩‍💻');
+});
+test('invalid quote stays literal, and unmatched trailing text stays non-phrase', () => {
+  assert.equal(parseQuotedSearchPhrase('\u00AD«سلام دنیا\u00AD'), null);
+  assert.equal(parseQuotedSearchPhrase('«سلام دنیا»\u00AD ادامه'), null);
+});
