@@ -21,6 +21,9 @@ export function normalizeSearchText(value: string): string {
     // Search pasted curly apostrophes with the ordinary keyboard apostrophe.
     // Comparison only: saved titles, notes and attachments remain unchanged.
     .replace(/[\u2018\u2019]/g, "'")
+    // Compare Word/PDF typographic hyphens and mathematical minus with
+    // the ordinary keyboard hyphen; never rewrite saved documents.
+    .replace(/[\u2010-\u2015\u2212]/g, '-')
     .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, '')
     // Copied RTL/LTR directional marks alter display order, not search content.
     .replace(/[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, '')
