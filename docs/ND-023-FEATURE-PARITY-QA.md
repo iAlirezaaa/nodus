@@ -14,3 +14,15 @@ Implement and verify in the same static GitHub Pages edition: six layout modes (
 Keep code on `feat/nd-023-github-pages-local-first` until build, Node behavior tests and real browser checks pass; commit to `gh-pages` only a built, self-contained index.html with correct CSP and no secrets. Verify GitHub Actions deployment and public URL, with exact tree/commit IDs; do not touch main, existing Site, other projects or other automation.
 
 Status: In progress. No features claimed released before verification.
+
+## Implementation and verification — 2026-11-16 (second parity pass)
+
+**Static bundle:** `pages/index.html`, exact tested Git blob `4ba369259c2b2830ad88e5ad697ba550134e77a8`. One self-contained HTML with CSS/JS SHA-256 CSP, no remote scripts, API calls, login tokens, databases, or server operations.
+
+**Added to GitHub edition:** six arrange modes (neural/tree/orbit/grid/timeline/kanban); magnetic physics *view preview* with pins and Apply as single Undo (no per-frame document writes, no animation while hidden, reduced-motion support); todo/doing/done statuses with subtask parent/progress and legacy boolean-task import; Shift multi-select and bulk color/drag/delete; node appearance/color and density/background/motion controls; basic comments, date/timeline, PDF download attachments alongside existing image/audio/video, nested projects, search, keyboard Enter/Tab, mobile.
+
+**Tests:** `node --test logic.test.mjs parity_logic.test.mjs`: **15/15 pass** using Node v22.16.0. Deterministic 500-node magnetic preview ~142 ms on this CPU. `node --check app.js` and `node --check logic.mjs`: pass. Embedded script/style CSP digests verified; no external resources. **Chromium 24/24 UI assertions** on exact bundled HTML with mocked IndexedDB/localStorage: 390px + desktop, Persian/English, in-place title editing, layout and selection, task/subtask, magnet preview/data purity, comments/PDF, nested board, search/export, no unexpected JS errors. Screenshots `/mnt/data/nodus_pages_parity/parity_{desktop,mobile}.png` (local only, not GitHub-hosted).
+
+**Limitations:** Chromium is administratively blocked from navigating to `127.0.0.1:4173` or `file:`; the UI verification uses `page.set_content` plus mock storage, so real IndexedDB save/reload and actual hosted URL/browser QA were **not** verified here. The original React full test/build, authenticated sessions, real-time collaboration, cross-device sync, R2 storage and actual production user data remain untouched/not ported. Those capabilities fundamentally require a server; GitHub Pages cannot provide them.
+
+**Release classification:** this is a verified targeted client-only slice on a branch, not complete feature parity. Publishing to `gh-pages` and GitHub Actions confirmation is a separate guarded step.

@@ -44,3 +44,11 @@ Created a single-file Nodus local-first app at `pages/index.html`, using browser
 No Pages settings write action available in connected GitHub plugin. Pages API from GitHub repository read reports `has_pages=false`. Plan/visibility constraints require user action; no public link claimed as active. Next create static-only `gh-pages` branch, then activate GitHub Pages branch/root in repository settings if eligible. Publication remains **Blocked** until public URL verified.
 
 **Publishing checkpoint (ND-023):** Source branch commit `15d21790229bb38d73531d5e9a30fee0ade5f02f`; static-only `gh-pages` commit `4b3ec8839f6bb1f56f2677b5c6c398ad7a4c61bb`, tree `0a75d4de97167cbca38093fef45e4255d67ed100`, one index.html blob `74eb0a158bd9fc1b567e3d2c0953b9c26b474770`. `has_pages=false` after branch creation. **Not Released**. Repository private; no Site data copied. GitHub Settings Pages requires activation and paid plan eligibility may apply; no user auth or repo visibility change made. See `docs/ND-023-PAGES-LOCAL-QA.md`.
+
+## 2026-11-16 — ND-023: recover core client-side Nodus features for GitHub Pages
+
+Run `nodus-chat-20261116T215438984Z-nd023-parity`. Public Pages baseline `gh-pages@4b3ec8839f6bb1f56f2677b5c6c398ad7a4c61bb`; main `26fafac05c320ed5db30a0ee908dd816714acdd9`. Expanded the standalone `pages/index.html` preserving `nodus-pages-v1` storage key and export/import: six graph layouts, magnetic preview (zero document writes in frames), three-state tasks, hierarchy/progress, grouped selection/color/drag/delete, comments, media/PDF, appearance preferences and mobile readability. Existing ChatGPT Site/DB and main unchanged.
+
+QA: 15/15 Node tests; 24/24 exact bundled Chromium set_content UI checks with mocked storage; JS syntax and CSP hash checks pass. Real 4173 navigation blocked by Chromium policy and real browser IndexedDB persistence unverified. No false claims about full online collaboration. Source HTML blob `4ba369259c2b2830ad88e5ad697ba550134e77a8`; publication pending guarded gh-pages update/Actions/public verification.
+
+Next: restore native live-URL/IndexedDB and real IME QA; online shared rooms/files require an external server unavailable on GitHub Pages.
