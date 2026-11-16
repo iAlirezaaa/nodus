@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-16T03:19:31.316Z",
-  "heartbeat_at": "2026-11-16T03:26:39.183Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-auto-20261116T0419Z-nd001-native-verify-11",
+  "acquired_at": "2026-11-16T04:19:52.161Z",
+  "heartbeat_at": "2026-11-16T04:19:52.161Z",
+  "expires_at": "2026-11-16T05:49:52.161Z",
   "current_task_id": "ND-001",
   "feature_branch": "fix/nd-001-search-clarity",
   "checkpoint": {
@@ -30,10 +30,10 @@
     "last_test": "Exact old normalizer 0/6 dash equivalences; committed patched module 6/6; exact-source V8 isolated 5/5 field search red→green, 151=70/70/11 page matches; exact-source V8 5/5 source-label previews with external snippets URL/annotation stubbed. Four registered node:test cases not natively executed.",
     "github_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "last_blocker": "Private clone fails GitHub DNS; no localhost 4173 listener; Actions 43797962809 failed before runner (runner_id=0 steps=[]); Sites skill empty, browser requires originating context",
-    "observed_control_head": "e2d123fa7588e55d604de505cc51fe0f973b41b3",
+    "observed_control_head": "b99dd631484fe935c8146cceacb5422098bf88eb",
     "site_source_verification": "UNVERIFIED; historical site source not equivalence evidence",
-    "active_run_id": null,
-    "observed_at": "2026-11-16T03:26:39.183Z",
+    "active_run_id": "nodus-auto-20261116T0419Z-nd001-native-verify-11",
+    "observed_at": "2026-11-16T04:19:52.161Z",
     "source_code_commit": "3cfe623cfa45e31c67c208114111e31c0f8e0dd7",
     "test_helper_blob": "25472713ce16ce7fa6658f9c4408df1c4da97805",
     "test_cases_blob": "a826552b67f70144fe5fb9af39653fdb5259283b",
@@ -81,9 +81,9 @@
     "last_run_id": "nodus-auto-20261116T0318Z-nd001-release-gates-12",
     "scoped_task": {
       "id": "ND-001",
-      "problem": "Native Node/TypeScript/build verification and honest 70+ search release gates are incomplete; avoid accumulating unverified search tweaks",
-      "acceptance": "Recover complete source and dependencies for native 4173 test/TS/build; verify UI screenshots and Sites tree before promoting; otherwise preserve feature branch as Blocked. A verified isolated improvement may be committed only with explicit evidence.",
-      "slice": "Investigate build access, reproduce a concrete search regression if present, record native/isolated tests and release blockers",
+      "problem": "Feature branch is stuck behind full native Node/TS/build, browser 4173 and authenticated Sites tree gate; prior isolated V8 checks cannot justify shipping",
+      "acceptance": "Obtain native source checkout if possible and execute suite/TypeScript/build; otherwise record checked evidence and only a reproducible bounded search improvement on existing feature branch, while preserving main/Site",
+      "slice": "Recover test environment and evaluate release blockers before any new optional code; maintain guarded checkpoint",
       "branch": "fix/nd-001-search-clarity"
     },
     "source_tail_fingerprint": "length=1931; FNV1a32=60428ca3",
@@ -172,6 +172,6 @@
   "updated_at": "2026-11-16T02:28:48.088Z",
   "completed_at": "2026-11-16T02:28:48.088Z",
   "last_completed_at": "2026-11-16T02:28:48.088Z",
-  "current_run": null,
-  "status": "ND-001 In progress; branch only; publication Blocked"
+  "current_run": "nodus-auto-20261116T0419Z-nd001-native-verify-11",
+  "status": "ND-001 In progress; native release gates investigation; publication Blocked"
 }
