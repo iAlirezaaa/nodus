@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-chat-20261116T205036881Z-nd013-pages",
   "acquired_at": "2026-11-16T20:50:36.881Z",
-  "heartbeat_at": "2026-11-16T20:50:36.881Z",
-  "expires_at": "2026-11-16T22:20:36.881Z",
+  "heartbeat_at": "2026-11-16T21:00:00.415Z",
+  "expires_at": "2026-11-16T22:30:00.415Z",
   "current_task_id": "ND-013 / GitHub publishing feasibility",
   "feature_branch": "feat/nd-013-dense-graph-readability",
   "checkpoint": {
-    "phase": "Scope: improve dense graph title legibility and mobile canvas, assess safe GitHub Pages options without copying private user data or bypassing server auth",
+    "phase": "ND-013 branch code committed; 4/4 exact-blob native tests and 390px/1280px synthetic Chromium fixtures passed; real app/browser and production gates still blocked",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "HISTORICAL eb8a9ad1f470447bf15634efbaa47531924901c5, NOT freshly checked",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -125,7 +125,7 @@
     "code_blob": "f98cffc10d76c860cac756b58e293ed8e3122844",
     "observed_control_tree": "83f8dd653c714ef3f4c0c1d3fa8e0108c049fd0e",
     "status": "In progress (branch only); release Blocked",
-    "code_tree": "5ed5e97768cb03a53190ec6bb539f185897c9edc",
+    "code_tree": "d0dcef46ebc4b98b7f850215d13e13d0009b9533",
     "native_full_suite": "NOT RUN",
     "ts_project": "NOT RUN",
     "build": "NOT RUN",
@@ -189,9 +189,12 @@
     "finished_at": "2026-11-16T17:31:37.251Z",
     "scoping_tree": "f5a7a26f40370165332ba6a0827146b2b9c4f03c",
     "implementation": "search quoted-term keyword fallback; local Node4/4 + helper TS5.8.3 PASS before commit; full suite unverified",
-    "current_branch_head": "159c825007804494979ee2551e15a606b4dfcce8",
+    "current_branch_head": "140782d6889a92b840ab9215bc3036f32bda0bed",
     "planned_branch": "feat/nd-013-dense-graph-readability",
-    "acceptance": "FA/EN readable node labels 390px and 20/100/500 nodes; native checks/build/screenshots where available; GitHub Pages only if privacy/backend compatibility confirmed; branch-only otherwise"
+    "acceptance": "FA/EN readable node labels 390px and 20/100/500 nodes; native checks/build/screenshots where available; GitHub Pages only if privacy/backend compatibility confirmed; branch-only otherwise",
+    "native_focus_tests": "4/4 Node22 TS strip PASS; global tsc5.8.3 isolated helper PASS",
+    "browser_fixture": "390x844 100 nodes, 1280x800 500 nodes, 390x844 20 nodes: synthetic browser CSS fixture PASS, NOT real Nodus UI",
+    "github_pages_status": "Not compatible with server-dependent auth/API/D1/R2 as a full app; no GitHub Pages activation or publication"
   },
   "last_completed_run": {
     "run_id": "nodus-auto-20261116T2018-nd001-ci-gate",
@@ -200,7 +203,7 @@
     "status": "In progress",
     "publication_status": "Blocked"
   },
-  "updated_at": "2026-11-16T20:50:36.881Z",
+  "updated_at": "2026-11-16T21:00:00.415Z",
   "completed_at": "2026-11-16T18:33:07.060Z",
   "last_completed_at": "2026-11-16T19:28:52.490Z",
   "current_run": {
