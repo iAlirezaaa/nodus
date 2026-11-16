@@ -45,3 +45,8 @@ test('a split canvas uses its own width rather than the window width', () => {
   assert.ok(Math.abs(neuronCaptionShift(14, 120, 1.6, 240) + 14) < 0.001);
   assert.equal(neuronCaptionShift(0, 120, 1, 240), 0);
 });
+
+test('editing and reading share an edge-safe 250px maximum caption budget', () => {
+  assert.equal(neuronCaptionShift(-100, 120, 1, 240), 204);
+  assert.equal(neuronCaptionShift(14, 195, 1.6, 390), -14);
+});

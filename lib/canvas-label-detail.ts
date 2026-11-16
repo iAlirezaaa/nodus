@@ -19,7 +19,7 @@ export function canvasLabelDetail(nodeCount: number, zoom: number): CanvasLabelD
  */
 export function neuronCaptionShift(centerX: number, viewX: number, zoom: number, canvasWidth: number): number {
   if (!Number.isFinite(centerX) || !Number.isFinite(viewX) || !Number.isFinite(zoom) || !Number.isFinite(canvasWidth) || zoom <= 0 || canvasWidth <= 32) return 0;
-  const halfLabel = Math.min(244 * Math.max(1, zoom), canvasWidth - 32) / 2;
+  const halfLabel = Math.min(250 * Math.max(1, zoom), canvasWidth - 32) / 2;
   const screenCenter = centerX * zoom + viewX;
   const clamped = Math.min(canvasWidth - 16 - halfLabel, Math.max(16 + halfLabel, screenCenter));
   return (clamped - screenCenter) / zoom;
