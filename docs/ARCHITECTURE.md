@@ -456,6 +456,10 @@ The search helper accepts an optional read-only map from board ID to its full di
 `lib/thought-search.ts` computes location paths once for the active workspace and groups matching thoughts by stable relevance (exact/prefix/substring title → board path → asset filename → notes → historical full-string match). It computes exact global totals before slicing a 70-result page, so ranking never hides or rewrites results. Equal relevance preserves persisted document order, but document order itself is not a semantic ranking. All lookup normalization is comparison-only. The search modal in `NodusApp` still owns page changes and navigation. Search result headings in `app/globals.css` are allowed to wrap on mobile rather than displaying ellipses. These changes are not released until full UI/build gates complete.
 
 
+### ND-001: separately quoted terms (branch candidate, not released)
+
+`lib/search-keywords.ts` derives unordered search terms without boundary quote punctuation from pasted text (e.g. `‘Forest' 'Lighting’`), preserving internal apostrophes and the original raw query for direct-title relevance. `parseQuotedSearchPhrase` still keeps **one** balanced phrase exact in a single field. The helper is read-only and invoked only for existing keyword-tier matching; the graph, UI shortcuts, 70-result paging and persistence model are unchanged. New native helper tests pass; real application/production release gates remain blocked. See [quoted-term QA](ND-001-QUOTED-TERMS-QA.md).
+
 ### ND-001 branch: unordered search keywords
 
 `lib/thought-search.ts` first evaluates established title/phrase/path/asset/note rankings, and only if none match checks all words from a multi-term query (regardless of order) across the **same thought** and its explicit, authorized current-workspace board path. The final tier neither compacts isolated punctuation-fragmented words nor joins separate nodes/documents. It is read-only, uses the existing 70-item paging and search-result UI, and does not store any derived index or change the board/edge graph. The branch change is not a published architectural baseline until the full app/Sites release gates pass.
