@@ -348,3 +348,38 @@ test('quoted term hits in signed URL remain host-only; balanced phrases remain e
   assert.deepEqual(searchResultPreview(node('Forest Lighting'), '"forest lighting"')?.kind, 'note');
   assert.equal(JSON.stringify(n), before);
 });
+
+
+test('unordered title words explain their real title source rather than multiple fields', () => {
+  const n = { ...node('Unrelated private note'), title: 'Forest camera Lighting' };
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'forest lighting', 'Studio / Other'), { kind: 'title', text: '' });
+  assert.deepEqual(searchResultPreview(n, '‘forest’ ‘lighting’'), { kind: 'title', text: '' });
+  assert.equal(JSON.stringify(n), before);
+});
+
+test('separated ancestor terms in one nested project path show project provenance', () => {
+  const n = { ...node('Unrelated private note'), title: 'Untitled' };
+  const path = 'Studio / Forest / Storyboard / Lighting';
+  const before = JSON.stringify(n);
+  assert.deepEqual(searchResultPreview(n, 'forest lighting', path), { kind: 'project', text: '' });
+  assert.deepEqual(searchResultPreview(n, '«جنگل» «نور»', 'استودیو / جنگل / سکانس / نور'),
+    { kind: 'project', text: '' });
+  assert.equal(JSON.stringify(n), before);
+});
+
+test('unordered single-field labels preserve stronger direct hits and split-field accuracy', () => {
+  const withTitle = { ...node('forest lighting camera note'), title: 'Forest camera Lighting' };
+  assert.equal(searchResultPreview(withTitle, 'forest lighting')?.kind, 'note',
+    'a direct matching note remains above unordered title terms');
+  const withFile = { ...node('', [], 'forest lighting.png'), title: 'Forest camera Lighting' };
+  assert.equal(searchResultPreview(withFile, 'forest lighting')?.kind, 'file',
+    'direct filename has stronger search tier');
+  const withLink = { ...node('', [], '', 'https://example.com/forest-lighting'), title: 'Forest camera Lighting' };
+  assert.equal(searchResultPreview(withLink, 'forest lighting')?.kind, 'link',
+    'direct compact URL remains above unordered title terms');
+  assert.deepEqual(searchResultPreview({ ...node('Lighting pass'), title: 'Forest' }, 'forest lighting'),
+    { kind: 'multiple', text: '' }, 'genuinely split sources still report multiple');
+  assert.notEqual(searchResultPreview({ ...node('Forest in between Lighting'), title: 'Draft' },
+    '"forest lighting"')?.kind, 'title', 'a balanced phrase stays contiguous');
+});

@@ -109,6 +109,10 @@ export function searchResultPreview(
   // This has a higher rank than unordered words in any individual field.
   if (!isPhrase && (title + ' ' + description + ' ' + file).includes(needle))
     return { kind: 'multiple', text: '' };
+  // Unordered words found entirely in one source are not a cross-field hit.
+  // Keep stronger direct filename/note/link and contiguous matches above.
+  if (matchesKeywords(node.title ?? '')) return { kind: 'title', text: '' };
+  if (matchesKeywords(boardPath)) return { kind: 'project', text: '' };
   if (savedUrl && (matchesKeywords(savedUrl) || (decodedUrl !== savedUrl && matchesKeywords(decodedUrl))))
     return linkPreview();
   if (matchesKeywords(note)) return preview('note', note);
