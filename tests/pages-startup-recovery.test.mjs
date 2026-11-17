@@ -25,7 +25,7 @@ function harness(){
  let writes=[],renders=0,focused=0,status=[];
  const elements={'recovery-modal':{hidden:false},'canvas':{focus:()=>focused++}};
  const ctx={state,JSON,copy,persist:async x=>{writes.push(copy(x))},persistRecoveryIfUnchanged:async x=>{writes.push(copy(x))},saveStatus:s=>status.push(s),
- toast:()=>{},L:(a,b)=>b,$:n=>elements[n]||{},render:()=>renders++,cancelAnimationFrame:()=>{},
+ toast:()=>{},L:(a,b)=>b,$:n=>elements[n]||{},render:()=>renders++,showRecovery:()=>{},cancelAnimationFrame:()=>{},
  flushEditor:()=>{throw Error('unexpected editor')},console:{error:()=>{}}};
  return {state,ctx,elements,stats:()=>({writes,renders,focused,status})};
 }
