@@ -289,3 +289,10 @@ Run `nodus-auto-20261117T1320Z-nd024-native-gates-11`. Baseline main `26fafac05c
 **Blocked gates:** native checkout via GitHub failed DNS resolution, and `http://127.0.0.1:4173/` refused connection. Native full tests, project TypeScript/build, FA/EN desktop/390px screenshots, real IndexedDB two-tab/reload, independent UI review, Site source HEAD/tree/audience and release therefore remain **NOT RUN / UNVERIFIED**. Screenshot **NONE**; version and deployment ID **NONE**. GitHub reports repository **public** although the task refers to private; do not silently change visibility. No changes to main, Site, gh-pages, owner data, automation schedule or other projects.
 
 **Status:** ND-024 **In progress; release Blocked**, not Verified or Released. [Focused QA](ND-024-SEARCH-FOCUS-QA.md). Next: recover complete authorized checkout, native test/TypeScript/build and actual 4173 browser with FA/EN/390px+IndexedDB screenshots, independently review and reconcile authoritative Site source tree before any guarded merge or publication.
+
+
+### 2026-11-17 — ND-024 Search dialog Tab boundary (pre-edit)
+
+- Run: `nodus-auto-20261117T151621-nd024-qa`; existing `fix/nd-024-startup-storage-recovery` head `c4af18b7915f8649de0d613186472bb55a75dd92`, tree `1318330ab49a60a613de2a4d56f1f4576441be3f`; main `26fafac05c320ed5db30a0ee908dd816714acdd9`.
+- Problem: `aria-modal` Search still leaks Tab and Shift+Tab to background controls; search-result list is dynamic. Acceptance: containment/fallback without interfering with Escape, Enter, Persian IME, search selection, document writes or Undo; native/TypeScript/build/4173 browser/Sites gates required.
+- Slice: scoped source-exact keyboard fix and new regression on existing branch; Site head/tree and audience unverified, no publication. Evidence before change: source inspection only. QA: `docs/ND-024-SEARCH-TAB-QA.md`.
