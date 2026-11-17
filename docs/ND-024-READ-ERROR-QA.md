@@ -22,3 +22,8 @@ Every startup `load()` failure now opens the existing recovery lock. For unknown
 ## Disposition
 
 **In progress, branch only / release Blocked.** Main and hosted Site unchanged. Confirm complete source checkout, native tests, full project typecheck/build and real 4173 recovery/retry/browser before any independent release review.
+
+
+## Committed-tree follow-up verification (same run)
+
+Implementation commit [`9640e48218c04e61d7db6a0add60a3555636ff7f`](https://github.com/iAlirezaaa/nodus/commit/9640e48218c04e61d7db6a0add60a3555636ff7f), Git tree `04b9062c08988aa7fcd6d384a8d0ff4405c4fd97`, source blob `1d0c53fe1a915ef7180090544ff93b3534b8995c`. A fresh read of that exact commit compiled the full inline JavaScript and reproduced **4/4 startup cases**, **2/2 save/mutation guards** and **4/4 FA/EN recovery-modal combinations** with isolated V8 DOM/storage mocks. The committed inline script SHA-256 was independently recomputed as `Qr1BGGJuRHpF//gds/3jhGN6nPwcK0ZclFwo481Ij3o=` and exactly matches its CSP policy. Three regression tests are present in the committed test file, but native runner **not run**. Browser, IndexedDB reload, TypeScript, production build and Sites reconciliation stay **Blocked**. No screenshot, no deployment/version ID; status remains **In progress**.

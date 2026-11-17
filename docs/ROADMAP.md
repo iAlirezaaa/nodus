@@ -125,3 +125,5 @@ Nodus باید فضای واقعی و ماندگاری برای فکرکردن �
 ### 2026-11-17 05:20 UTC — ND-024 startup read failures (branch only)
 
 **In progress:** Generic IndexedDB open/read errors now fail closed and show a useful retry-first FA/EN recovery hint rather than exposing an editable blank workspace. Source-exact V8 4/4 startup, 2/2 mutation/save gates and 4/4 modal cases passed; three regression tests checked in but native runner/full TS/build/real 4173 IndexedDB & Site parity **Blocked**. No release; QA: [ND-024 read failures](ND-024-READ-ERROR-QA.md).
+
+**Committed checkpoint:** [code `9640e48218c0`](https://github.com/iAlirezaaa/nodus/commit/9640e48218c04e61d7db6a0add60a3555636ff7f), tree `04b9062c08988aa7fcd6d384a8d0ff4405c4fd97`, 4/4 exact committed startup + 2/2 guarded writes + 4/4 FA/EN modal mocks, CSP digest PASS; screenshot **none**, native Node project runner/TS/build/4173/Sites **Blocked**. Branch-only, not Verified/Released. Next: checkout full source, run native tests/build and real IndexedDB recovery at 4173.
