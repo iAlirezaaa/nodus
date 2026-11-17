@@ -121,3 +121,7 @@ Nodus باید فضای واقعی و ماندگاری برای فکرکردن �
 ### 2026-11-17 04:13 UTC — ND-024 read-retry safety checkpoint
 
 **In progress, branch only:** non-destructive re-read control added to the existing IndexedDB recovery modal, including a focusable action for raw records that cannot be exported as JSON, stale-backup revocation and concurrent-retry guard. QA: [ND-024 retry](ND-024-RECOVERY-RETRY-QA.md). 11 V8 assertions and inline CSP verified; newly checked-in Node cases, full TypeScript/build, native IndexedDB/browser 4173 and hosted Site verification remain blocked. No release or version ID.
+
+### 2026-11-17 05:20 UTC — ND-024 startup read failures (branch only)
+
+**In progress:** Generic IndexedDB open/read errors now fail closed and show a useful retry-first FA/EN recovery hint rather than exposing an editable blank workspace. Source-exact V8 4/4 startup, 2/2 mutation/save gates and 4/4 modal cases passed; three regression tests checked in but native runner/full TS/build/real 4173 IndexedDB & Site parity **Blocked**. No release; QA: [ND-024 read failures](ND-024-READ-ERROR-QA.md).

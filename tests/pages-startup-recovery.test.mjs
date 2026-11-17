@@ -126,3 +126,61 @@ test('recovery retry UI includes a focusable fallback when raw JSON cannot be do
  assert.match(script,/\['recovery-download','recovery-retry','recovery-import','recovery-reset'\]/);
  assert.match(script,/recovery.rawAvailable\?\$\('recovery-download'\):\$\('recovery-retry'\)/);
 });
+
+
+test('generic startup IndexedDB open/read errors quarantine before any mutation or save',async()=>{
+ for(const message of ['IDB open denied','read transaction aborted']){
+  const state={doc:null,hasLoaded:false,storageRecovery:null,lang:'en',theme:'dark',
+   design:{nodeStyle:'neural',density:'comfortable',motion:'calm',background:'dots'},
+   history:[],future:[],boardId:null};
+  let shown=0,writes=0;
+  const ctx={state,setup:()=>{},localStorage:{getItem:()=>null},
+   load:async()=>{throw Error(message)},blank:()=>copy(good),L:(fa,en)=>en,
+   saveStatus:()=>{},toast:()=>{},$:()=>({clientWidth:390,clientHeight:844}),
+   render:()=>{},showRecovery:()=>shown++,onBoard:()=>[],fit:()=>{}};
+  await fn('init',ctx)();
+  assert.equal(state.hasLoaded,true);
+  assert.equal(shown,1);
+  assert.ok(state.storageRecovery);
+  assert.equal(state.storageRecovery.rawAvailable,false);
+  assert.equal(state.storageRecovery.backupTaken,false);
+  assert.equal(state.storageRecovery.reason,message);
+  const original=JSON.stringify(state.doc);
+  fn('mutate',{...ctx,copy,queueSave:()=>writes++})(doc=>{doc.boards=[]});
+  assert.equal(JSON.stringify(state.doc),original);
+  assert.equal(await fn('queueSave',{...ctx,copy,persist:async()=>writes++})(),false);
+  assert.equal(writes,0);
+ }
+});
+
+test('normal startup remains unlocked after a valid IndexedDB read',async()=>{
+ const state={doc:null,hasLoaded:false,storageRecovery:null,design:{},history:[],future:[]};
+ let shown=0;
+ const ctx={state,setup:()=>{},localStorage:{getItem:()=>null},load:async()=>good,
+  blank:()=>copy(good),L:(fa,en)=>en,saveStatus:()=>{},toast:()=>{},
+  $:()=>({clientWidth:390,clientHeight:844}),render:()=>{},
+  showRecovery:()=>shown++,onBoard:()=>[],fit:()=>{}};
+ await fn('init',ctx)();
+ assert.equal(state.doc,good);
+ assert.equal(state.storageRecovery,null);
+ assert.equal(shown,0);
+ assert.equal(state.boardId,good.homeBoardId);
+});
+
+test('unknown raw data explains Retry in Persian and English with download disabled',()=>{
+ for(const lang of ['fa','en']){
+  const state={lang,storageRecovery:{raw:undefined,rawAvailable:false,backupTaken:false,reason:'read blocked'},restorePending:false};
+  const controls={};
+  for(const id of ['recovery-title','recovery-desc','recovery-detail','recovery-download','recovery-retry','recovery-import','recovery-reset','recovery-hint','recovery-modal']){
+   controls[id]={disabled:false,hidden:true,textContent:'',focused:false,focus(){this.focused=true}};
+  }
+  fn('showRecovery',{state,$:id=>controls[id]})();
+  assert.equal(controls['recovery-modal'].hidden,false);
+  assert.equal(controls['recovery-download'].disabled,true);
+  assert.equal(controls['recovery-import'].disabled,true);
+  assert.equal(controls['recovery-reset'].disabled,true);
+  assert.equal(controls['recovery-retry'].disabled,false);
+  assert.equal(controls['recovery-retry'].focused,true);
+  assert.match(controls['recovery-hint'].textContent,lang==='fa'?/دوباره/:/Retry/);
+ }
+});
