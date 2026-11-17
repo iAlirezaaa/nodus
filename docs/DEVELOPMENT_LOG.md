@@ -92,3 +92,14 @@ Run `nodus-auto-20261117T011507Z-nd024-recovery`; main `26fafac05c320ed5db30a0ee
 ## 2026-11-17 01:22 UTC — ND-024: invalid startup record quarantine, branch-only
 
 Run `nodus-auto-20261117T011507Z-nd024-recovery`. Source commit `19b9dc3634d066f756129f3a5633ff16e422aeb1`, tree `1c336d2490879dde2a1a6d07f6c3bd2334f0ccb3` on `fix/nd-024-startup-storage-recovery` (forked from incomplete ND-023 Pages local-first). Raw invalid IndexedDB records are now retained and edits/Undo/Redo/saving blocked until user exports raw JSON and explicitly imports or starts fresh; failed save preserves recovery lock. CSP recomputed, inline syntax passes, 19/19 isolated V8 checks passed. Seven native Node regression cases were added but **NOT RUN**. Native full tests, TypeScript, build, 4173 browser/actual IndexedDB reload, screenshots and Sites source/tree are **Blocked** by unavailable checkout/DNS and current Sites/browser access. The user-facing Site and `gh-pages` are unchanged. **In progress; not Verified/Released.** See [ND-024 QA](ND-024-STARTUP-RECOVERY-QA.md). Next: native checks, live local IndexedDB reload and independent review before guarded publication.
+
+
+## 2026-11-17 02:16 UTC — ND-024 follow-up: raw recovery export integrity (scope before code)
+
+Run `nodus-auto-20261117T021442Z-nd024-native-qa`. Base `fix/nd-024-startup-storage-recovery` `e4bcabb6122e4ad47e50a8f6e2da4c9ac0a33624`, tree `a58738cad54c72de87e4c91d9ba581095001a79e`; main `26fafac05c320ed5db30a0ee908dd816714acdd9` tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`; Site source/head/tree/audience **UNVERIFIED** (current Sites skill unavailable). Lease owned on the separate control branch. Existing ND-024 corruption quarantine stays **In progress / unreleased**.
+
+**Demonstrated data-risk to test:** IndexedDB structured clones may contain Map, Date, Set, Blob, undefined properties, sparse arrays or non-finite numbers. `downloadRecovery()` currently calls plain `JSON.stringify` and marks `backupTaken=true` even when JSON silently drops or converts those values. This could enable replacement of the only raw record using an incomplete backup.
+
+**Acceptance:** for pure JSON trees, preserve original export/confirmation flow; for non-JSON-safe or circular stored records, refuse a misleading "successful" recovery export, leave `backupTaken=false`, and keep import/reset disabled. Verify old-vs-new against exact GitHub JS, check CSP SHA-256 and unchanged persistence keys; add checked-in regression. Re-run native tests, TypeScript/build, and real 4173 IndexedDB/browser if a usable checkout becomes available. Do not release without those gates and an independent review.
+
+**This slice:** lossless JSON export preflight in `pages/index.html` and focused regression test on the existing ND-024 branch; docs/roadmap/checkpoint afterward. No migration, remote auth, live workspace, deployment, or GitHub Pages ref changes.
