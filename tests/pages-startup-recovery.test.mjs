@@ -24,7 +24,7 @@ function harness(){
  magnetPositions:null,magnetPins:new Set(),viewByBoard:new Map(),saveQueue:Promise.resolve()};
  let writes=[],renders=0,focused=0,status=[];
  const elements={'recovery-modal':{hidden:false},'canvas':{focus:()=>focused++}};
- const ctx={state,JSON,copy,persist:async x=>{writes.push(copy(x))},persistRecoveryIfUnchanged:async x=>{writes.push(copy(x))},saveStatus:s=>status.push(s),
+ const ctx={state,JSON,copy,persist:async x=>{writes.push(copy(x))},persistRecoveryIfUnchanged:async x=>{writes.push(copy(x))},persistImportIfUnchanged:async x=>{writes.push(copy(x))},saveStatus:s=>status.push(s),
  toast:()=>{},L:(a,b)=>b,$:n=>elements[n]||{},render:()=>renders++,showRecovery:()=>{},cancelAnimationFrame:()=>{},
  flushEditor:()=>{throw Error('unexpected editor')},console:{error:()=>{}}};
  return {state,ctx,elements,stats:()=>({writes,renders,focused,status})};
@@ -36,7 +36,7 @@ test('inline JS compiles with matching CSP digest and accessible recovery dialog
 });
 test('only absent IndexedDB record is blank; malformed falsy values preserve raw',async()=>{
  for(const value of [undefined,good,0,null,bad]){
-  const ctx={db:null,getDB:async()=>db(value),blank:()=>({new:true}),
+  const ctx={state:{},db:null,getDB:async()=>db(value),blank:()=>({new:true}),
    validate:x=>{if(x!==good)throw Error('Invalid workspace');return x}};
   const load=fn('load',ctx);
   if(value===undefined)assert.equal((await load()).new,true);
@@ -254,7 +254,7 @@ test('changed stored raw revokes stale backup consent and keeps prior Undo/selec
  assert.equal(h.state.storageRecovery.rawAvailable,false);assert.equal(h.state.storageRecovery.raw,undefined);
  assert.equal(h.stats().writes.length,0);
 });
-test('ordinary non-quarantined restore still uses the existing persist path',async()=>{
+test('ordinary non-quarantined restore uses the guarded import path',async()=>{
  const h=harness();h.state.storageRecovery=null;
  h.ctx.persistRecoveryIfUnchanged=()=>{throw Error('unexpected guarded restore')};
  assert.equal(await fn('restoreLocalDocument',h.ctx)(copy(good)),true);
