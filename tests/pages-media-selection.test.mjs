@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
 const html = readFileSync(new URL('../pages/index.html', import.meta.url), 'utf8');
-const script = html.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script, 'Pages inline script must exist');
-const line = script.split('\\n').find(s => s.includes("$('media-file').onchange=async e=>"));
+const line = script.split('\n').find(s => s.includes("$('media-file').onchange=async e=>"));
 assert.ok(line, 'Media input event must exist');
 const handler = line.slice(line.indexOf("$('media-file').onchange=async e=>"));
 
