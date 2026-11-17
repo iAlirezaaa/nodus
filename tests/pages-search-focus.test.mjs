@@ -13,8 +13,9 @@ const keyLine=lines.find(x=>x.includes("document.addEventListener('keydown',e=>"
 const setupLine=lines.find(x=>x.includes("$('search-close').onclick="));
 assert.ok(openLine&&closeLine&&keyLine&&setupLine,'Source-exact search handlers must be present');
 
-function session(origin='node',change='none'){
+function session(origin='node',change='none',deferFocus=false){
   let keyHandler;
+  const pendingFrames=[];
   const document={activeElement:null,body:{},addEventListener:(type,cb)=>{if(type==='keydown')keyHandler=cb}};
   const make=(node=false,id='')=>{
     const el={dataset:{node:id},isConnected:true,classList:{contains:k=>node&&k==='node'},
@@ -35,7 +36,7 @@ function session(origin='node',change='none'){
   const api=factory(document,$,{storageRecovery:null},()=>{
     if(change==='remount'){oldCard.isConnected=false;nodes.children=[newCard]}
     if(change==='remove'){oldCard.isConnected=false;nodes.children=[]}
-  },()=>{},cb=>cb(),Input,Textarea);
+  },()=>{},cb=>deferFocus?pendingFrames.push(cb):cb(),Input,Textarea);
   const register=new Function('$','openSearch','closeSearch','renderResults',setupLine);
   register($,api.openSearch,api.closeSearch,()=>{});
   function escape(){
@@ -44,7 +45,7 @@ function session(origin='node',change='none'){
     keyHandler(evt);return evt;
   }
   return {document,oldCard,newCard,canvas,searchButton,closeButton,input,modal,nodes,api,escape,
-    getWrites:()=>writes};
+    getWrites:()=>writes,flushFrames:()=>pendingFrames.splice(0).forEach(cb=>cb())};
 }
 
 test('Escape restores focus to remounted graph card after the dialog closes',()=>{
@@ -91,4 +92,22 @@ test('Script parses, CSP hash matches, and modal closure has no persistence side
   new Function(script);
   assert.equal(html.match(/script-src 'sha256-([^']+)'/)?.[1],createHash('sha256').update(script).digest('base64'));
   const s=session('button');s.api.openSearch();s.closeButton.onclick();assert.equal(s.getWrites(),0);
+});
+
+
+test('Closing Search before its pending animation frame cannot focus a hidden input',()=>{
+  const s=session('button','none',true);
+  s.api.openSearch();
+  assert.equal(s.modal.hidden,false);
+  s.closeButton.onclick();
+  assert.equal(s.modal.hidden,true);
+  assert.equal(s.document.activeElement,s.searchButton,'Close restores opener immediately');
+  s.flushFrames();
+  assert.equal(s.document.activeElement,s.searchButton,'Late frame must not steal focus into a hidden dialog');
+  s.api.openSearch();
+  s.flushFrames();
+  assert.equal(s.modal.hidden,false);
+  assert.equal(s.document.activeElement,s.input,'Next legitimate open still focuses the search field');
+  s.escape();
+  assert.equal(s.document.activeElement,s.searchButton);
 });
