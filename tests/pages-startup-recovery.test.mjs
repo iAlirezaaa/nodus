@@ -260,3 +260,41 @@ test('ordinary non-quarantined restore still uses the existing persist path',asy
  assert.equal(await fn('restoreLocalDocument',h.ctx)(copy(good)),true);
  assert.equal(h.stats().writes.length,1);assert.equal(h.state.storageRecovery,null);
 });
+
+// ND-024: loss-aware regular saves and import preflight.
+test('failed queued save reports false while retaining in-memory edits',async()=>{
+ const h=harness();h.state.storageRecovery=null;
+ let attempts=0;const ctx={...h.ctx,copy,persist:async()=>{attempts++;throw Error('quota')}};
+ assert.equal(await fn('queueSave',ctx)(),false);
+ assert.equal(await h.state.saveQueue,false);
+ assert.equal(attempts,1);assert.deepEqual(h.state.doc,{old:true});
+ assert.match(h.stats().status.at(-1),/failed/i);
+});
+test('pending failed save blocks ordinary replacement import without losing Undo',async()=>{
+ const h=harness();h.state.storageRecovery=null;h.state.saveQueue=Promise.resolve(false);
+ let writes=0;h.ctx.persist=async()=>{writes++};
+ assert.equal(await fn('restoreLocalDocument',h.ctx)(copy(good)),false);
+ assert.equal(writes,0);assert.deepEqual(h.state.doc,{old:true});
+ assert.deepEqual(h.state.history,['prior']);assert.deepEqual(h.state.future,['redo']);
+ assert.equal(h.state.restorePending,false);
+});
+test('Save retry success permits a subsequent import only after storage acknowledgement',async()=>{
+ const h=harness();h.state.storageRecovery=null;h.state.saveQueue=Promise.resolve(false);
+ let writes=0;const ctx={...h.ctx,copy,persist:async()=>{writes++}};
+ assert.equal(await fn('queueSave',ctx)(),true);
+ assert.equal(await fn('restoreLocalDocument',ctx)(copy(good)),true);
+ assert.equal(writes,2);assert.equal(h.state.doc.homeBoardId,'root');
+});
+test('Details Save only confirms after persistence settles',async()=>{
+ const line=script.split('\n').find(s=>s.includes("$('edit-save').onclick="));
+ const expression=line.slice(line.indexOf("$('edit-save').onclick="),line.indexOf("$('sub-project').onclick="));
+ for(const [outcome,pattern] of [[false,/failed/i],[true,/^Saved$/]]){
+  const h=harness();h.state.storageRecovery=null;
+  const btn={'edit-save':{}},messages=[];let resolveSave;
+  new Function('$','state','flushEditor','queueSave','toast','L',expression)(
+   name=>btn[name],h.state,()=>{},()=>new Promise(resolve=>resolveSave=resolve),
+   msg=>messages.push(msg),(fa,en)=>en);
+  const action=btn['edit-save'].onclick();assert.equal(messages.length,0);
+  resolveSave(outcome);await action;assert.match(messages[0],pattern);
+ }
+});
