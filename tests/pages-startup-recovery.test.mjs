@@ -298,3 +298,36 @@ test('Details Save only confirms after persistence settles',async()=>{
   resolveSave(outcome);await action;assert.match(messages[0],pattern);
  }
 });
+
+test('ND-024: failed graph save warns on unload until acknowledged retry',async()=>{
+ const h=harness();h.state.storageRecovery=null;h.state.unsavedChanges=false;
+ let complete;
+ const ctx={...h.ctx,copy,render:()=>{},persist:()=>new Promise((resolve,reject)=>{complete={resolve,reject}})};
+ const queueSave=fn('queueSave',ctx),mutate=fn('mutate',{...ctx,queueSave}),warn=fn('warnOnUnsavedExit',{state:h.state});
+ const event=()=>{let prevented=false;const e={preventDefault(){prevented=true},returnValue:undefined};warn(e);return {prevented,value:e.returnValue}};
+ assert.equal(event().prevented,false);
+ mutate(d=>{d.thought='فارسی';});assert.equal(h.state.unsavedChanges,true);
+ assert.deepEqual(event(),{prevented:true,value:''});
+ await new Promise(resolve=>setImmediate(resolve));complete.reject(Error('quota'));
+ assert.equal(await h.state.saveQueue,false);assert.equal(event().prevented,true);
+ const retry=queueSave();await new Promise(resolve=>setImmediate(resolve));complete.resolve();
+ assert.equal(await retry,true);assert.equal(h.state.unsavedChanges,false);assert.equal(event().prevented,false);
+});
+test('ND-024: older acknowledged snapshot does not clear newer dirty edits',async()=>{
+ const h=harness();h.state.storageRecovery=null;h.state.unsavedChanges=false;
+ const complete=[];const ctx={...h.ctx,copy,render:()=>{},persist:()=>new Promise(resolve=>complete.push(resolve))};
+ const queueSave=fn('queueSave',ctx),mutate=fn('mutate',{...ctx,queueSave});
+ mutate(d=>{d.rev=1});await new Promise(resolve=>setImmediate(resolve));assert.equal(complete.length,1);
+ mutate(d=>{d.rev=2});complete[0]();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(h.state.unsavedChanges,true);assert.match(h.stats().status.at(-1),/Saving/);
+ assert.equal(complete.length,2);complete[1]();assert.equal(await h.state.saveQueue,true);
+ assert.equal(h.state.unsavedChanges,false);assert.match(h.stats().status.at(-1),/Saved/);
+});
+test('ND-024: clean unload stays native, dirty export does not acknowledge save',()=>{
+ const h=harness();h.state.unsavedChanges=false;let prevented=false;
+ const guard=fn('warnOnUnsavedExit',{state:h.state}),e={preventDefault(){prevented=true},returnValue:undefined};
+ guard(e);assert.equal(prevented,false);assert.equal(e.returnValue,undefined);
+ assert.match(script,/addEventListener\('beforeunload',warnOnUnsavedExit\)/);
+ assert.match(script,/state\.unsavedChanges=true;queueSave\(\);render\(\)/);
+ assert.doesNotMatch(script.split('\n').find(s=>s.startsWith('function download(){')),/unsavedChanges=false/);
+});
