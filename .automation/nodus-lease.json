@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261117T151621-nd024-qa",
   "acquired_at": "2026-11-17T15:16:21.268Z",
-  "heartbeat_at": "2026-11-17T15:16:21.268Z",
-  "expires_at": "2026-11-17T16:46:21.268Z",
+  "heartbeat_at": "2026-11-17T15:23:05.107Z",
+  "expires_at": "2026-11-17T16:53:05.107Z",
   "current_task_id": "ND-024",
   "feature_branch": "fix/nd-024-startup-storage-recovery",
   "checkpoint": {
@@ -168,7 +168,7 @@
     "planned_new_test": "tests/thought-search-ligatures.test.ts",
     "detected_regression": "Persian spaced quoted query ranked prefix before semantically exact title; targeted fix pending.",
     "control_head_before_release": "ae1013b3fce6c7f39178d9eaa39bf147beb1e577",
-    "current_run_id": "nodus-auto-20261117T1413Z-nd024-native-validation-11",
+    "current_run_id": "nodus-auto-20261117T151621-nd024-qa",
     "observed_feature": "2ed4a601bf5c58959a28cc5a8bd0a47bff7a943f",
     "updated_at": "2026-11-16T14:42:48.832Z",
     "test_evidence": "Old quote-attached keyword membership 0/151 vs 151/151 with new tokenizer; page fixture 70/70/11; Node22 4/4; helper TS5.8.3 PASS",
@@ -190,8 +190,8 @@
     "ci_run_id": 43929466335,
     "ci_status": "failure before runner; no steps/logs",
     "scope_tree": "dea59c3a40787ffc7ca72165dc9c299433fac0cc",
-    "source_head": "931063fa26e843d7af24aebda2906dbcda0d0118",
-    "source_tree": "a314a4e42c1e12a2ad8a81b011cfa90dcb10a62b",
+    "source_head": "3c75b00437ee624109f9ac5d01099aefc587fbb7",
+    "source_tree": "05b496e2fbbc7bbb7c9ef2b4adf3f0d42402243c",
     "finished_at": "2026-11-17T03:15:35.351Z",
     "scoping_tree": "f5a7a26f40370165332ba6a0827146b2b9c4f03c",
     "implementation": "search quoted-term keyword fallback; local Node4/4 + helper TS5.8.3 PASS before commit; full suite unverified",
@@ -289,7 +289,8 @@
       }
     ],
     "activity": "Scoped and committed search-modal focus restoration; branch-only",
-    "focused_tests": "11/11 exact GitHub source/check-in test cases executed under isolated V8 Node facades; no native runner"
+    "focused_tests": "11/11 exact GitHub source/check-in test cases executed under isolated V8 Node facades; no native runner",
+    "stage": "Search focus Tab containment implemented, source-exact V8 red/green pass; native focused Node22 extracted helper 9/9 pass; final review pending"
   },
   "last_completed_run": "nodus-auto-20261117T1413Z-nd024-native-validation-11",
   "updated_at": "2026-11-17T14:20:56.089Z",
