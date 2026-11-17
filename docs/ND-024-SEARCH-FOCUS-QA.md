@@ -39,3 +39,10 @@ No test pass or deployment claimed at scoping. Screenshot: **NONE**. Release ver
 - **Release:** none. Main `26fafac05c320ed5db30a0ee908dd816714acdd9`, live Site and gh-pages were not changed; source trees between GitHub and Site remain **unverified**. The GitHub API reports public despite the requested private designation; visibility was not changed.
 
 **State:** **In progress** on the branch; **Blocked release**, not Verified or Released. **Next:** native checked-in tests, full TypeScript/build, real 4173 search keyboard+IME and two-tab IndexedDB FA/EN/mobile screenshots; independent review and authoritative Site tree parity, then guarded merge/deployment only on success.
+
+## 2026-11-17T14:16:01.990Z — ND-024 scheduled focus restoration race (pre-edit scope)
+
+- **Problem / red:** If Search opens then closes before the queued requestAnimationFrame callback executes, that stale callback focuses the now-hidden search input, defeating the earlier focus restoration. Source-exact deferred-frame reproduction: after closing focus is on opener, after callback it is incorrectly on hidden input.
+- **Acceptance:** A pending frame must not focus hidden Search; a subsequent newly opened Search must still focus its input; Escape, close button, backdrop and result-destination focus retain existing behavior. No document writes, keyboard/IME/Tab changes, schema or collaboration changes. Add a checked-in native Node regression and source-exact red/green check.
+- **Slice:** Guard the scheduled focus by current dialog visibility, extend `tests/pages-search-focus.test.mjs`. Reuse `fix/nd-024-startup-storage-recovery`. GitHub feature pre-edit head `931063fa26e843d7af24aebda2906dbcda0d0118`, tree `a314a4e42c1e12a2ad8a81b011cfa90dcb10a62b`; main `26fafac05c320ed5db30a0ee908dd816714acdd9`, tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`. Authorized Sites head/tree/audience unavailable.
+- **Gates:** In progress, release Blocked. Full native suite, TypeScript, build, real 4173 browser/FA+EN/mobile screenshot, two-tab IndexedDB and Sites tree parity are still required. No Site/main changes or screenshot/deployment claimed.
