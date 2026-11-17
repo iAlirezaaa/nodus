@@ -28,7 +28,7 @@ function simulate(target, key, options = {}) {
   fn(document,{addEventListener:(type,handler)=>{if(type==='keydown')nodeKeyHandler=handler}},{id:'n'},$,state,Input,Textarea,(_fa,en)=>en,
     ()=>calls.add++,()=>calls.sibling++,()=>calls.child++,()=>calls.undo++,()=>calls.redo++,()=>calls.remove++,
     ()=>calls.edit++,()=>calls.fit++,()=>{},()=>calls.search++,()=>{},()=>[]);
-  const event = {key,shiftKey:!!options.shiftKey,ctrlKey:!!options.ctrlKey,metaKey:false,isComposing:!!options.isComposing,
+  const event = {key,shiftKey:!!options.shiftKey,ctrlKey:!!options.ctrlKey,metaKey:!!options.metaKey,altKey:!!options.altKey,isComposing:!!options.isComposing,
     keyCode:options.isComposing?229:0,defaultPrevented:!!options.handled,target:focused,
     preventDefault(){this.defaultPrevented=true;}};
   if(target==='node' && options.bubble!==false)nodeKeyHandler(event);
@@ -62,4 +62,29 @@ test('ND-024 composition, already-handled and input keys never create ideas',()=
 test('ND-024 exact inline source parses and matches CSP hash',()=>{
   new Function(script);
   assert.equal(html.match(/script-src 'sha256-([^']+)'/)?.[1],createHash('sha256').update(script).digest('base64'));
+});
+
+
+test('ND-024 modified Enter/Tab never mutate graph or intercept browser shortcuts',()=>{
+  for(const modifier of ['ctrlKey','metaKey','altKey']){
+    for(const target of ['canvas','node']){
+      for(const key of ['Enter','Tab']){
+        const result=simulate(target,key,{[modifier]:true});
+        assert.equal(result.calls.add,0,`${target} ${modifier}+${key} must not create a root`);
+        assert.equal(result.calls.sibling,0,`${target} ${modifier}+${key} must not create a sibling`);
+        assert.equal(result.calls.child,0,`${target} ${modifier}+${key} must not create a child`);
+        assert.equal(result.event.defaultPrevented,false,`${target} ${modifier}+${key} must remain native`);
+      }
+    }
+  }
+  for(const target of ['canvas','node']){
+    const result=simulate(target,'Enter',{shiftKey:true});
+    assert.equal(result.calls.add+result.calls.sibling+result.calls.child,0,'Shift+Enter must not create a node');
+    assert.equal(result.event.defaultPrevented,false,'Shift+Enter stays available for the surrounding interface');
+  }
+  assert.equal(simulate('canvas','Enter').calls.add,1,'plain Enter still creates a root');
+  assert.equal(simulate('node','Enter').calls.sibling,1,'plain Enter still creates a sibling');
+  assert.equal(simulate('node','Tab').calls.child,1,'plain Tab still creates one child');
+  assert.equal(simulate('node','Tab',{shiftKey:true}).event.defaultPrevented,false,'Shift+Tab stays native');
+  assert.equal(simulate('node','Enter',{isComposing:true}).calls.sibling,0,'IME Enter must not commit a sibling');
 });
