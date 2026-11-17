@@ -47,7 +47,7 @@ function session(origin='node',change='none',deferFocus=false){
       ctrlKey:false,metaKey:false,preventDefault(){this.defaultPrevented=true}};
     keyHandler(evt);return evt;
   }
-  function fireKey(key,{shiftKey=false,isComposing=false}={}){const e={key,target:document.activeElement,shiftKey,isComposing,keyCode:0,defaultPrevented:false,ctrlKey:false,metaKey:false,preventDefault(){this.defaultPrevented=true}};keyHandler(e);return e}
+  function fireKey(key,{shiftKey=false,isComposing=false,ctrlKey=false,metaKey=false,altKey=false}={}){const e={key,target:document.activeElement,shiftKey,isComposing,keyCode:0,defaultPrevented:false,ctrlKey,metaKey,altKey,preventDefault(){this.defaultPrevented=true}};keyHandler(e);return e}
   return {document,oldCard,newCard,canvas,searchButton,closeButton,input,modal,nodes,api,escape,resultOne,resultTwo,fireKey,setResults:n=>{searchButtons=[resultOne,resultTwo].slice(0,n)},
     getWrites:()=>writes,flushFrames:()=>pendingFrames.splice(0).forEach(cb=>cb())};
 }
@@ -149,5 +149,15 @@ test('Search allows native Enter and ongoing Persian IME composition',()=>{
  assert.equal(s.document.activeElement,s.input);
  assert.equal(s.fireKey('Tab',{isComposing:true}).defaultPrevented,false);
  assert.equal(s.document.activeElement,s.input);
+ assert.equal(s.getWrites(),0);
+});
+
+test('Search leaves Ctrl/Meta/Alt+Tab browser switching shortcuts intact',()=>{
+ const s=session('button');s.api.openSearch();s.input.focus();
+ for(const modifier of ['ctrlKey','metaKey','altKey']){
+   const evt=s.fireKey('Tab',{[modifier]:true});
+   assert.equal(evt.defaultPrevented,false,modifier+' must not be trapped');
+   assert.equal(s.document.activeElement,s.input);
+ }
  assert.equal(s.getWrites(),0);
 });
