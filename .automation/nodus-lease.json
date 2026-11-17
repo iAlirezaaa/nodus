@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-17T12:19:44.642Z",
-  "heartbeat_at": "2026-11-17T12:36:39.156Z",
-  "expires_at": null,
+  "owner_run_id": "nodus-auto-20261117T1320Z-nd024-native-gates-11",
+  "acquired_at": "2026-11-17T13:20:52.115Z",
+  "heartbeat_at": "2026-11-17T13:20:52.115Z",
+  "expires_at": "2026-11-17T14:50:52.115Z",
   "current_task_id": "ND-024",
   "feature_branch": "fix/nd-024-startup-storage-recovery",
   "checkpoint": {
@@ -125,7 +125,7 @@
     "code_commit": "9640e48218c04e61d7db6a0add60a3555636ff7f",
     "code_blob": "f98cffc10d76c860cac756b58e293ed8e3122844",
     "observed_control_tree": "66c927b34cb2bbb39dae605186310b23ff17d025",
-    "status": "In progress / Blocked release",
+    "status": "In progress / release Blocked",
     "code_tree": "04b9062c08988aa7fcd6d384a8d0ff4405c4fd97",
     "native_full_suite": "NOT RUN: no full native checkout",
     "ts_project": "NOT RUN",
@@ -174,15 +174,15 @@
     "test_evidence": "Old quote-attached keyword membership 0/151 vs 151/151 with new tokenizer; page fixture 70/70/11; Node22 4/4; helper TS5.8.3 PASS",
     "qa_doc": "docs/ND-001-QUOTED-TERMS-QA.md",
     "scope_this_run": {
-      "run_id": "nodus-auto-20261117T0411Z-nd024-verification",
+      "run_id": "nodus-auto-20261117T1320Z-nd024-native-gates-11",
       "task": "ND-024",
-      "problem": "Unverified ND-024 startup recovery and native tests, full project gates and live Sites source blocked",
-      "acceptance": "Run native checked-in tests & TypeScript/build where recoverable; add a narrow data-safety regression only if reproduced, no live publication without 4173 UI and Site parity",
-      "slice": "Recover runnable repo at port 4173 and test; safe targeted fix on existing branch if executable",
+      "problem": "Incomplete ND-024 browser/IndexedDB native regression verification and an unshipped keyboard/data safety branch",
+      "acceptance": "Run native checked-in targeted tests, project TS/build and real 4173 browser when available; only change code for reproducible regression, preserve owner data; no release without Site tree and browser QA",
+      "slice": "Reconstruct checkout, execute native tests, fix one evidenced failure if needed",
       "branch": "fix/nd-024-startup-storage-recovery",
-      "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
-      "feature_head": "9ca0926041e0c8126c3cba75f20776733cf2f0bd",
-      "site_source": "UNVERIFIED (Site access requires interactive input)"
+      "main_head": "26fafac05c320ed5db30a0ee908dd816714acdd9",
+      "feature_head": "18e6cb161380c9485eded6dbdd0a7774a4651bbc",
+      "site_head": "UNVERIFIED"
     },
     "next": "Recover authorized full repo checkout; run 7 native checked-in tests, full suite, TypeScript/build and real 4173 IndexedDB two-tab/reload FA/EN mobile screenshot; independently review and reconcile Sites tree before guarded publish",
     "qa_result": "5/5 old red V8; 15/15 patched isolated V8; 3/3 checked-in exact tests under V8 facades; CSP/JS syntax PASS; native Node/TypeScript/build/4173 browser NOT RUN",
@@ -290,11 +290,20 @@
     ]
   },
   "last_completed_run": "nodus-auto-20261117T121944642Z-nd024-review",
-  "updated_at": "2026-11-17T11:20:12.902Z",
+  "updated_at": "2026-11-17T13:20:52.115Z",
   "completed_at": "2026-11-17T12:36:39.156Z",
   "last_completed_at": "2026-11-17T11:20:12.902Z",
-  "current_run": null,
+  "current_run": {
+    "run_id": "nodus-auto-20261117T1320Z-nd024-native-gates-11",
+    "task": "ND-024",
+    "branch": "fix/nd-024-startup-storage-recovery",
+    "started_at": "2026-11-17T13:20:52.115Z",
+    "main_head": "26fafac05c320ed5db30a0ee908dd816714acdd9",
+    "source_head": "18e6cb161380c9485eded6dbdd0a7774a4651bbc",
+    "site_head": "UNVERIFIED",
+    "plan": "Recover native checkout and run checked-in ND-024 tests; investigate an actual regression and implement one bounded safety fix if verified; no publish without full gates"
+  },
   "status": "In progress / Blocked release",
-  "current_run_id": null,
-  "active_run_id": null
+  "current_run_id": "nodus-auto-20261117T1320Z-nd024-native-gates-11",
+  "active_run_id": "nodus-auto-20261117T1320Z-nd024-native-gates-11"
 }
