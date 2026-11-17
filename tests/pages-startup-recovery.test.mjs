@@ -184,3 +184,33 @@ test('unknown raw data explains Retry in Persian and English with download disab
   assert.match(controls['recovery-hint'].textContent,lang==='fa'?/دوباره/:/Retry/);
  }
 });
+
+test('generic retry failure revokes a previously readable raw snapshot rather than enabling stale reset',async()=>{
+ for(const error of [new Error('IDB transaction blocked'),Object.assign(new Error('aborted'),{name:'AbortError'})]){
+  const h=harness(),oldRaw=h.state.storageRecovery.raw,oldDoc=h.state.doc;
+  h.state.storageRecovery.backupTaken=true;
+  let dialogs=0,reads=0;
+  h.ctx.load=async()=>{reads++;throw error};h.ctx.showRecovery=()=>{dialogs++};
+  assert.equal(await fn('retryRecovery',h.ctx)(),false);
+  assert.equal(reads,1);assert.equal(dialogs,1);
+  assert.equal(h.state.doc,oldDoc);assert.deepEqual(h.state.history,['prior']);
+  assert.deepEqual(h.state.future,['redo']);assert.equal(h.state.selected,'a');
+  assert.equal(h.state.storageRecovery.rawAvailable,false);
+  assert.equal(h.state.storageRecovery.raw,undefined);
+  assert.notEqual(h.state.storageRecovery.raw,oldRaw);
+  assert.equal(h.state.storageRecovery.backupTaken,false);
+  assert.equal(h.state.restorePending,false);
+  assert.equal(h.stats().writes.length,0);assert.equal(h.stats().renders,0);
+ }
+});
+test('fresh corrupt raw record can still be exported after a failed retry',async()=>{
+ const h=harness(),fresh={version:'invalid fresh record'};
+ h.state.storageRecovery.backupTaken=true;
+ const err=Object.assign(new Error('bad stored record'),{name:'CorruptWorkspaceError',raw:fresh});
+ h.ctx.load=async()=>{throw err};h.ctx.showRecovery=()=>{};
+ assert.equal(await fn('retryRecovery',h.ctx)(),false);
+ assert.equal(h.state.storageRecovery.raw,fresh);
+ assert.equal(h.state.storageRecovery.rawAvailable,true);
+ assert.equal(h.state.storageRecovery.backupTaken,false);
+ assert.equal(h.stats().writes.length,0);
+});
