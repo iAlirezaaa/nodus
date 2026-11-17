@@ -11,7 +11,8 @@ const openLine=lines.find(x=>x.startsWith('function openSearch('));
 const closeLine=lines.find(x=>x.startsWith('function closeSearch('));
 const keyLine=lines.find(x=>x.includes("document.addEventListener('keydown',e=>"));
 const setupLine=lines.find(x=>x.includes("$('search-close').onclick="));
-assert.ok(openLine&&closeLine&&keyLine&&setupLine,'Source-exact search handlers must be present');
+const trapLine=lines.find(x=>x.startsWith('function trapSearchTab('));
+assert.ok(openLine&&closeLine&&trapLine&&keyLine&&setupLine,'Source-exact search handlers must be present');
 
 function session(origin='node',change='none',deferFocus=false){
   let keyHandler;
@@ -24,15 +25,17 @@ function session(origin='node',change='none',deferFocus=false){
   };
   const oldCard=make(origin==='node','thought-1'),newCard=make(true,'thought-1');
   const canvas=make(),searchButton=make(),closeButton=make(),input=make();
+  let searchButtons=[];const resultOne=make(),resultTwo=make();
+  const searchResults={querySelectorAll:()=>searchButtons};
   const modal={hidden:true,addEventListener:(type,cb)=>{if(type==='pointerdown')modal.onBackdrop=cb}};
   const nodes={children:[oldCard]},elements={'canvas':canvas,'search-open':searchButton,'search-close':closeButton,
-    'search-modal':modal,'search-input':input,'nodes':nodes};
+    'search-modal':modal,'search-input':input,'search-results':searchResults,'nodes':nodes};
   document.activeElement=origin==='button'?searchButton:oldCard;
   const $=id=>elements[id];
   class Input{}; class Textarea{};
   let writes=0;
   const factory=new Function('document','$','state','flushEditor','renderResults','requestAnimationFrame','HTMLInputElement','HTMLTextAreaElement',
-    'let searchReturnFocus=null,searchReturnNodeId=null;\n'+openLine+'\n'+closeLine+'\n'+keyLine+'\nreturn {openSearch,closeSearch}');
+    'let searchReturnFocus=null,searchReturnNodeId=null;\n'+openLine+'\n'+closeLine+'\n'+trapLine+'\n'+keyLine+'\nreturn {openSearch,closeSearch}');
   const api=factory(document,$,{storageRecovery:null},()=>{
     if(change==='remount'){oldCard.isConnected=false;nodes.children=[newCard]}
     if(change==='remove'){oldCard.isConnected=false;nodes.children=[]}
@@ -44,7 +47,8 @@ function session(origin='node',change='none',deferFocus=false){
       ctrlKey:false,metaKey:false,preventDefault(){this.defaultPrevented=true}};
     keyHandler(evt);return evt;
   }
-  return {document,oldCard,newCard,canvas,searchButton,closeButton,input,modal,nodes,api,escape,
+  function fireKey(key,{shiftKey=false,isComposing=false}={}){const e={key,target:document.activeElement,shiftKey,isComposing,keyCode:0,defaultPrevented:false,ctrlKey:false,metaKey:false,preventDefault(){this.defaultPrevented=true}};keyHandler(e);return e}
+  return {document,oldCard,newCard,canvas,searchButton,closeButton,input,modal,nodes,api,escape,resultOne,resultTwo,fireKey,setResults:n=>{searchButtons=[resultOne,resultTwo].slice(0,n)},
     getWrites:()=>writes,flushFrames:()=>pendingFrames.splice(0).forEach(cb=>cb())};
 }
 
@@ -110,4 +114,40 @@ test('Closing Search before its pending animation frame cannot focus a hidden in
   assert.equal(s.document.activeElement,s.input,'Next legitimate open still focuses the search field');
   s.escape();
   assert.equal(s.document.activeElement,s.searchButton);
+});
+
+test('Search Tab wraps from the last control without leaving the modal, even when empty',()=>{
+ const s=session('button');s.api.openSearch();s.input.focus();
+ const forward=s.fireKey('Tab');assert.equal(forward.defaultPrevented,true);
+ assert.equal(s.document.activeElement,s.closeButton);
+ const reverse=s.fireKey('Tab',{shiftKey:true});assert.equal(reverse.defaultPrevented,true);
+ assert.equal(s.document.activeElement,s.input);
+ s.escape();assert.equal(s.document.activeElement,s.searchButton);assert.equal(s.getWrites(),0);
+});
+test('Search Tab includes dynamically rendered results at both boundaries',()=>{
+ const s=session('button');s.api.openSearch();s.setResults(2);s.resultTwo.focus();
+ assert.equal(s.fireKey('Tab').defaultPrevented,true);
+ assert.equal(s.document.activeElement,s.closeButton);
+ assert.equal(s.fireKey('Tab',{shiftKey:true}).defaultPrevented,true);
+ assert.equal(s.document.activeElement,s.resultTwo);
+ s.setResults(0);s.input.focus();
+ assert.equal(s.fireKey('Tab').defaultPrevented,true);
+ assert.equal(s.document.activeElement,s.closeButton);
+});
+test('Search Tab recovers focus after the browser leaves the dialog',()=>{
+ const s=session('node');s.api.openSearch();s.canvas.focus();
+ assert.equal(s.fireKey('Tab').defaultPrevented,true);
+ assert.equal(s.document.activeElement,s.closeButton);
+ s.canvas.focus();
+ assert.equal(s.fireKey('Tab',{shiftKey:true}).defaultPrevented,true);
+ assert.equal(s.document.activeElement,s.input);
+ s.escape();assert.equal(s.document.activeElement,s.oldCard);assert.equal(s.getWrites(),0);
+});
+test('Search allows native Enter and ongoing Persian IME composition',()=>{
+ const s=session('button');s.api.openSearch();s.input.focus();
+ assert.equal(s.fireKey('Enter').defaultPrevented,false);
+ assert.equal(s.document.activeElement,s.input);
+ assert.equal(s.fireKey('Tab',{isComposing:true}).defaultPrevented,false);
+ assert.equal(s.document.activeElement,s.input);
+ assert.equal(s.getWrites(),0);
 });
