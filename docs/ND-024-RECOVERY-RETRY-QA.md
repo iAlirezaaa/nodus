@@ -18,3 +18,9 @@ A **Retry reading stored data / تلاش دوباره برای خواندن** bu
 ## Status
 
 **In progress (branch only), not Verified or Released.** Main `26fafac05c320ed5db30a0ee908dd816714acdd9` / tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618` and authenticated Site were not changed. Continue by recovering a complete checkout, running Node tests + TypeScript + production build, checking IndexedDB retry and Tab/IME at the reserved 4173 address, capturing real desktop/mobile screenshots, and independently reviewing before guarded release.
+
+### Independent static/accessibility source review (same run, 04:14 UTC)
+
+Re-read the **committed** GitHub source and evaluated the actual `showRecovery()` function against a synthetic DOM: **6/6 assertions pass** — non-exportable raw record focuses the new retry button, exportable record focuses Download, retry remains enabled in either case, Import/Reset stay disabled until backup, Persian label is correct, and the new CSP marker is present. This is a source-exact **DOM mock**, not a real 4173 browser, not an authenticated session and not a genuine IndexedDB transaction.
+
+Implementation commit: [`cafdbe423cbc`](https://github.com/iAlirezaaa/nodus/commit/cafdbe423cbcca8ac061cf8588ca1e75486aded4); source tree `c94f0889ebfb050497ebbd70f5975054de1b5d85`. No deployment, screenshot or publication ID. Source `main` and original hosted Site unchanged/unchecked respectively.
