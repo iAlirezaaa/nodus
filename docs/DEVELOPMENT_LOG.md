@@ -234,3 +234,10 @@ Run `nodus-auto-20261117T1012Z-nd024-11`. Scope was recorded **before source** a
 **Gates remain Blocked/unverified:** native new tests and full Node suite, project TypeScript 5.9.3/build, real port 4173 IndexedDB two-tab/reload and FA/EN/390px browser screenshot, independent review, exact hosted Sites source/head/tree/audience. Local `curl http://127.0.0.1:4173/` failed to connect; no preview was started/occupied. Screenshot NONE, deployment/version NONE, CI not run. No authenticated two-user claims. GitHub main `26fafac05c320ed5db30a0ee908dd816714acdd9` (tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`) unchanged; GitHub Pages/Sites remain untouched and cannot be asserted synchronized. Repository currently reports public, unlike requested private; no visibility modification.
 
 **Status:** ND-024 **In progress / release Blocked** — not Verified or Released. Next: obtain a real complete checkout and authorized Sites source, execute native test suite/TS/build and two genuine isolated browser tabs (not live accounts), check data conflict/Save/reload, capture actual screenshots and independent review; then guarded merge/deploy only if gates pass.
+
+### 2026-11-17T11:14:00.565Z — ND-024 ordinary autosave concurrency scope
+
+- **Problem:** normal `queueSave → persist` still writes unconditionally despite guarded ordinary Import, allowing a second tab to lose newer data.
+- **Acceptance:** transaction-level current-record vs acknowledged-baseline CAS; no foreign overwrites; serial local writes still persist; named conflicts keep local drafts/Undo and exit warning; native focused test, TS/build/browser before release.
+- **This slice:** reuse existing compare-write helper and add focused regression; branch `fix/nd-024-startup-storage-recovery`, head before edit `29710c20058ac4d03270cfab684ae5fd3c9ca2ec`; main `26fafac05`/tree `cf93a13f`; Site head/tree unverified; no production release.
+- **Scope/QA:** [ND-024 ordinary autosave guard](ND-024-ORDINARY-SAVE-CONFLICT-QA.md). Status **In progress**; branch only. No test has been claimed yet.
