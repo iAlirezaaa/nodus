@@ -29,7 +29,7 @@ function simulate(target, key, options = {}) {
     ()=>calls.add++,()=>calls.sibling++,()=>calls.child++,()=>calls.undo++,()=>calls.redo++,()=>calls.remove++,
     ()=>calls.edit++,()=>calls.fit++,()=>{},()=>calls.search++,()=>{},()=>[]);
   const event = {key,shiftKey:!!options.shiftKey,ctrlKey:!!options.ctrlKey,metaKey:!!options.metaKey,altKey:!!options.altKey,isComposing:!!options.isComposing,
-    keyCode:options.isComposing?229:0,defaultPrevented:!!options.handled,target:focused,
+    keyCode:options.keyCode??(options.isComposing?229:0),defaultPrevented:!!options.handled,target:focused,
     preventDefault(){this.defaultPrevented=true;}};
   if(target==='node' && options.bubble!==false)nodeKeyHandler(event);
   documentHandler(event);
@@ -87,4 +87,6 @@ test('ND-024 modified Enter/Tab never mutate graph or intercept browser shortcut
   assert.equal(simulate('node','Tab').calls.child,1,'plain Tab still creates one child');
   assert.equal(simulate('node','Tab',{shiftKey:true}).event.defaultPrevented,false,'Shift+Tab stays native');
   assert.equal(simulate('node','Enter',{isComposing:true}).calls.sibling,0,'IME Enter must not commit a sibling');
+  assert.equal(simulate('node','Enter',{keyCode:229}).calls.sibling,0,'229 IME fallback must not commit a sibling');
+  assert.equal(simulate('node','Enter',{handled:true}).calls.sibling,0,'already-handled Enter must not commit a sibling');
 });
