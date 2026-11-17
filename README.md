@@ -17,6 +17,8 @@ The static GitHub Pages build is kept separately under [pages/index.html](pages/
 
 **Experimental Pages keyboard fix (unreleased branch):** graph shortcuts now require canvas or focused thought-card context. Enter on Save, Export and other focused buttons retains its native action, an idea-card Enter does not create duplicate siblings, and Shift+Tab navigates backward. This Pages-only behavior remains unshipped pending full native and real-browser QA; see [ND-024 keyboard QA](docs/ND-024-KEYBOARD-CONTEXT-QA.md).
 
+**Experimental Pages large-backup restore (unreleased branch):** Import JSON now accepts backups up to 64 MiB, including several media attachments that previously exceeded the 15 MiB limit; larger files are rejected before reading. The existing validation, confirmation and multi-tab conflict protection remain. This is **only** in `fix/nd-024-startup-storage-recovery`, not the hosted Site. See [large backup QA](docs/ND-024-LARGE-BACKUP-QA.md). A backup over 64 MiB requires a future bounded streaming recovery design.
+
 ## Development roadmap
 
 The [living roadmap](docs/ROADMAP.md) prioritizes usability, capabilities, visual design, personalization and animation, with acceptance criteria for each item. The [development loop](docs/DEVELOPMENT_LOOP.md) defines hourly work, isolated branches for special/large changes, verification, publication and source synchronization. The [development log](docs/DEVELOPMENT_LOG.md) records actual outcomes and the next checkpoint. The roadmap is updated whenever a capability becomes available; a feature being coded or verified is not yet a released feature.
