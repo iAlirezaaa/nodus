@@ -24,7 +24,7 @@ function harness(){
  magnetPositions:null,magnetPins:new Set(),viewByBoard:new Map(),saveQueue:Promise.resolve()};
  let writes=[],renders=0,focused=0,status=[];
  const elements={'recovery-modal':{hidden:false},'canvas':{focus:()=>focused++}};
- const ctx={state,JSON,copy,persist:async x=>{writes.push(copy(x))},saveStatus:s=>status.push(s),
+ const ctx={state,JSON,copy,persist:async x=>{writes.push(copy(x))},persistRecoveryIfUnchanged:async x=>{writes.push(copy(x))},saveStatus:s=>status.push(s),
  toast:()=>{},L:(a,b)=>b,$:n=>elements[n]||{},render:()=>renders++,cancelAnimationFrame:()=>{},
  flushEditor:()=>{throw Error('unexpected editor')},console:{error:()=>{}}};
  return {state,ctx,elements,stats:()=>({writes,renders,focused,status})};
@@ -55,7 +55,7 @@ test('recovery lock blocks edit/Undo/Redo/save',async()=>{
 test('import requires prior backup; storage failures keep original and locked',async()=>{
  const h=harness(),restore=fn('restoreLocalDocument',h.ctx);
  assert.equal(await restore(good),false);assert.equal(h.stats().writes.length,0);
- h.state.storageRecovery.backupTaken=true;h.ctx.persist=async()=>{throw Error('quota')};
+ h.state.storageRecovery.backupTaken=true;h.ctx.persistRecoveryIfUnchanged=async()=>{throw Error('quota')};
  assert.equal(await restore(good),false);assert.deepEqual(h.state.doc,{old:true});
  assert.ok(h.state.storageRecovery);assert.equal(h.stats().renders,0);
 });
@@ -213,4 +213,50 @@ test('fresh corrupt raw record can still be exported after a failed retry',async
  assert.equal(h.state.storageRecovery.rawAvailable,true);
  assert.equal(h.state.storageRecovery.backupTaken,false);
  assert.equal(h.stats().writes.length,0);
+});
+
+// ND-024 recovery writes must serialize other tabs via one readwrite transaction.
+function guardDb(value,{readFail=false,putFail=false}={}){
+ const stats={reads:0,writes:[],aborts:0};
+ const db={transaction:(store,mode)=>{assert.equal(store,'workspace');assert.equal(mode,'readwrite');
+ const tx={abort(){stats.aborts++;queueMicrotask(()=>tx.onabort?.())},
+  objectStore:()=>({
+   get:()=>{stats.reads++;const req={result:value,error:readFail?Error('read failure'):null};
+    queueMicrotask(()=>readFail?req.onerror?.():req.onsuccess?.());return req},
+   put:(next,key)=>{assert.equal(key,'main');if(putFail)throw Error('put failed');
+    stats.writes.push(copy(next));queueMicrotask(()=>tx.oncomplete?.())}
+  })};
+ return tx}};
+ return {db,stats};
+}
+test('guarded recovery replaces only the unchanged raw IndexedDB record',async()=>{
+ const saved={version:0,homeBoardId:'bad'},fresh=copy(good);
+ const safe=fn('serializeRecoverySafely',{});
+ for(const [name,current,opt,shouldSave] of [
+  ['unchanged',copy(saved),{},true],['changed by another tab',{version:0,homeBoardId:'different'},{},false],
+  ['record deleted',undefined,{},false],['transaction unreadable',copy(saved),{readFail:true},false],
+  ['storage put rejected',copy(saved),{putFail:true},false]]){
+  const mock=guardDb(current,opt),guard=fn('persistRecoveryIfUnchanged',{db:mock.db,serializeRecoverySafely:safe});
+  if(shouldSave)await guard(fresh,saved);
+  else await assert.rejects(guard(fresh,saved),e=>Boolean(e?.message),name);
+  assert.equal(mock.stats.reads,1,name);
+  assert.equal(mock.stats.writes.length,shouldSave?1:0,name);
+  if(shouldSave)assert.deepEqual(mock.stats.writes[0],fresh);
+ }
+});
+test('changed stored raw revokes stale backup consent and keeps prior Undo/selection',async()=>{
+ const h=harness(),prior=h.state.doc;h.state.storageRecovery.backupTaken=true;
+ h.ctx.persistRecoveryIfUnchanged=async()=>{throw Error('Stored workspace changed since backup')};
+ h.ctx.showRecovery=()=>{};
+ assert.equal(await fn('restoreLocalDocument',h.ctx)(copy(good)),false);
+ assert.equal(h.state.doc,prior);assert.deepEqual(h.state.history,['prior']);assert.deepEqual(h.state.future,['redo']);
+ assert.equal(h.state.selected,'a');assert.equal(h.state.storageRecovery.backupTaken,false);
+ assert.equal(h.state.storageRecovery.rawAvailable,false);assert.equal(h.state.storageRecovery.raw,undefined);
+ assert.equal(h.stats().writes.length,0);
+});
+test('ordinary non-quarantined restore still uses the existing persist path',async()=>{
+ const h=harness();h.state.storageRecovery=null;
+ h.ctx.persistRecoveryIfUnchanged=()=>{throw Error('unexpected guarded restore')};
+ assert.equal(await fn('restoreLocalDocument',h.ctx)(copy(good)),true);
+ assert.equal(h.stats().writes.length,1);assert.equal(h.state.storageRecovery,null);
 });
