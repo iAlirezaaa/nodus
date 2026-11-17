@@ -14,9 +14,9 @@ function fn(name,ctx){
 const good={version:1,homeBoardId:'root',boards:[{id:'root',title:'Root'}],nodes:[],edges:[]};
 const bad={...good,homeBoardId:'missing'};
 const copy=x=>JSON.parse(JSON.stringify(x));
-function db(value){return {transaction:()=>({objectStore:()=>({get:()=>{
+function db(value,present=value!==undefined,failKey=false){return {transaction:()=>({objectStore:()=>({get:()=>{
  const req={result:value};queueMicrotask(()=>req.onsuccess?.());return req;
-}})})}}
+},getKey:()=>{const req={result:present?'main':undefined,error:failKey?Error('probe blocked'):null};queueMicrotask(()=>failKey?req.onerror?.():req.onsuccess?.());return req;}})})}}
 function harness(){
  const state={hasLoaded:true,restorePending:false,storageRecovery:{raw:bad,rawAvailable:true,backupTaken:false},
  doc:{old:true},boardId:'old',selected:'a',selectedIds:new Set(['a']),history:['prior'],future:['redo'],
@@ -91,4 +91,12 @@ test('startup chooses recovery UI, not blank editable storage',async()=>{
  onBoard:()=>[],fit:()=>{}};
  await fn('init',ctx)();assert.equal(state.storageRecovery.raw,bad);
  assert.equal(state.storageRecovery.backupTaken,false);assert.equal(shown,1);assert.equal(rendered,1);
+});
+test('present undefined IndexedDB value is quarantined rather than replaced with blank',async()=>{
+ const ctx={getDB:async()=>db(undefined,true),blank:()=>({new:true}),validate:()=>{throw Error('Invalid undefined workspace')}};
+ await assert.rejects(fn('load',ctx),e=>e.name==='CorruptWorkspaceError'&&Object.prototype.hasOwnProperty.call(e,'raw')&&e.raw===undefined);
+});
+test('failed IndexedDB key-presence check fails closed',async()=>{
+ const ctx={getDB:async()=>db(undefined,true,true),blank:()=>({new:true}),validate:()=>{throw Error('invalid')}};
+ await assert.rejects(fn('load',ctx),e=>e.name==='CorruptWorkspaceError'&&/Cannot check stored workspace key/.test(e.message));
 });
