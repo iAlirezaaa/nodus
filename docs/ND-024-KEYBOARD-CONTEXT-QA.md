@@ -20,3 +20,15 @@ Keep the existing ND-024 data-protection branch; change only the Pages document 
 
 ## Verification results
 Pending. Real screenshot NONE. New version/deployment NONE. Gate **Blocked** until completed.
+
+## Implemented and tested — 2026-11-17T12:35:06.479Z
+
+**Source:** `pages/index.html` on `fix/nd-024-startup-storage-recovery`. Source/test commit [`7e646c2f`](https://github.com/iAlirezaaa/nodus/commit/7e646c2fb429b985712f1982521e28339633b2af), tree `6956f4d244b4cba3e7904ee99f36e6611f618d88`; corrected checked-in test commit [`d8f0a39d`](https://github.com/iAlirezaaa/nodus/commit/d8f0a39def33595848dc27bdfb93f891f73f25f0), tree `70cabc206eb4eae586621efca9034c4a92bcfa53`. Original inline JS blob `c46defd368393fd2bb492655c5047fdf0fdd888f`.
+
+**Actual behavior change:** document-level graph shortcuts now exit if a prior handler prevented the event, if IME composition is active, or if focus is outside the canvas/idea card. The existing search and recovery modal guards remain before graph-focus checks. Forward Tab on a focused selected idea still creates a child; Shift+Tab is native backwards navigation. Node-local Enter/F2/Delete handlers prevent default, so document bubbling cannot execute a second graph edit. Toolbar, Save/Export/Delete buttons, inspector fields and selects retain native keyboard behavior. No saved document or storage-schema change, no new shortcut or control.
+
+**Exact-source red/green:** old GitHub handler failed **8 of 12** scoped interaction scenarios (focused button Enter; toolbar Ctrl+Z; bubbled node Enter, F2 and Delete; node Shift+Tab; IME Enter; already-handled canvas Enter). Patched exact source passes **12/12** under isolated V8 event/DOM mocks. The five newly checked-in `node:test` cases were additionally run under an isolated V8 Node-facade harness: **5/5 passed**; **native Node module runner was NOT run**. This is not a browser screenshot or authenticated-session proof. Full source inline JavaScript compiled with `new Function`; independent SHA-256 implementation was checked against the original CSP and recomputed to `sha256-sGddm7tzOcgzZDQxfJti9yUmpqEW+XG2kvAS1lcVVQE=`. Source was re-read from GitHub after the commit.
+
+**Blocked release gates:** the required native checkout and full Node suite, TypeScript 5.9.3, production build, real `http://127.0.0.1:4173/` browser interaction (localhost connection refused), true IndexedDB two-tab save/reload, FA/EN and 390px screenshots, independent review and current Site HEAD/tree/audience (current Sites skill unavailable). No screenshot, release ID or deployment ID. Main `26fafac05c320ed5db30a0ee908dd816714acdd9` and the existing Site were not modified. GitHub metadata reports **public**, contrary to requested private state; visibility was left unchanged.
+
+**Disposition:** ND-024 **In progress; release Blocked**. Only branch changes. Next: recover full authorized checkout and Site source; run checked-in native tests, TS/build and 4173 keyboard/IME, IndexedDB and FA/EN/390px screenshot checks; independently review, compare exact trees and audience, then guarded integration/publication only if green.

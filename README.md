@@ -13,6 +13,8 @@ The static GitHub Pages build is kept separately under [pages/index.html](pages/
 
 **Experimental normal autosave safety (feature branch, not released):** the optional static Pages build now also checks the last acknowledged IndexedDB record within the same transaction as a normal autosave. Another tab's newer record blocks overwrite, keeps the current draft/Undo and requires JSON export plus reload; it is not live shared editing. See [the ND-024 autosave QA](docs/ND-024-ORDINARY-SAVE-CONFLICT-QA.md). Full browser and production release checks are still pending.
 
+**Experimental Pages keyboard fix (unreleased branch):** graph shortcuts now require canvas or focused thought-card context. Enter on Save, Export and other focused buttons retains its native action, an idea-card Enter does not create duplicate siblings, and Shift+Tab navigates backward. This Pages-only behavior remains unshipped pending full native and real-browser QA; see [ND-024 keyboard QA](docs/ND-024-KEYBOARD-CONTEXT-QA.md).
+
 ## Development roadmap
 
 The [living roadmap](docs/ROADMAP.md) prioritizes usability, capabilities, visual design, personalization and animation, with acceptance criteria for each item. The [development loop](docs/DEVELOPMENT_LOOP.md) defines hourly work, isolated branches for special/large changes, verification, publication and source synchronization. The [development log](docs/DEVELOPMENT_LOG.md) records actual outcomes and the next checkpoint. The roadmap is updated whenever a capability becomes available; a feature being coded or verified is not yet a released feature.
