@@ -5,8 +5,8 @@ import {createHash} from 'node:crypto';
 import vm from 'node:vm';
 
 const html=readFileSync(new URL('../pages/index.html',import.meta.url),'utf8');
-const script=html.match(/<script>([\\s\\S]*?)<\\/script>/)[1];
-function source(name){const line=script.split('\\n').find(s=>s.startsWith('function '+name+'('));assert.ok(line,'missing exact '+name);return line}
+const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+function source(name){const line=script.split('\n').find(s=>s.startsWith('function '+name+'('));assert.ok(line,'missing exact '+name);return line}
 function run(raw){
  const rec={raw,rawAvailable:true,backupTaken:false};
  const controls={'recovery-import':{disabled:true},'recovery-reset':{disabled:true}};
