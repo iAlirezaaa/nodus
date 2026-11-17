@@ -62,6 +62,8 @@ An empty new card is only a view draft: repeated Enter or Tab does not save empt
 
 Starting a title from a zoomed-out overview raises the scale to 100%, bounded by the available width of the card. Subsequent Enter and Tab keep that scale and pan only as needed. Reveal margins keep the active card above the floating toolbar.
 
+In the experimental local-first Pages edition, closing Search with Escape, Close or a backdrop tap returns keyboard focus to the originating thought or visible control. Choosing a result focuses that result, including within a nested project. This improvement remains on a feature branch until browser and release checks pass.
+
 ### A quieter canvas
 
 A single contextual dock replaces the stacked creation toolbar, selection toolbar and repeated shortcut footer. With no selection, **New thought** is the primary action. With one selected thought, **Branch**, **Sibling** and **Open** continue it; **More actions** holds title editing, other content types, uploads and pan/selection tools. Selecting several thoughts replaces these actions with a compact group toolbar showing the count, color, task state, Delete and Undo/Redo. The hint row advertises graph shortcuts only when the canvas or a thought actually has keyboard focus. While writing a title, the dock disappears and Enter/Tab/Escape instructions stay beside the input. **Shortcut guide** separates canvas actions, inline title flow and ordinary text/dialog behavior, with advanced commands collapsed by default.

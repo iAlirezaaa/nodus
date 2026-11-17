@@ -27,3 +27,15 @@ Continue `fix/nd-024-startup-storage-recovery`; change only search-dialog focus 
 ## Pending verification
 
 No test pass or deployment claimed at scoping. Screenshot: **NONE**. Release version/deployment: **NONE**.
+
+## Implementation and isolated verification — 2026-11-17 13:28 UTC
+
+**Product code:** [485e52546abfa5eeaf4d6a05fc6b3bd8e3b31191](https://github.com/iAlirezaaa/nodus/commit/485e52546abfa5eeaf4d6a05fc6b3bd8e3b31191); tree \`0c7d1d4c98ec7c6d52d53fc51e1613a2414dcf26\`, HTML blob \`bb2f76b4ca40024354100581a99dc1c28882a24a\`, six new checked-in regression cases in \`tests/pages-search-focus.test.mjs\` (blob \`2ad7f429828dad481000f6b496184592c5b144a8\`).
+
+- **Before:** executing the exact prior GitHub keyboard handler with the search modal open closes it on Escape but leaves \`document.activeElement\` on the now-hidden search input; the Close and backdrop handlers likewise hid the modal directly.
+- **After:** \`openSearch\` captures its visible opener and graph node ID. \`closeSearch\` restores focus to the corresponding remounted node, original mounted toolbar opener, or a visible fallback. Escape prevents native defaults; Close/backdrop use the same lifecycle. Result selection uses \`closeSearch(false)\` and retains its explicit new-result focus. No stored document, Undo, layout, authentication, permissions, IndexedDB schema or motion loop changed.
+- **Executed:** 6/6 new checked-in Node-style scenarios + 5/5 existing keyboard-context scenarios = **11/11 passed under isolated V8 with Node/test/assert/filesystem/crypto facades** against exact fetched GitHub source/test blobs. Three additional source-focused opener scenarios passed before the commit. This is **not** the native Node.js test runner. Inline JS parsed; independent SHA-256 implementation recomputed CSP \`sha256-c2I9lIrmi4L03/a3zJS2vgX+xZLVqvvN99F4/cLn3RY=\` and matched the checked-in HTML.
+- **Blocked / not run:** full native checkout (GitHub DNS failure), native regression suite, TypeScript 5.9.3, production build, actual port 4173 browser and FA/EN + 390px screenshots, real IndexedDB two tabs/reload, independent interaction review, and current Sites source head/tree/audience. Browser connector needs its originating context. No real two-account tests. **No screenshot.**
+- **Release:** none. Main \`26fafac05c320ed5db30a0ee908dd816714acdd9\`, live Site and gh-pages were not changed; source trees between GitHub and Site remain **unverified**. The GitHub API reports public despite the requested private designation; visibility was not changed.
+
+**State:** **In progress** on the branch; **Blocked release**, not Verified or Released. **Next:** native checked-in tests, full TypeScript/build, real 4173 search keyboard+IME and two-tab IndexedDB FA/EN/mobile screenshots; independent review and authoritative Site tree parity, then guarded merge/deployment only on success.
