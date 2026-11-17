@@ -4,10 +4,10 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
 const html = readFileSync(new URL('../pages/index.html', import.meta.url), 'utf8');
-const script = html.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script, 'Pages inline script is required');
-const graphHandler = script.split('\\n').find(s => s.includes("document.addEventListener('keydown',e=>"));
-const nodeHandler = script.split('\\n').find(s => s.includes("el.addEventListener('keydown',ev=>"));
+const graphHandler = script.split('\n').find(s => s.includes("document.addEventListener('keydown',e=>"));
+const nodeHandler = script.split('\n').find(s => s.includes("el.addEventListener('keydown',ev=>"));
 assert.ok(graphHandler && nodeHandler, 'Exact Pages keyboard handlers must remain testable');
 
 function simulate(target, key, options = {}) {
