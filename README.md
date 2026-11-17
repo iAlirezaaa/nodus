@@ -10,6 +10,9 @@ The static GitHub Pages build is kept separately under [pages/index.html](pages/
 
 **Experimental import safety (feature branch, not released):** the local JSON restore waits for previously queued browser saves, then commits the imported document to IndexedDB before it replaces the visible graph. If the write fails, the existing project, selection and undo history remain unchanged. Native browser reload verification is still pending.
 
+
+**Experimental normal autosave safety (feature branch, not released):** the optional static Pages build now also checks the last acknowledged IndexedDB record within the same transaction as a normal autosave. Another tab's newer record blocks overwrite, keeps the current draft/Undo and requires JSON export plus reload; it is not live shared editing. See [the ND-024 autosave QA](docs/ND-024-ORDINARY-SAVE-CONFLICT-QA.md). Full browser and production release checks are still pending.
+
 ## Development roadmap
 
 The [living roadmap](docs/ROADMAP.md) prioritizes usability, capabilities, visual design, personalization and animation, with acceptance criteria for each item. The [development loop](docs/DEVELOPMENT_LOOP.md) defines hourly work, isolated branches for special/large changes, verification, publication and source synchronization. The [development log](docs/DEVELOPMENT_LOG.md) records actual outcomes and the next checkpoint. The roadmap is updated whenever a capability becomes available; a feature being coded or verified is not yet a released feature.
