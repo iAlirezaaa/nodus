@@ -13,6 +13,8 @@ The static GitHub Pages build is kept separately under [pages/index.html](pages/
 
 **Experimental normal autosave safety (feature branch, not released):** the optional static Pages build now also checks the last acknowledged IndexedDB record within the same transaction as a normal autosave. Another tab's newer record blocks overwrite, keeps the current draft/Undo and requires JSON export plus reload; it is not live shared editing. See [the ND-024 autosave QA](docs/ND-024-ORDINARY-SAVE-CONFLICT-QA.md). Full browser and production release checks are still pending.
 
+**Experimental Search keyboard containment (unreleased branch):** Tab and Shift+Tab cycle within Search (including results), instead of entering background controls; browser Ctrl/Meta/Alt+Tab, native Enter, composition and Escape remain intact. See [Search Tab QA](docs/ND-024-SEARCH-TAB-QA.md). This is not released to the hosted Site.
+
 **Experimental Pages keyboard fix (unreleased branch):** graph shortcuts now require canvas or focused thought-card context. Enter on Save, Export and other focused buttons retains its native action, an idea-card Enter does not create duplicate siblings, and Shift+Tab navigates backward. This Pages-only behavior remains unshipped pending full native and real-browser QA; see [ND-024 keyboard QA](docs/ND-024-KEYBOARD-CONTEXT-QA.md).
 
 ## Development roadmap

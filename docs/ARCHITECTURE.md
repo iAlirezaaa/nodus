@@ -441,3 +441,8 @@ The experimental local-first `pages/index.html` edition uses both article-local 
 ## Branch-only ND-024 Pages Search focus-frame guard (2026-11-17)
 
 In `fix/nd-024-startup-storage-recovery` only, the local-first `pages/index.html` Search dialog restores its opener on dismissal. Its scheduled `requestAnimationFrame` input-focus callback now rechecks that the dialog is not hidden; this prevents a just-closed dialog from taking keyboard focus back during a late frame. It is view-only and never writes a graph state, storage record, history entry or per-frame persisted position. The source remains unreleased pending real browser and full native checks; see [focused QA](ND-024-SEARCH-FOCUS-QA.md). This note describes unmerged branch behavior, not the current hosted Site.
+
+
+### Static Pages Search Tab containment (ND-024, branch-only, unreleased)
+
+The optional local-first `pages/index.html` Search modal is a non-native `role=dialog` overlay. `trapSearchTab(e)`, invoked by its document keydown handler only while Search is visible and for plain Tab/Shift+Tab, resolves enabled controls in DOM order: Close, input, and current rendered result buttons. It wraps at both boundaries and repairs external focus. Ctrl/Meta/Alt+Tab is left for browser/OS navigation; Escape closes through the existing opener-restoration path; result buttons still navigate and focus the destination graph card. The handler returns before global graph commands while Search is open; ordinary text/IME handling is unchanged. This is transient focus state only, without IndexedDB, graph/Undo, collaboration, or animation writes. [QA](ND-024-SEARCH-TAB-QA.md) and source commit `d42b21eb`; native/browser/build/Sites release gates remain Blocked.
