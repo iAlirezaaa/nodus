@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261117T1911Z-nd024-native",
   "acquired_at": "2026-11-17T19:11:49.776Z",
-  "heartbeat_at": "2026-11-17T19:11:49.776Z",
-  "expires_at": "2026-11-17T20:41:49.776Z",
+  "heartbeat_at": "2026-11-17T19:19:55.996Z",
+  "expires_at": "2026-11-17T20:49:55.996Z",
   "current_task_id": "ND-024",
   "feature_branch": "fix/nd-024-startup-storage-recovery",
   "checkpoint": {
-    "phase": "acquired-scope-native-gates",
+    "phase": "branch-code-tested-documenting",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "UNVERIFIED: no authorized current Sites skill/action available",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -18,8 +18,8 @@
     "deployment_status": "NO DEPLOYMENT",
     "next_task": "Recover full authorized checkout and Sites source, run native checked-in Node suite + TypeScript + build, real 4173 FA/EN/390px UI + two-tab IndexedDB screenshots, independent review and Site-tree parity before guarded merge/deploy",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "c617324492d57f22af4eaecf65b350d64713274f",
-    "feature_branch_tree": "1318330ab49a60a613de2a4d56f1f4576441be3f",
+    "feature_branch_head": "c9fc0b92b51a97f0fb90cc3073dc23cfbb8c0a84",
+    "feature_branch_tree": "cceaa4f5d769a8e4c392fbede65868ae22906ab0",
     "feature_branch": "fix/nd-024-startup-storage-recovery",
     "pending_verification": [
       "Native checked-in test and full Node suite",
@@ -38,7 +38,7 @@
     "test_helper_blob": "25472713ce16ce7fa6658f9c4408df1c4da97805",
     "test_cases_blob": "a826552b67f70144fe5fb9af39653fdb5259283b",
     "test_result": "7/7 checked-in focus tests evaluated on exact new GitHub source in isolated V8 with Node facades; inline syntax and independently computed CSP PASS. Native Node runner, full TS/build and real browser NOT RUN.",
-    "publication_status": "In progress / NOT DEPLOYED",
+    "publication_status": "In progress / Blocked; branch only",
     "search_source_blob": "41af4f3a0ce2ec9e55aa8d2229c8da8f3c3d63da",
     "relevance_test_blob": "b0e54dfaabfac759b28a34b04d805d33d974bb84",
     "scoping_commit": "dd49e7843b4b9e078cebbaab53639e5066006684",
@@ -48,7 +48,7 @@
     "source_code_tree": "1ab02e5b3a11b38eea295c9e204b03a3b1812b58",
     "documentation_commit": "c617324492d57f22af4eaecf65b350d64713274f",
     "source_blob": "e65459bec32a2cb07e8853f764c0fa7b5e0f6ca9",
-    "new_test_blob": "fef4799fc05b18ea7664a7ae44e73d92743293c",
+    "new_test_blob": "ff285ebc89110a6c60b2dece9abd67349fe82eb5",
     "observed_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "observed_main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "observed_feature_branch": "aab929f23fb9a3a30b68c4b063ac7c8562f86aaf",
@@ -59,7 +59,7 @@
     "local_tested_source_blob": "74a1beaf6825a21753a80a660e950ac648f91ce8",
     "local_tested_test_blob": "8e7f3858b62d7b6ceabd3fdaca9cf2e6fe59965a",
     "helper_ts": "isolated TypeScript 5.8.3 --strict --noEmit PASS; project 5.9.3 NOT RUN",
-    "source_code_blob": "c46defd368393fd2bb492655c5047fdf0fdd888f",
+    "source_code_blob": "d21eedb493feb3dd6244e4aeaa6199a2b566f1e6",
     "regression_test_blob": "1a0cca81467a0f92d50eb1fe76d4f33c86c1cfae",
     "actual_regression": "6/6 exact-GitHub-source isolated V8 syntax-erasure test scenarios pass; checked-in test file assertion corrected; native Node full suite, TS project, build, browser, Site NOT RUN",
     "benchmark": "5000 synthetic nodes, 35 queries (5 warmup), old 0 hits p50 23.81ms p95 24.46ms, new 834 hits p50 30.79ms p95 36.17ms; Node-only non-comparable workloads",
@@ -263,7 +263,12 @@
     "site_tree": "UNVERIFIED",
     "actual_change": "Ordinary local autosave now atomic CAS; foreign IndexedDB writes do not get overwritten, local draft and undo preserved",
     "prior_red": "Exact GitHub old persist writes once on foreign record; patched persist writes 0",
-    "blocked": "GitHub DNS failed local clone; native checked-in suite and project TypeScript/build unrun; 127.0.0.1:4173 refused; Browser requires originating context; Sites skill unavailable, tree not reconciled",
+    "blocked": [
+      "Git checkout DNS",
+      "full Node and TypeScript/build",
+      "127.0.0.1:4173 browser refused",
+      "Sites source and current audience unavailable"
+    ],
     "branch_only": true,
     "actions": [
       {
@@ -293,7 +298,9 @@
     "script_csp": "sha256-osFMNeFUe/xA9uldsCQ1+Ep3TvFSuARMleOgqgamPlA= independently recomputed and parse PASS",
     "checked_in_tests": "6/6 checked-in Node-style test bodies in isolated V8 with Node facades; NOT native runner",
     "full_suite": "NOT RUN (GitHub DNS resolution failed)",
-    "typescript": "NOT RUN (no native checkout)"
+    "typescript": "NOT RUN (no native checkout)",
+    "native_targeted_test": "6/6 Node22 PASS on fingerprint-matched extracted real handler; not full checked-in suite",
+    "other_test": "6/6 source-exact V8 simulated import boundary/invalid/cancel/recovery PASS; syntax and independently computed CSP hash match"
   },
   "last_completed_run": "nodus-auto-20261117T1814-nd024-native-gates",
   "updated_at": "2026-11-17T18:24:30.000Z",
