@@ -100,3 +100,29 @@ test('failed IndexedDB key-presence check fails closed',async()=>{
  const ctx={getDB:async()=>db(undefined,true,true),blank:()=>({new:true}),validate:()=>{throw Error('invalid')}};
  await assert.rejects(fn('load',ctx),e=>e.name==='CorruptWorkspaceError'&&/Cannot check stored workspace key/.test(e.message));
 });
+
+// ND-024: source-exact, non-destructive read-retry behavior (no IndexedDB write).
+test('recovery retry rereads a valid workspace and clears the quarantine without writing',async()=>{
+ const h=harness();h.state.storageRecovery={raw:undefined,rawAvailable:false,backupTaken:false,reason:'present undefined'};
+ h.ctx.load=async()=>good;h.ctx.showRecovery=()=>{throw Error('Unexpected recovery dialog')};
+ h.ctx.onBoard=()=>[];h.ctx.fit=()=>{};
+ const retry=fn('retryRecovery',h.ctx);
+ assert.equal(await retry(),true);assert.equal(h.state.doc,good);
+ assert.equal(h.state.storageRecovery,null);assert.deepEqual(h.state.history,[]);assert.deepEqual(h.state.future,[]);
+ assert.equal(h.elements['recovery-modal'].hidden,true);assert.equal(h.stats().writes.length,0);
+});
+test('failed recovery retry keeps the original record locked and revokes stale download consent',async()=>{
+ const h=harness();h.state.storageRecovery.backupTaken=true;
+ const err=Error('new bad value');err.name='CorruptWorkspaceError';err.raw={changed:'record'};
+ h.ctx.load=async()=>{throw err};h.ctx.showRecovery=()=>{};
+ h.ctx.onBoard=()=>[];h.ctx.fit=()=>{};
+ assert.equal(await fn('retryRecovery',h.ctx)(),false);
+ assert.deepEqual(h.state.doc,{old:true});assert.deepEqual(h.state.history,['prior']);
+ assert.equal(h.state.storageRecovery.raw,err.raw);assert.equal(h.state.storageRecovery.backupTaken,false);
+ assert.equal(h.state.restorePending,false);assert.equal(h.stats().writes.length,0);
+});
+test('recovery retry UI includes a focusable fallback when raw JSON cannot be downloaded',()=>{
+ assert.match(html,/id="recovery-retry" type="button"/);
+ assert.match(script,/\['recovery-download','recovery-retry','recovery-import','recovery-reset'\]/);
+ assert.match(script,/recovery.rawAvailable\?\$\('recovery-download'\):\$\('recovery-retry'\)/);
+});

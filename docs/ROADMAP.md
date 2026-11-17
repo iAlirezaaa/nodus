@@ -117,3 +117,7 @@ Nodus باید فضای واقعی و ماندگاری برای فکرکردن �
 ## معیار بازبینی برنامه
 
 در هر نوبت، کار بعدی از شواهد رابط، بازخورد Hades، خطای واقعی یا وابستگی‌های همین جدول انتخاب می‌شود. پس از هر قابلیت، مسئلهٔ بعدی و هر وابستگی تازه ثبت شود؛ افزایش بی‌دلیل تعداد کارها هدف نیست. اولویت‌ها می‌توانند عوض شوند، اما شناسه و تاریخچهٔ کارهای قبلی حذف یا دوباره استفاده نمی‌شوند.
+
+### 2026-11-17 04:13 UTC — ND-024 read-retry safety checkpoint
+
+**In progress, branch only:** non-destructive re-read control added to the existing IndexedDB recovery modal, including a focusable action for raw records that cannot be exported as JSON, stale-backup revocation and concurrent-retry guard. QA: [ND-024 retry](ND-024-RECOVERY-RETRY-QA.md). 11 V8 assertions and inline CSP verified; newly checked-in Node cases, full TypeScript/build, native IndexedDB/browser 4173 and hosted Site verification remain blocked. No release or version ID.
