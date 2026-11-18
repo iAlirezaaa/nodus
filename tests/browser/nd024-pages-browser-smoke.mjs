@@ -325,7 +325,60 @@ try{
     console.log('PASS: denied localStorage boot, FA/EN and theme toggles, zero preference graph writes, IndexedDB reload');
   }finally{await deniedCtx.close()}
 
+  // Genuine Chromium export of one fixture document. The browser cannot attest
+  // the user saved the file to disk, so Nodus only claims preparation.
+  const exportCtx=await browser.newContext({viewport:{width:1440,height:900},acceptDownloads:true,locale:'en-US'});
+  try{
+    const p=await exportCtx.newPage();p.on('pageerror',e=>errors.push('BackupExport: '+e.message));
+    await p.goto(TEST_URL,{waitUntil:'load'});await p.waitForFunction(()=>state.hasLoaded);
+    await p.locator('#language').click();
+    assert.equal(await p.evaluate(()=>state.lang),'en');
+    await p.locator('#add').click();
+    await p.locator('#nodes input').fill('فکر برای پشتیبان');
+    await p.keyboard.press('Shift+Enter');
+    await p.waitForFunction(()=>!state.unsavedChanges);
+    const baseline=await p.evaluate(()=>({doc:JSON.stringify(state.doc),history:state.history.length}));
+    const event=p.waitForEvent('download');
+    await p.locator('#export').click();
+    const downloaded=await event;
+    assert.match(downloaded.suggestedFilename(),/^nodus-local-backup-.*\\.json$/);
+    const exported=JSON.parse(await readFile(await downloaded.path(),'utf8'));
+    assert.deepEqual(JSON.stringify(exported),baseline.doc);
+    assert.match(await p.locator('#toast').textContent(),/prepared/i);
+    const outcome=await p.evaluate(()=>{
+      const old=URL.createObjectURL,oldPut=IDBObjectStore.prototype.put;
+      let writes=0;
+      const before=JSON.stringify(state.doc),history=state.history.length;
+      try{
+        URL.createObjectURL=()=>{throw Error('synthetic backup URL allocation error')};
+        IDBObjectStore.prototype.put=function(...args){if(this.name==='workspace')writes++;return oldPut.apply(this,args)};
+        const result=download();
+        return {result,notice:document.getElementById('toast').textContent,
+          documentUnchanged:JSON.stringify(state.doc)===before,
+          historyUnchanged:state.history.length===history,
+          writes,unsaved:state.unsavedChanges};
+      }finally{URL.createObjectURL=old;IDBObjectStore.prototype.put=oldPut}
+    });
+    assert.equal(outcome.result,false,JSON.stringify(outcome));
+    assert.match(outcome.notice,/Could not prepare backup/i);
+    assert.equal(outcome.documentUnchanged,true);
+    assert.equal(outcome.historyUnchanged,true);
+    assert.equal(outcome.writes,0);
+    assert.equal(outcome.unsaved,false);
+    await p.screenshot({path:resolve(dir,'nd024-backup-export-failure-en.png'),animations:'disabled'});
+    await p.locator('#language').click();
+    const fa=await p.evaluate(()=>{
+      const old=URL.createObjectURL;
+      try{URL.createObjectURL=()=>{throw Error('synthetic')};download();
+        return document.getElementById('toast').textContent}
+      finally{URL.createObjectURL=old}
+    });
+    assert.match(fa,/پشتیبان/);
+    await p.screenshot({path:resolve(dir,'nd024-backup-export-failure-fa.png'),animations:'disabled'});
+    console.log('PASS: real browser JSON backup and localized allocation failure with no graph/Undo/IDB writes');
+  }finally{await exportCtx.close()}
+
   assert.deepEqual(errors,[]);
   console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
-  console.log('ND-024: 14/14 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
+  console.log('ND-024: 15/15 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}
