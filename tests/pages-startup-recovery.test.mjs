@@ -9,6 +9,7 @@ const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
 function fn(name,ctx){
  const line=script.split('\n').find(s=>s.startsWith('function '+name+'(')||s.startsWith('async function '+name+'('));
  assert.ok(line,'Missing exact code: '+name);
+ if(name==='init'&&typeof ctx.readPreference!=='function')ctx.readPreference=fn('readPreference',ctx);
  return vm.runInNewContext('('+line+')',ctx);
 }
 const good={version:1,homeBoardId:'root',boards:[{id:'root',title:'Root'}],nodes:[],edges:[]};
