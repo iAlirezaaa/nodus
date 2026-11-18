@@ -60,7 +60,7 @@ test('retry after an intervening versionchange can succeed on a fresh healthy re
  assert.equal(await f.retry(),true);
  assert.equal(reads,2);assert.equal(f.state.doc,good);
  assert.equal(f.state.storageRecovery,null);
- assert.deepEqual(f.state.history,[]);assert.deepEqual(f.state.future,[]);
+ assert.equal(f.state.history.length,0);assert.equal(f.state.future.length,0);
  assert.equal(f.nodes['recovery-modal'].hidden,true);
  assert.equal(f.state.unsavedChanges,false);
  assert.equal(f.counts().renders,1);
