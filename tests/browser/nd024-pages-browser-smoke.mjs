@@ -252,6 +252,57 @@ try{
     await p.reload({waitUntil:'load'});
     await p.waitForFunction(()=>state.hasLoaded&&!!state.storageRecovery);
     assert.equal(await p.evaluate(()=>state.storageRecovery.rawAvailable),true);
+    // A denied click must never unlock destructive recovery, leak an anchor or
+    // claim the quarantined raw record was saved.
+    const rawFailure=await p.evaluate(()=>{
+      const oldClick=HTMLAnchorElement.prototype.click;
+      const oldCreate=URL.createObjectURL,oldRevoke=URL.revokeObjectURL;
+      const oldPut=IDBObjectStore.prototype.put;
+      const original=JSON.stringify(state.doc),history=state.history.length;
+      let allocated=0,revoked=0,writes=0;
+      try{
+        URL.createObjectURL=()=>{allocated++;return 'blob:synthetic-raw'};
+        URL.revokeObjectURL=()=>{revoked++};
+        HTMLAnchorElement.prototype.click=function(){throw Error('Synthetic raw click blocked')};
+        IDBObjectStore.prototype.put=function(...args){if(this.name==='workspace')writes++;return oldPut.apply(this,args)};
+        const result=downloadRecovery();
+        return {result,allocated,revoked,writes,
+          notice:document.getElementById('toast').textContent,
+          attached:document.querySelectorAll('a[download^="nodus-recovery-raw-"]').length,
+          locked:!state.storageRecovery.backupTaken&&
+            document.getElementById('recovery-import').disabled&&
+            document.getElementById('recovery-reset').disabled,
+          rawHome:state.storageRecovery.raw?.homeBoardId,
+          documentUnchanged:JSON.stringify(state.doc)===original,undoUnchanged:state.history.length===history};
+      }finally{
+        HTMLAnchorElement.prototype.click=oldClick;
+        URL.createObjectURL=oldCreate;URL.revokeObjectURL=oldRevoke;
+        IDBObjectStore.prototype.put=oldPut;
+      }
+    });
+    assert.equal(rawFailure.result,false,JSON.stringify(rawFailure));
+    assert.equal(rawFailure.allocated,1);
+    assert.equal(rawFailure.revoked,1);
+    assert.equal(rawFailure.attached,0);
+    assert.equal(rawFailure.locked,true);
+    assert.equal(rawFailure.rawHome,'missing');
+    assert.equal(rawFailure.documentUnchanged,true);
+    assert.equal(rawFailure.undoUnchanged,true);
+    assert.equal(rawFailure.writes,0);
+    assert.match(rawFailure.notice,/نسخهٔ خام/);
+    await p.screenshot({path:resolve(dir,'nd024-recovery-raw-export-failure-fa.png'),animations:'disabled'});
+    const englishNotice=await p.evaluate(()=>{
+      state.lang='en';render();showRecovery();
+      const oldCreate=URL.createObjectURL;
+      try{
+        URL.createObjectURL=()=>{throw Error('Synthetic raw allocation denied')};
+        assert.equal(downloadRecovery(),false);
+        return document.getElementById('toast').textContent;
+      }finally{URL.createObjectURL=oldCreate}
+    });
+    assert.match(englishNotice,/Cannot export raw data/i);
+    await p.screenshot({path:resolve(dir,'nd024-recovery-raw-export-failure-en.png'),animations:'disabled'});
+    await p.evaluate(()=>{state.lang='fa';render();showRecovery()});
     const d=p.waitForEvent('download');
     await p.locator('#recovery-download').click();
     assert.match((await d).suggestedFilename(),/nodus-recovery-raw/);
@@ -380,5 +431,5 @@ try{
 
   assert.deepEqual(errors,[]);
   console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
-  console.log('ND-024: 15/15 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
+  console.log('ND-024: 16/16 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}
