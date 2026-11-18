@@ -69,3 +69,43 @@ test('repeated retries close the old connection and a newly failed read connecti
  assert.equal(await f.retry(),true);assert.equal(closes,2);
  assert.equal(f.state.doc,good);assert.equal(f.counts().writes,0);
 });
+
+test('transient Retry failure retains the last captured raw record for safe export',async()=>{
+ const f=fixture(null,async()=>{throw Error('open blocked by another tab')});
+ const raw=f.state.storageRecovery.raw;
+ assert.equal(await f.retry(),false);
+ assert.equal(f.state.storageRecovery.raw,raw);
+ assert.equal(f.state.storageRecovery.rawAvailable,true);
+ assert.equal(f.state.storageRecovery.backupTaken,false);
+ assert.match(f.state.storageRecovery.reason,/blocked/);
+ assert.equal(f.state.doc.previous,true);
+ assert.equal(f.state.history[0],'undo');
+ assert.equal(f.counts().writes,0);
+});
+test('Retry failure with a newer corrupt raw snapshot prefers that latest record',async()=>{
+ const updated={newlyCorrupt:true};
+ const f=fixture(null,async()=>{const e=Error('new validation failed');e.name='CorruptWorkspaceError';e.raw=updated;throw e});
+ assert.equal(await f.retry(),false);
+ assert.equal(f.state.storageRecovery.raw,updated);
+ assert.equal(f.state.storageRecovery.rawAvailable,true);
+ assert.equal(f.state.storageRecovery.backupTaken,false);
+ assert.equal(f.counts().writes,0);
+});
+test('Retry validation failure without a new raw value preserves the prior captured backup',async()=>{
+ const f=fixture(null,async()=>{const e=Error('invalid');e.name='CorruptWorkspaceError';throw e});
+ const prior=f.state.storageRecovery.raw;
+ assert.equal(await f.retry(),false);
+ assert.equal(f.state.storageRecovery.raw,prior);
+ assert.equal(f.state.storageRecovery.rawAvailable,true);
+ assert.equal(f.state.storageRecovery.backupTaken,false);
+});
+test('Retry error cannot invent an available raw record if the earlier read had none',async()=>{
+ const f=fixture(null,async()=>{throw Error('read failed')});
+ f.state.storageRecovery={raw:undefined,rawAvailable:false,backupTaken:false,reason:'old'};
+ assert.equal(await f.retry(),false);
+ assert.equal(f.state.storageRecovery.raw,undefined);
+ assert.equal(f.state.storageRecovery.rawAvailable,false);
+ assert.equal(f.state.storageRecovery.backupTaken,false);
+ assert.equal(f.state.doc.previous,true);
+ assert.equal(f.counts().writes,0);
+});
