@@ -308,6 +308,42 @@ try{
     await p.reload({waitUntil:'load'});
     await p.waitForFunction(()=>state.hasLoaded&&!!state.storageRecovery);
     assert.equal(await p.evaluate(()=>state.storageRecovery.rawAvailable),true);
+    // A second, transient database-open failure must not discard the corrupt raw snapshot
+    // captured by the first real IndexedDB read. This fault is fixture-only.
+    const retained=await p.evaluate(async()=>{
+      const oldOpen=IDBFactory.prototype.open,oldPut=IDBObjectStore.prototype.put;
+      let writes=0;
+      const initial=JSON.stringify(state.storageRecovery.raw);
+      const documentBefore=JSON.stringify(state.doc),undo=state.history.length;
+      try{
+        IDBFactory.prototype.open=function(){throw new DOMException('Synthetic transient open denied','UnknownError')};
+        IDBObjectStore.prototype.put=function(...args){if(this.name==='workspace')writes++;return oldPut.apply(this,args)};
+        const ok=await retryRecovery();
+        return {ok,writes,rawPreserved:JSON.stringify(state.storageRecovery.raw)===initial,
+          rawAvailable:state.storageRecovery.rawAvailable,backupTaken:state.storageRecovery.backupTaken,
+          rawHome:state.storageRecovery.raw?.homeBoardId,
+          exportEnabled:!document.getElementById('recovery-download').disabled,
+          importLocked:document.getElementById('recovery-import').disabled,
+          resetLocked:document.getElementById('recovery-reset').disabled,
+          documentUnchanged:JSON.stringify(state.doc)===documentBefore,undoUnchanged:state.history.length===undo};
+      }finally{IDBFactory.prototype.open=oldOpen;IDBObjectStore.prototype.put=oldPut}
+    });
+    assert.equal(retained.ok,false,JSON.stringify(retained));
+    assert.equal(retained.rawPreserved,true,JSON.stringify(retained));
+    assert.equal(retained.rawAvailable,true,JSON.stringify(retained));
+    assert.equal(retained.backupTaken,false,JSON.stringify(retained));
+    assert.equal(retained.rawHome,'missing',JSON.stringify(retained));
+    assert.equal(retained.exportEnabled,true,JSON.stringify(retained));
+    assert.equal(retained.importLocked,true,JSON.stringify(retained));
+    assert.equal(retained.resetLocked,true,JSON.stringify(retained));
+    assert.equal(retained.documentUnchanged,true,JSON.stringify(retained));
+    assert.equal(retained.undoUnchanged,true,JSON.stringify(retained));
+    assert.equal(retained.writes,0,JSON.stringify(retained));
+    await p.setViewportSize({width:390,height:844});
+    await p.screenshot({path:resolve(dir,'nd024-raw-retained-after-transient-retry-fa-mobile.png'),animations:'disabled'});
+    await p.reload({waitUntil:'load'});await p.waitForFunction(()=>state.hasLoaded&&!!state.storageRecovery);
+    assert.equal(await p.evaluate(()=>state.storageRecovery.rawAvailable),true);
+    console.log('PASS: 390px real IndexedDB corrupt recovery retains raw export after transient retry; destructive controls locked');
     // A denied click must never unlock destructive recovery, leak an anchor or
     // claim the quarantined raw record was saved.
     const rawFailure=await p.evaluate(()=>{
@@ -488,5 +524,5 @@ try{
 
   assert.deepEqual(errors,[]);
   console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
-  console.log('ND-024: 17/17 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
+  console.log('ND-024: 18/18 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}
