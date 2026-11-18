@@ -19,7 +19,7 @@ function fixture(){
  const db={transaction(name,mode){assert.equal(name,'workspace');assert.equal(mode,'readonly');return tx}};
  const ctx={db:null,state,getDB:()=>Promise.resolve(db),validate(value){if(!value||value.version!==1)throw Error('invalid stored workspace');return value},blank:()=>blankDoc,Error};
  const load=vm.runInNewContext('('+loadLine+')',ctx);
- return {doc,blankDoc,state,req,keyReq,tx,load};
+ return {doc,blankDoc,state,req,keyReq,tx,load,context:ctx};
 }
 async function ready(req){
  // Async functions evaluated in vm contexts may install callbacks after another event-loop turn.
@@ -80,4 +80,30 @@ test('request error and premature complete are fail-closed',async()=>{
  two.tx.oncomplete();
  await assert.rejects(p2,e=>e.name==='CorruptWorkspaceError'&&/before requests finished/.test(e.message));
  assert.equal(two.state.storedBaseline.marker,'previous');
+});
+
+test('a retired connection after readonly completion cannot clear quarantine or accept stale data',async()=>{
+ const f=fixture(),pending=f.load();await ready(f.req);
+ f.req.result=f.doc;f.req.onsuccess();f.tx.oncomplete();
+ // Simulate onversionchange retiring the global connection before the async continuation resumes.
+ f.context.db=null;f.state.localConflict=true;
+ await assert.rejects(pending,/connection (was )?retired during read/i);
+ assert.equal(f.state.storedBaseline.marker,'previous');
+ assert.equal(f.state.localConflict,true);
+});
+test('a retired empty read must not create a new blank editable workspace',async()=>{
+ const f=fixture(),pending=f.load();await ready(f.req);
+ f.req.result=undefined;f.req.onsuccess();f.keyReq.result=undefined;f.keyReq.onsuccess();f.tx.oncomplete();
+ f.context.db=null;f.state.localConflict=true;
+ await assert.rejects(pending,/connection (was )?retired during read/i);
+ assert.equal(f.state.storedBaseline.marker,'previous');
+ assert.equal(f.state.localConflict,true);
+});
+test('a read from a replaced handle must not clear the newer connection or baseline',async()=>{
+ const f=fixture(),pending=f.load();await ready(f.req);
+ f.req.result=f.doc;f.req.onsuccess();f.tx.oncomplete();
+ const newerConnection={marker:'other open'};f.context.db=newerConnection;
+ await assert.rejects(pending,/connection (was )?retired during read/i);
+ assert.equal(f.context.db,newerConnection);
+ assert.equal(f.state.storedBaseline.marker,'previous');
 });
