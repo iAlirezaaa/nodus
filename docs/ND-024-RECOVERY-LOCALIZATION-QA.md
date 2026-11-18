@@ -1,0 +1,21 @@
+# ND-024 — localized Pages recovery diagnostics (branch only)
+
+## Problem and user-facing change
+
+The *separate, optional local-first Pages edition* renders Safe data recovery when IndexedDB opening, reading or validation fails. The 390px Persian modal previously displayed a raw English technical exception as its main reason, including the known “blocked by another tab” case. The new `localizeRecoveryDetail(reason, isFa)` in `pages/index.html` displays clear Persian instructions for (1) a conflicting browser tab, (2) corrupt or invalid data, (3) read/transaction/storage failure and (4) unknown failure. English still displays the existing bounded raw diagnostic. The original diagnostic remains available in the detail element's `title` tooltip for support, and `storageRecovery.reason` is not changed. The existing controls remain `Retry reading`, `Download raw data`, `Import JSON` and `Start fresh`; no new user-visible capability or stored field was added.
+
+Scope-first commit [`81d4f52`](https://github.com/iAlirezaaa/nodus/commit/81d4f52bf1d0b2f868e6cc15e7529b35f91bc2f6); first implementation [`621e77ee`](https://github.com/iAlirezaaa/nodus/commit/621e77ee9941e38e7c7b7a92ce4e1b231494951f); isolated VM harness correction [`838c3da`](https://github.com/iAlirezaaa/nodus/commit/838c3da49a6d882198457d55581f2acbcaa992bb), tree `2dd53888f5e2a22d48178596686659251a9fe3c4`.
+
+## Verification on exact code head
+
+- [GitHub Actions run #44334193701](https://github.com/iAlirezaaa/nodus/actions/runs/44334193701) **completed success** on `838c3da`: **378/378 checked-in Node tests**, TypeScript `tsc --noEmit` PASS, production `npm run build` PASS.
+- The same run executed **17/17 Chromium Pages fixture scenario groups** against the exact isolated `http://127.0.0.1:4173/` port, including 390px Persian blocked-open recovery text assertion and English diagnostic assertion. It also reran the previous FA/EN desktop/mobile, synthetic Persian composition, Enter/Tab, IndexedDB save/reload and two **fixture** tabs/conflict, and calm/off/reduced motion zero-write checks.
+- [Chromium screenshot artifact #14439509686](https://github.com/iAlirezaaa/nodus/actions/runs/44334193701/artifacts/14439509686) contains actual screenshots including `nd024-blocked-open-recovery-fa-mobile.png` and the added `nd024-blocked-open-recovery-en-mobile.png`. Both are captured by real Chromium; **individual image inspection was not performed in this run**. Assertions check content and locale; they do not establish typography quality on every device.
+- Inline script CSP SHA-256 digest `Qzk5ImLA/iW+/74y25SKdZnbmRR9n7jJUzjgYJ+qjr4=` was computed from the exact edited script; the checked-in source-exact Node test validates the hash and JS syntax.
+- The first [run #44333915023](https://github.com/iAlirezaaa/nodus/actions/runs/44333915023) failed **1 of 378** Node tests because an existing isolated `vm` test invoked `showRecovery` without injecting its new pure localization helper. This *test harness* error was corrected in `838c3da`; do not report the failed run as successful.
+
+## Preservation and release gate
+
+No changes to document schema, IndexedDB keys/transactions, stored values, reset/import consent, Undo, focus/Tab handling, background movement or user data. The change is **on `fix/nd-024-startup-storage-recovery` only, ND-024 In progress**. The original authenticated Sites project source head/tree/audience and its current deployment version remain **UNVERIFIED/BLOCKED** because the current native Sites skill catalog is empty. **Two genuine authenticated accounts**, permission revocation, independent integration review and live Site browser checks have **not** been performed. Fixture tabs are not those accounts. GitHub `main` `26fafac0` and live Site remain unchanged; **no new Site version/deployment ID, no release**. GitHub metadata reports `public` despite the intended private scope; no visibility change was made.
+
+**Next:** recover authorized original Sites source tree and audience, compare actual trees/changes and verify real account/permission workflows before any guarded merge or publish. ND-025 broader mobile Fit legibility remains separate; this bounded message fix does not finish it.

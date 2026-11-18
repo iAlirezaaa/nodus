@@ -510,3 +510,8 @@ Ordinary Export JSON serializes the current workspace, creates an object URL and
 ### Optional local-first Pages: blocked database-open safety (ND-024 branch only)
 
 The existing `getDB()` open promise handles `onblocked`, ordinary errors and synchronous open denial as fail-closed read failures. Startup then uses the already-existing local storage recovery modal rather than allowing an empty editable document. Once blocked, an eventual `onupgradeneeded` is aborted and a late success closes its connection; the abandoned request cannot commit or replace the canonical workspace. Ordinary successful open still returns the connection. This affects only the standalone Pages build and does not modify D1/R2, authenticated collaboration or the original Site. [Native/Chromium evidence](ND-024-BLOCKED-OPEN-QA.md). Branch-only; original Site parity and release remain blocked.
+
+
+### ND-024 — Persian recovery reason is actionable (optional local-first Pages, unreleased)
+
+`pages/index.html` keeps `state.storageRecovery.reason` as the original bounded technical diagnostic. The presentation helper `localizeRecoveryDetail` maps known blocked-tab, invalid record and read/transaction failures into human-readable Persian guidance; unknown conditions use a safe generic Persian fallback. EN retains raw diagnostics and the detail element's `title` holds the original text for support in both languages. This changes presentation only, not raw records, destructive recovery consent, IndexedDB writes or undo state. Source-exact Node + real Chromium 4173 fixture checks, and FA/EN mobile screenshots: [ND-024 localized recovery QA](ND-024-RECOVERY-LOCALIZATION-QA.md). Hosted Site parity and genuine account checks remain blocked; no release.
