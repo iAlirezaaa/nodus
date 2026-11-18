@@ -506,3 +506,7 @@ The separate static Pages recovery dialog's **Download raw data** action uses th
 ### Optional local-first Pages: ordinary backup URL lifecycle (ND-024 branch only)
 
 Ordinary Export JSON serializes the current workspace, creates an object URL and clicks a temporary anchor; after removal, a five-second delayed URL revocation catches cleanup exceptions. If scheduling itself throws, the synchronous failure path revokes the allocated URL and displays the existing localized retry warning, without changing document, Undo or IndexedDB. This differs from the corrupt-record raw-backup export, which retains its separate recovery consent lock. See [ND-024 delayed cleanup QA](ND-024-BACKUP-DELAYED-CLEANUP-QA.md). Not deployed to original Site.
+
+### Optional local-first Pages: blocked database-open safety (ND-024 branch only)
+
+The existing `getDB()` open promise handles `onblocked`, ordinary errors and synchronous open denial as fail-closed read failures. Startup then uses the already-existing local storage recovery modal rather than allowing an empty editable document. Once blocked, an eventual `onupgradeneeded` is aborted and a late success closes its connection; the abandoned request cannot commit or replace the canonical workspace. Ordinary successful open still returns the connection. This affects only the standalone Pages build and does not modify D1/R2, authenticated collaboration or the original Site. [Native/Chromium evidence](ND-024-BLOCKED-OPEN-QA.md). Branch-only; original Site parity and release remain blocked.
