@@ -32,3 +32,15 @@ Roadmap/help/architecture updates:
 Limitations or blockers:
 Next concrete action:
 ```
+
+## 2026-11-19 — ND-011 + ND-013: scoped template starters and dense-graph readability (in progress)
+
+**User problem:** Too many interconnected nodes become illegible. Hades requests additional useful templates and clearer reading/navigation, not just new decorative styles.
+
+**Observed bases:** GitHub main `26fafac05c320ed5db30a0ee908dd816714acdd9` with tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`; branch `feat/nd-011-templates-and-dense-graph` starts at this exact head. Previous ND-024 remains separate and unfinished on `fix/nd-024-startup-storage-recovery`. Original Site `appgprj_6af58606fb9c81918541f056a898c1a2`: head/tree/audience **unverified** because native Sites skill is unavailable; preserve its source, audience and user data. Lease belongs to `nodus-chat-20261118T234654-nd011-density` on `automation/nodus-control`.
+
+**Acceptance and planned slice:** (1) Add several named, editable starter graph templates (brainstorming, research, project production, task planning) with Persian/English names and a clear preview of how many nodes/links each inserts; apply only on explicit confirmation, append to active board without replacing existing ideas, and allow one Undo. (2) Add a readable dense-network mode that preserves the entire saved graph, makes the selected idea and immediate links legible and clearly reports hidden/dimmed context; preserve pan/drag/keyboard/focus and RTL/LTR, with no frame-by-frame writes. (3) Verify relevant Node behavior, TypeScript, production build, desktop/mobile browser screenshots, large synthetic boards and save/reload. If the 4173 or browser/site gate is blocked, keep feature on branch only.
+
+**Files/boundaries:** Existing workspace and graph mutations stay inside `hooks/use-workspace.ts` and validated graph helpers; canvas presentation/selection changes in `components/Canvas.tsx` and contextual controls. No schema/auth/permission/asset deletion, no change to shared-room access or Site. Tests/README/architecture/QA must reflect actually run checks.
+
+**Status:** ND-011 In progress, ND-013 In progress (owner request supersedes lower-priority queue); neither Verified nor Released. No publication attempted. **Next:** inspect source, implement the bounded graph-template insertion and dense graph highlighting, then test and checkpoint.
