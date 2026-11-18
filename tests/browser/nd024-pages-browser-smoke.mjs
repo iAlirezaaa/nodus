@@ -341,7 +341,7 @@ try{
     const event=p.waitForEvent('download');
     await p.locator('#export').click();
     const downloaded=await event;
-    assert.match(downloaded.suggestedFilename(),/^nodus-local-backup-.*\\.json$/);
+    assert.match(downloaded.suggestedFilename(),/^nodus-local-backup-.*\.json$/);
     const exported=JSON.parse(await readFile(await downloaded.path(),'utf8'));
     assert.deepEqual(JSON.stringify(exported),baseline.doc);
     assert.match(await p.locator('#toast').textContent(),/prepared/i);
