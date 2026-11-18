@@ -76,6 +76,7 @@ test('transient Retry failure retains the last captured raw record for safe expo
  assert.equal(await f.retry(),false);
  assert.equal(f.state.storageRecovery.raw,raw);
  assert.equal(f.state.storageRecovery.rawAvailable,true);
+ assert.equal(f.state.storageRecovery.staleRaw,true);
  assert.equal(f.state.storageRecovery.backupTaken,false);
  assert.match(f.state.storageRecovery.reason,/blocked/);
  assert.equal(f.state.doc.previous,true);
@@ -88,6 +89,7 @@ test('Retry failure with a newer corrupt raw snapshot prefers that latest record
  assert.equal(await f.retry(),false);
  assert.equal(f.state.storageRecovery.raw,updated);
  assert.equal(f.state.storageRecovery.rawAvailable,true);
+ assert.equal(f.state.storageRecovery.staleRaw,false);
  assert.equal(f.state.storageRecovery.backupTaken,false);
  assert.equal(f.counts().writes,0);
 });

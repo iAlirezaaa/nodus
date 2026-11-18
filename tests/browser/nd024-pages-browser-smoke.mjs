@@ -320,7 +320,7 @@ try{
         IDBObjectStore.prototype.put=function(...args){if(this.name==='workspace')writes++;return oldPut.apply(this,args)};
         const ok=await retryRecovery();
         return {ok,writes,rawPreserved:JSON.stringify(state.storageRecovery.raw)===initial,
-          rawAvailable:state.storageRecovery.rawAvailable,backupTaken:state.storageRecovery.backupTaken,
+          rawAvailable:state.storageRecovery.rawAvailable,staleRaw:state.storageRecovery.staleRaw,backupTaken:state.storageRecovery.backupTaken,
           rawHome:state.storageRecovery.raw?.homeBoardId,
           exportEnabled:!document.getElementById('recovery-download').disabled,
           importLocked:document.getElementById('recovery-import').disabled,
@@ -331,6 +331,7 @@ try{
     assert.equal(retained.ok,false,JSON.stringify(retained));
     assert.equal(retained.rawPreserved,true,JSON.stringify(retained));
     assert.equal(retained.rawAvailable,true,JSON.stringify(retained));
+    assert.equal(retained.staleRaw,true,JSON.stringify(retained));
     assert.equal(retained.backupTaken,false,JSON.stringify(retained));
     assert.equal(retained.rawHome,'missing',JSON.stringify(retained));
     assert.equal(retained.exportEnabled,true,JSON.stringify(retained));

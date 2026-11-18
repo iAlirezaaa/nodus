@@ -227,7 +227,7 @@ test('unknown raw data explains Retry in Persian and English with download disab
  }
 });
 
-test('generic retry failure revokes a previously readable raw snapshot rather than enabling stale reset',async()=>{
+test('generic retry failure preserves previous raw only as export-only snapshot and revokes reset consent',async()=>{
  for(const error of [new Error('IDB transaction blocked'),Object.assign(new Error('aborted'),{name:'AbortError'})]){
   const h=harness(),oldRaw=h.state.storageRecovery.raw,oldDoc=h.state.doc;
   h.state.storageRecovery.backupTaken=true;
@@ -237,9 +237,9 @@ test('generic retry failure revokes a previously readable raw snapshot rather th
   assert.equal(reads,1);assert.equal(dialogs,1);
   assert.equal(h.state.doc,oldDoc);assert.deepEqual(h.state.history,['prior']);
   assert.deepEqual(h.state.future,['redo']);assert.equal(h.state.selected,'a');
-  assert.equal(h.state.storageRecovery.rawAvailable,false);
-  assert.equal(h.state.storageRecovery.raw,undefined);
-  assert.notEqual(h.state.storageRecovery.raw,oldRaw);
+  assert.equal(h.state.storageRecovery.rawAvailable,true);
+  assert.equal(h.state.storageRecovery.raw,oldRaw);
+  assert.equal(h.state.storageRecovery.staleRaw,true);
   assert.equal(h.state.storageRecovery.backupTaken,false);
   assert.equal(h.state.restorePending,false);
   assert.equal(h.stats().writes.length,0);assert.equal(h.stats().renders,0);
@@ -253,8 +253,22 @@ test('fresh corrupt raw record can still be exported after a failed retry',async
  assert.equal(await fn('retryRecovery',h.ctx)(),false);
  assert.equal(h.state.storageRecovery.raw,fresh);
  assert.equal(h.state.storageRecovery.rawAvailable,true);
+ assert.equal(h.state.storageRecovery.staleRaw,false);
  assert.equal(h.state.storageRecovery.backupTaken,false);
  assert.equal(h.stats().writes.length,0);
+});
+
+test('download of a stale captured raw snapshot keeps import and fresh reset locked',()=>{
+ const h=harness();h.state.storageRecovery.staleRaw=true;
+ const controls={'recovery-import':{disabled:true},'recovery-reset':{disabled:true}};
+ let clicks=0;
+ const ctx={state:h.state,JSON,Date,serializeRecoverySafely:fn('serializeRecoverySafely',{Object,Array,Reflect,WeakSet,Number,JSON}),Blob:function(){},URL:{createObjectURL:()=>'/blob',revokeObjectURL:()=>{}},document:{createElement:()=>({click(){clicks++},remove(){}}),body:{append(){}}},setTimeout:()=>{},toast:()=>{},console:{error:()=>{}},L:(a,b)=>b,$:n=>controls[n]};
+ assert.equal(fn('downloadRecovery',ctx)(),true);
+ assert.equal(clicks,1);
+ assert.equal(h.state.storageRecovery.backupTaken,false);
+ assert.equal(controls['recovery-import'].disabled,true);
+ assert.equal(controls['recovery-reset'].disabled,true);
+ assert.equal(fn('restoreLocalDocument',h.ctx)(good) instanceof Promise,true);
 });
 
 // ND-024 recovery writes must serialize other tabs via one readwrite transaction.
