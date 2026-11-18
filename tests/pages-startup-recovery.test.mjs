@@ -216,7 +216,7 @@ test('unknown raw data explains Retry in Persian and English with download disab
   for(const id of ['recovery-title','recovery-desc','recovery-detail','recovery-download','recovery-retry','recovery-import','recovery-reset','recovery-hint','recovery-modal']){
    controls[id]={disabled:false,hidden:true,textContent:'',focused:false,focus(){this.focused=true}};
   }
-  fn('showRecovery',{state,$:id=>controls[id]})();
+  fn('showRecovery',{state,$:id=>controls[id],localizeRecoveryDetail:fn('localizeRecoveryDetail',{String})})();
   assert.equal(controls['recovery-modal'].hidden,false);
   assert.equal(controls['recovery-download'].disabled,true);
   assert.equal(controls['recovery-import'].disabled,true);
