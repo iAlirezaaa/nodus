@@ -41,3 +41,32 @@ jobs:
       - name: Build production bundle (no deployment)
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         run: npm run build
+
+  browser-pages:
+    name: Real 4173 Chromium and IndexedDB (Pages fixture)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out exact pushed branch
+        uses: actions/checkout@v4
+      - name: Use supported Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked application dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install pinned ephemeral Playwright (no lockfile change)
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+      - name: Install isolated Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run real browser smoke on reserved test port
+        run: node tests/browser/nd024-pages-browser-smoke.mjs
+      - name: Retain actual screenshots (no deployment)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nd024-pages-browser
+          path: artifacts/nd024-browser/*.png
+          if-no-files-found: ignore
+          retention-days: 14
