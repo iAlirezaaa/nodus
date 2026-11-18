@@ -234,7 +234,62 @@ try{
   await failurePage.screenshot({path:resolve(dir,'nd024-media-read-failure.png'),animations:'disabled'});
   await failurePage.close();
   console.log('PASS: real Chromium reader abort/error/throw show retry notice with zero workspace writes or Undo');
+
+  // Recovery fixture in an independent real Chromium IndexedDB profile.
+  const recoverCtx=await browser.newContext({viewport:{width:1440,height:900},acceptDownloads:true,locale:'fa-IR'});
+  try{
+    const p=await recoverCtx.newPage();
+    p.on('pageerror',e=>errors.push('Recovery: '+e.message));
+    p.on('dialog',d=>d.accept());
+    await p.goto(TEST_URL,{waitUntil:'load'});
+    await p.waitForFunction(()=>state.hasLoaded);
+    const valid=await p.evaluate(()=>JSON.stringify(state.doc));
+    await p.evaluate(async()=>new Promise((resolve,reject)=>{
+      const tx=db.transaction('workspace','readwrite');
+      tx.objectStore('workspace').put({version:1,homeBoardId:'missing',boards:[{id:'root',title:'invalid'}],nodes:[],edges:[]},'main');
+      tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+    }));
+    await p.reload({waitUntil:'load'});
+    await p.waitForFunction(()=>state.hasLoaded&&!!state.storageRecovery);
+    assert.equal(await p.evaluate(()=>state.storageRecovery.rawAvailable),true);
+    const d=p.waitForEvent('download');
+    await p.locator('#recovery-download').click();
+    assert.match((await d).suggestedFilename(),/nodus-recovery-raw/);
+    assert.equal(await p.evaluate(()=>state.storageRecovery.backupTaken),true);
+    await p.evaluate(()=>{
+      window.oldPut=IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put=function(...args){
+        if(this.name==='workspace')throw new DOMException('Synthetic quota failure','QuotaExceededError');
+        return window.oldPut.apply(this,args);
+      };
+    });
+    const file={name:'backup.json',mimeType:'application/json',buffer:Buffer.from(valid)};
+    await p.locator('#import-file').setInputFiles(file);
+    await p.waitForFunction(()=>state.storageRecovery?.reason==='Synthetic quota failure');
+    const frozen=await p.evaluate(()=>({
+      rawAvailable:state.storageRecovery.rawAvailable,backupTaken:state.storageRecovery.backupTaken,
+      rawHome:state.storageRecovery.raw?.homeBoardId,docHome:state.doc.homeBoardId,
+      history:state.history.length,modalOpen:!document.getElementById('recovery-modal').hidden,
+      importEnabled:!document.getElementById('recovery-import').disabled
+    }));
+    assert.equal(frozen.rawAvailable,true,JSON.stringify(frozen));
+    assert.equal(frozen.backupTaken,true,JSON.stringify(frozen));
+    assert.equal(frozen.rawHome,'missing',JSON.stringify(frozen));
+    assert.notEqual(frozen.docHome,'missing',JSON.stringify(frozen));
+    assert.equal(frozen.history,0,JSON.stringify(frozen));
+    assert.equal(frozen.modalOpen,true,JSON.stringify(frozen));
+    assert.equal(frozen.importEnabled,true,JSON.stringify(frozen));
+    await p.screenshot({path:resolve(dir,'nd024-recovery-quota-retry.png'),animations:'disabled'});
+    await p.evaluate(()=>{IDBObjectStore.prototype.put=window.oldPut;delete window.oldPut});
+    await p.locator('#import-file').setInputFiles(file);
+    await p.waitForFunction(()=>state.storageRecovery===null);
+    await p.reload({waitUntil:'load'});await p.waitForFunction(()=>state.hasLoaded);
+    assert.equal(await p.evaluate(()=>state.storageRecovery),null);
+    assert.equal(await p.evaluate(()=>state.doc.homeBoardId),JSON.parse(valid).homeBoardId);
+    console.log('PASS: real IndexedDB raw export, failed restore, retained consent, retry and reload');
+  }finally{await recoverCtx.close()}
+
   assert.deepEqual(errors,[]);
   console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
-  console.log('ND-024: 12/12 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
+  console.log('ND-024: 13/13 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}
