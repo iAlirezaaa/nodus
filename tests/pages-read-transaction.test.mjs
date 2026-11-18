@@ -19,8 +19,14 @@ function fixture(){
  const db={transaction(name,mode){assert.equal(name,'workspace');assert.equal(mode,'readonly');return tx}};
  const ctx={db:null,state,getDB:()=>Promise.resolve(db),validate(value){if(!value||value.version!==1)throw Error('invalid stored workspace');return value},blank:()=>blankDoc,Error};
  const load=vm.runInNewContext('('+loadLine+')',ctx);
- const start=async()=>{const pending=load();await Promise.resolve();await Promise.resolve();assert.equal(typeof req.onsuccess,'function');return {pending}};
- return {doc,blankDoc,state,req,keyReq,tx,load,start};
+ return {doc,blankDoc,state,req,keyReq,tx,load};
+}
+async function ready(req){
+ // Async functions evaluated in vm contexts may install callbacks after another event-loop turn.
+ for(let attempt=0;attempt<10 && typeof req.onsuccess!=='function';attempt++){
+  await new Promise(resolve=>setImmediate(resolve));
+ }
+ assert.equal(typeof req.onsuccess,'function','IndexedDB get callback must be installed');
 }
 
 test('exact source script is parseable and CSP matches its digest',()=>{
@@ -29,7 +35,7 @@ test('exact source script is parseable and CSP matches its digest',()=>{
 });
 test('a valid get response cannot be accepted before transaction completion',async()=>{
  const f=fixture(),pending=f.load();
- await Promise.resolve();await Promise.resolve();
+ await ready(f.req);
  let status='pending';pending.then(()=>status='resolved',()=>status='rejected');
  f.req.result=f.doc;f.req.onsuccess();await Promise.resolve();
  assert.equal(status,'pending');assert.equal(f.state.storedBaseline.marker,'previous');
@@ -38,7 +44,7 @@ test('a valid get response cannot be accepted before transaction completion',asy
 });
 for(const failed of ['abort','error']){
  test('late readonly '+failed+' after successful get rejects without trusting baseline',async()=>{
-  const f=fixture(),pending=f.load();await Promise.resolve();await Promise.resolve();
+  const f=fixture(),pending=f.load();await ready(f.req);
   f.req.result=f.doc;f.req.onsuccess();
   f.tx.error=Error('transaction '+failed);
   f.tx['on'+failed]();
@@ -47,30 +53,30 @@ for(const failed of ['abort','error']){
  });
 }
 test('getKey-confirmed missing key becomes a blank document only after tx commit',async()=>{
- const f=fixture(),pending=f.load();await Promise.resolve();await Promise.resolve();
+ const f=fixture(),pending=f.load();await ready(f.req);
  f.req.result=undefined;f.req.onsuccess();f.keyReq.result=undefined;f.keyReq.onsuccess();
  let settled=false;pending.then(()=>settled=true,()=>settled=true);await Promise.resolve();
  assert.equal(settled,false);
  f.tx.oncomplete();assert.deepEqual(await pending,f.blankDoc);assert.equal(f.state.storedBaseline,null);
 });
 test('existing undefined-valued key is never mistaken for missing workspace',async()=>{
- const f=fixture(),pending=f.load();await Promise.resolve();await Promise.resolve();
+ const f=fixture(),pending=f.load();await ready(f.req);
  f.req.result=undefined;f.req.onsuccess();f.keyReq.result='main';f.keyReq.onsuccess();f.tx.oncomplete();
  await assert.rejects(pending,e=>e.name==='CorruptWorkspaceError'&&/validation/.test(e.message));
  assert.equal(f.state.storedBaseline.marker,'previous');
 });
 test('getKey success followed by abort cannot admit a new empty workspace',async()=>{
- const f=fixture(),pending=f.load();await Promise.resolve();await Promise.resolve();
+ const f=fixture(),pending=f.load();await ready(f.req);
  f.req.result=undefined;f.req.onsuccess();f.keyReq.result=undefined;f.keyReq.onsuccess();f.tx.onabort();
  await assert.rejects(pending,e=>e.name==='CorruptWorkspaceError'&&/aborted/.test(e.message));
  assert.equal(f.state.storedBaseline.marker,'previous');assert.equal(f.state.localConflict,true);
 });
 test('request error and premature complete are fail-closed',async()=>{
- const one=fixture(),p1=one.load();await Promise.resolve();await Promise.resolve();
+ const one=fixture(),p1=one.load();await ready(one.req);
  one.req.error=Error('disk read failed');one.req.onerror();
  await assert.rejects(p1,e=>e.name==='CorruptWorkspaceError'&&/Cannot read/.test(e.message));
  assert.equal(one.state.storedBaseline.marker,'previous');
- const two=fixture(),p2=two.load();await Promise.resolve();await Promise.resolve();
+ const two=fixture(),p2=two.load();await ready(two.req);
  two.tx.oncomplete();
  await assert.rejects(p2,e=>e.name==='CorruptWorkspaceError'&&/before requests finished/.test(e.message));
  assert.equal(two.state.storedBaseline.marker,'previous');
