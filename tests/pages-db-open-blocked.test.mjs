@@ -5,9 +5,9 @@ import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 
 const html = readFileSync(new URL('../pages/index.html', import.meta.url), 'utf8');
-const script = html.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script, 'must test the exact production inline script');
-const source = script.split('\\n').find(line => line.startsWith('function getDB()'));
+const source = script.split('\n').find(line => line.startsWith('function getDB()'));
 assert.ok(source, 'must use the exact production getDB handler');
 
 function fixture() {
