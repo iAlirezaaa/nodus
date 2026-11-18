@@ -33,6 +33,29 @@ try{
   assert.equal(await a.evaluate(()=>state.doc.nodes.length),1);
   assert.equal(await a.evaluate(()=>state.doc.nodes[0].title),'ایدهٔ آغازین');
   await a.waitForFunction(()=>!state.unsavedChanges);
+  // An actual readonly IndexedDB transaction can abort after an individual request succeeds.
+  // Fault injection is limited to this isolated tab; the saved fixture in the normal tab stays intact.
+  const abortPage=await ctx.newPage();abortPage.on('pageerror',e=>errors.push('ABORT: '+e.message));
+  await abortPage.addInitScript(()=>{
+    const original=IDBObjectStore.prototype.get;
+    IDBObjectStore.prototype.get=function(...args){
+      const request=original.apply(this,args);
+      if(this.name==='workspace'&&this.transaction.mode==='readonly'&&args[0]==='main'){
+        request.addEventListener('success',()=>this.transaction.abort(),{once:true});
+      }
+      return request;
+    };
+  });
+  await abortPage.goto(TEST_URL,{waitUntil:'load'});
+  await abortPage.waitForFunction(()=>state.hasLoaded);
+  assert.equal(await abortPage.evaluate(()=>!!state.storageRecovery),true);
+  assert.equal(await abortPage.evaluate(()=>state.doc.nodes.length),0);
+  assert.equal(await abortPage.locator('#recovery-modal').isVisible(),true);
+  assert.equal(await abortPage.locator('#recovery-reset').isDisabled(),true);
+  await abortPage.screenshot({path:resolve(dir,'nd024-read-transaction-abort-fa.png'),animations:'disabled'});
+  await abortPage.close();
+  assert.equal(await a.evaluate(()=>state.doc.nodes[0].title),'ایدهٔ آغازین');
+  console.log('PASS: real IndexedDB readonly abort opens safe recovery without changing saved work');
   console.log('PASS: Unicode/FA edit and IndexedDB save');
   await a.locator('#nodes .node').first().dblclick();
   await a.locator('#nodes input').fill('متن اشتباه؛ لغو شود');
@@ -55,6 +78,8 @@ try{
   assert.equal(await a.evaluate(()=>state.doc.nodes.length),3);
   assert.ok(await a.evaluate(()=>state.doc.edges.length>0));
   console.log('PASS: ordinary Tab creates connected child');
+  // inlineEdit is scheduled in requestAnimationFrame, so await its real focus target.
+  await a.locator('#nodes input').first().waitFor({state:'visible'});
   const beforeIme=await a.evaluate(()=>state.doc.nodes.length);
   const simulated=await a.evaluate(()=>{
     const input=document.querySelector('#nodes input');if(!input)return false;
