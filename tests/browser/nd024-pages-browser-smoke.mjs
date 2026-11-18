@@ -7,11 +7,11 @@ import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chromium} from 'playwright';
-const URL='http://127.0.0.1:4173/',dir=resolve('artifacts/nd024-browser');
+const TEST_URL='http://127.0.0.1:4173/',dir=resolve('artifacts/nd024-browser');
 const html=await readFile(resolve('pages/index.html'),'utf8');
 assert.match(html,/Nodus Pages/);
 const server=createServer((req,res)=>{
-  if(req.method!=='GET'||!['/','/index.html'].includes(new URL(req.url,URL).pathname)){res.writeHead(404).end();return;}
+  if(req.method!=='GET'||!['/','/index.html'].includes(new URL(req.url,TEST_URL).pathname)){res.writeHead(404).end();return;}
   res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end(html);
 });
 try{await new Promise((yes,no)=>{server.once('error',no);server.listen(4173,'127.0.0.1',yes)})}
@@ -23,7 +23,7 @@ try{
   browser=await chromium.launch({headless:true});
   const ctx=await browser.newContext({viewport:{width:1440,height:900},locale:'fa-IR'});
   const a=await ctx.newPage();a.on('pageerror',e=>errors.push('A: '+e.message));
-  await a.goto(URL,{waitUntil:'load'});await a.waitForFunction(()=>state.hasLoaded);
+  await a.goto(TEST_URL,{waitUntil:'load'});await a.waitForFunction(()=>state.hasLoaded);
   assert.equal(await a.evaluate(()=>state.lang),'fa');
   assert.equal(await a.evaluate(()=>state.doc.nodes.length),0);
   console.log('PASS: FA desktop actual Pages boot at 4173');
@@ -70,7 +70,7 @@ try{
   await a.waitForFunction(()=>!state.unsavedChanges);
   const b=await ctx.newPage();b.on('pageerror',e=>errors.push('B: '+e.message));
   b.on('dialog',d=>d.accept());
-  await b.goto(URL,{waitUntil:'load'});await b.waitForFunction(()=>state.hasLoaded);
+  await b.goto(TEST_URL,{waitUntil:'load'});await b.waitForFunction(()=>state.hasLoaded);
   assert.equal(await b.evaluate(()=>state.doc.nodes.length),3);
   await a.locator('#add').click();
   await a.locator('#nodes input').fill('Newer tab edit');
@@ -94,7 +94,7 @@ try{
   console.log('PASS: reload, EN, motion off and genuine desktop screenshot');
   const m=await ctx.newPage();await m.setViewportSize({width:390,height:844});
   m.on('pageerror',e=>errors.push('M: '+e.message));
-  await m.goto(URL,{waitUntil:'load'});await m.waitForFunction(()=>state.hasLoaded);
+  await m.goto(TEST_URL,{waitUntil:'load'});await m.waitForFunction(()=>state.hasLoaded);
   const dim=await m.evaluate(()=>({w:innerWidth,scroll:document.documentElement.scrollWidth,n:state.doc.nodes.length}));
   assert.equal(dim.w,390);assert.equal(dim.n,4);assert.ok(dim.scroll<=392,'390px overflow: '+JSON.stringify(dim));
   await m.screenshot({path:resolve(dir,'nd024-fa-mobile-390.png'),animations:'disabled'});
