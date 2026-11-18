@@ -246,7 +246,7 @@ test('guarded recovery replaces only the unchanged raw IndexedDB record',async()
 });
 test('changed stored raw revokes stale backup consent and keeps prior Undo/selection',async()=>{
  const h=harness(),prior=h.state.doc;h.state.storageRecovery.backupTaken=true;
- h.ctx.persistRecoveryIfUnchanged=async()=>{throw Error('Stored workspace changed since backup')};
+ h.ctx.persistRecoveryIfUnchanged=async()=>{const error=Error('Stored workspace changed since backup');error.name='LocalRecoveryConflictError';throw error;};
  h.ctx.showRecovery=()=>{};
  assert.equal(await fn('restoreLocalDocument',h.ctx)(copy(good)),false);
  assert.equal(h.state.doc,prior);assert.deepEqual(h.state.history,['prior']);assert.deepEqual(h.state.future,['redo']);

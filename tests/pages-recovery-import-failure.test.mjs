@@ -17,7 +17,7 @@ function harness(){
  const state={doc:copy(oldDoc),boardId:'ephemeral',selected:'old',selectedIds:new Set(['old']),hasLoaded:true,restorePending:false,storageRecovery:{raw:copy(raw),rawAvailable:true,backupTaken:true,reason:'invalid graph'},storedBaseline:undefined,localConflict:false,history:['past'],future:['future'],magnetFrame:null,magnetRunning:false,magnetPositions:null,magnetPins:new Set(),groupMode:true,linkFrom:'old',gesture:null,viewByBoard:new Map(),saveQueue:Promise.resolve(),unsavedChanges:false};
  let attempts=0,writes=[],renders=0,dialogs=0,notices=[],shouldFail=true,remoteRaw=copy(raw);
  const ctx={state,copy,JSON,console:{error:()=>{}},L:(fa,en)=>en,
-  persistRecoveryIfUnchanged:async (doc,expected)=>{attempts++;assert.equal(JSON.stringify(expected),JSON.stringify(raw));if(JSON.stringify(remoteRaw)!==JSON.stringify(expected))throw Error('Stored workspace changed since backup; retry reading');if(shouldFail)throw Error('QuotaExceededError');writes.push(copy(doc));},
+  persistRecoveryIfUnchanged:async (doc,expected)=>{attempts++;assert.equal(JSON.stringify(expected),JSON.stringify(raw));if(JSON.stringify(remoteRaw)!==JSON.stringify(expected)){const error=Error('Stored workspace changed since backup; retry reading');error.name='LocalRecoveryConflictError';throw error;}if(shouldFail)throw Error('QuotaExceededError');writes.push(copy(doc));},
   persistImportIfUnchanged:()=>{throw Error('Unexpected ordinary import')},
   saveStatus:()=>{},toast:message=>notices.push(message),showRecovery:()=>dialogs++,
   $:id=>id==='recovery-modal'?{hidden:false}:id==='canvas'?{focus:()=>{}}:{},
@@ -48,13 +48,14 @@ test('retry after transient storage failure succeeds without another destructive
  assert.equal(h.stats().attempts,2);assert.equal(h.stats().writes.length,1);
  assert.equal(JSON.stringify(h.state.doc),JSON.stringify(replacement));
  assert.equal(h.state.storageRecovery,null);assert.equal(h.state.restorePending,false);
- assert.deepEqual(h.state.history,[]);assert.deepEqual(h.state.future,[]);
+ assert.deepEqual(Array.from(h.state.history),[]);assert.deepEqual(Array.from(h.state.future),[]);
 });
 test('a changed external record still fails closed, even with old raw backup consent',async()=>{
  const h=harness();h.changeStoredRaw();h.allowRetry();
  assert.equal(await h.restore(copy(replacement)),false);
  assert.equal(h.stats().writes.length,0);
- assert.equal(h.state.storageRecovery.backupTaken,true);
+ assert.equal(h.state.storageRecovery.backupTaken,false);
+ assert.equal(h.state.storageRecovery.rawAvailable,false);
  assert.equal(JSON.stringify(h.state.doc),JSON.stringify(h.oldDoc));
  assert.deepEqual(h.state.history,['past']);assert.equal(h.state.restorePending,false);
 });
