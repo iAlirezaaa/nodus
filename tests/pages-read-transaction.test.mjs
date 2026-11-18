@@ -5,8 +5,8 @@ import {createHash} from 'node:crypto';
 import vm from 'node:vm';
 
 const html=readFileSync(new URL('../pages/index.html',import.meta.url),'utf8');
-const script=html.match(/<script>([\\s\\S]*?)<\\/script>/)[1];
-const loadLine=script.split('\\n').find(line=>line.startsWith('async function load()'));
+const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const loadLine=script.split('\n').find(line=>line.startsWith('async function load()'));
 assert.ok(loadLine,'Test the exact inline IndexedDB load handler');
 
 function fixture(){
