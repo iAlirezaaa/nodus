@@ -5,8 +5,8 @@ import {createHash} from 'node:crypto';
 import vm from 'node:vm';
 
 const html=readFileSync(new URL('../pages/index.html',import.meta.url),'utf8');
-const script=html.match(/<script>([\\s\\S]*?)<\\/script>/)[1];
-const line=script.split('\\n').find(s=>s.startsWith('function download('));
+const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const line=script.split('\n').find(s=>s.startsWith('function download('));
 assert.ok(line,'The actual Pages download handler must be tested');
 const run=ctx=>vm.runInNewContext('('+line+')',ctx)();
 
@@ -45,7 +45,7 @@ test('normal export prepares actual Persian document, keeps undo/dirty state, an
  assert.equal(h.stats.removed,1);assert.equal(h.stats.revoked.length,0);
  assert.equal(h.stats.scheduled.length,1);
  h.stats.scheduled[0]();assert.deepEqual(h.stats.revoked,['blob:backup']);
- assert.match(h.anchor.download,/^nodus-local-backup-\\d{4}-\\d{2}-\\d{2}\\.json$/);
+ assert.match(h.anchor.download,/^nodus-local-backup-\d{4}-\d{2}-\d{2}\.json$/);
  assert.match(h.stats.toasts.at(-1),/prepared/i);
  assert.doesNotMatch(h.stats.toasts.at(-1),/downloaded/i);
  assert.deepEqual(h.state.doc,h.original);
