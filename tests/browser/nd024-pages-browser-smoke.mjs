@@ -296,11 +296,12 @@ try{
       const oldCreate=URL.createObjectURL;
       try{
         URL.createObjectURL=()=>{throw Error('Synthetic raw allocation denied')};
-        assert.equal(downloadRecovery(),false);
-        return document.getElementById('toast').textContent;
+        const ok=downloadRecovery();
+        return {ok,notice:document.getElementById('toast').textContent};
       }finally{URL.createObjectURL=oldCreate}
     });
-    assert.match(englishNotice,/Cannot export raw data/i);
+    assert.equal(englishNotice.ok,false);
+    assert.match(englishNotice.notice,/Cannot export raw data/i);
     await p.screenshot({path:resolve(dir,'nd024-recovery-raw-export-failure-en.png'),animations:'disabled'});
     await p.evaluate(()=>{state.lang='fa';render();showRecovery()});
     const d=p.waitForEvent('download');

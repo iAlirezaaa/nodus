@@ -92,7 +92,7 @@ for(const lang of ['fa','en']){
    assert.equal(h.stats.scheduled.length,0);
    const allocated=['element','append','click','timer'].includes(fail);
    assert.deepEqual(h.stats.revoked,allocated?['blob:raw-fixture']:[]);
-   assert.equal(h.stats.removed,allocated?1:0);
+   assert.equal(h.stats.removed,['append','click','timer'].includes(fail)?1:0);
    assert.match(h.stats.toasts.at(-1),lang==='fa'?/نسخهٔ خام/:/raw data/i);
    assert.deepEqual(h.state.doc,{unchanged:true});assert.deepEqual(h.state.history,['undo']);
    assert.equal(h.state.unsavedChanges,true);
