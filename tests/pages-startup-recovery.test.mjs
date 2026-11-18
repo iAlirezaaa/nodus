@@ -258,7 +258,7 @@ test('fresh corrupt raw record can still be exported after a failed retry',async
  assert.equal(h.stats().writes.length,0);
 });
 
-test('download of a stale captured raw snapshot keeps import and fresh reset locked',()=>{
+test('download of a stale captured raw snapshot keeps import and fresh reset locked',async()=>{
  const h=harness();h.state.storageRecovery.staleRaw=true;
  const controls={'recovery-import':{disabled:true},'recovery-reset':{disabled:true}};
  let clicks=0;
@@ -268,7 +268,7 @@ test('download of a stale captured raw snapshot keeps import and fresh reset loc
  assert.equal(h.state.storageRecovery.backupTaken,false);
  assert.equal(controls['recovery-import'].disabled,true);
  assert.equal(controls['recovery-reset'].disabled,true);
- assert.equal(fn('restoreLocalDocument',h.ctx)(good) instanceof Promise,true);
+ assert.equal(await fn('restoreLocalDocument',h.ctx)(good),false);
 });
 
 // ND-024 recovery writes must serialize other tabs via one readwrite transaction.
