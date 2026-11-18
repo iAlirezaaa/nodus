@@ -53,10 +53,15 @@ try{
     await p.waitForFunction(()=>state.hasLoaded&&!!state.storageRecovery);
     assert.equal(await p.locator('#recovery-modal').isVisible(),true);
     assert.equal(await p.locator('#recovery-reset').isDisabled(),true);
+    assert.match(await p.locator('#recovery-detail').textContent(),/تب دیگری/);
+    assert.match(await p.locator('#recovery-detail').getAttribute('title'),/blocked by another tab/);
     assert.equal(await p.evaluate(()=>state.doc.nodes.length),0);
     await p.waitForFunction(()=>window.nd024BlockedOpen.closes===1);
     assert.deepEqual(await p.evaluate(()=>window.nd024BlockedOpen),{aborts:1,creates:0,closes:1});
     await p.screenshot({path:resolve(dir,'nd024-blocked-open-recovery-fa-mobile.png'),animations:'disabled'});
+    await p.evaluate(()=>{state.lang='en';render();showRecovery()});
+    assert.match(await p.locator('#recovery-detail').textContent(),/blocked by another tab/);
+    await p.screenshot({path:resolve(dir,'nd024-blocked-open-recovery-en-mobile.png'),animations:'disabled'});
     console.log('PASS: 390px FA blocked open enters recovery and closes late connection without IDB writes');
   }finally{await blockedCtx.close()}
   // An actual readonly IndexedDB transaction can abort after an individual request succeeds.

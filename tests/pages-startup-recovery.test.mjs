@@ -181,6 +181,34 @@ test('normal startup remains unlocked after a valid IndexedDB read',async()=>{
  assert.equal(state.boardId,good.homeBoardId);
 });
 
+test('Persian recovery details explain blocked tabs and corrupt records; raw diagnostics stay available',()=>{
+ const localize=fn('localizeRecoveryDetail',{String});
+ const blocked='Stored workspace open blocked by another tab; close it and retry';
+ const invalid='Stored workspace failed validation';
+ assert.match(localize(blocked,true),/تب دیگری/);
+ assert.doesNotMatch(localize(blocked,true),/[A-Za-z]/);
+ assert.match(localize(invalid,true),/معتبر نیستند/);
+ assert.match(localize('Cannot read stored workspace',true),/خواندن اطلاعات/);
+ assert.match(localize('Unknown technical fault',true),/بازیابی اطلاعات/);
+ assert.equal(localize(blocked,false),blocked);
+ const state={lang:'fa',storageRecovery:{raw:undefined,rawAvailable:false,backupTaken:false,reason:blocked},restorePending:false};
+ const controls={};
+ for(const id of ['recovery-title','recovery-desc','recovery-detail','recovery-download','recovery-retry','recovery-import','recovery-reset','recovery-hint','recovery-modal']){
+  controls[id]={disabled:false,hidden:true,textContent:'',title:'',focused:false,focus(){this.focused=true}};
+ }
+ fn('showRecovery',{state,$:id=>controls[id],localizeRecoveryDetail:localize})();
+ assert.match(controls['recovery-detail'].textContent,/تب دیگری/);
+ assert.equal(controls['recovery-detail'].title,blocked);
+ assert.equal(state.storageRecovery.reason,blocked);
+ assert.equal(controls['recovery-reset'].disabled,true);
+ assert.equal(controls['recovery-import'].disabled,true);
+ assert.equal(controls['recovery-retry'].focused,true);
+ state.lang='en';
+ fn('showRecovery',{state,$:id=>controls[id],localizeRecoveryDetail:localize})();
+ assert.equal(controls['recovery-detail'].textContent,blocked);
+ assert.equal(controls['recovery-detail'].title,blocked);
+});
+
 test('unknown raw data explains Retry in Persian and English with download disabled',()=>{
  for(const lang of ['fa','en']){
   const state={lang,storageRecovery:{raw:undefined,rawAvailable:false,backupTaken:false,reason:'read blocked'},restorePending:false};
