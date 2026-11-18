@@ -33,6 +33,32 @@ try{
   assert.equal(await a.evaluate(()=>state.doc.nodes.length),1);
   assert.equal(await a.evaluate(()=>state.doc.nodes[0].title),'ایدهٔ آغازین');
   await a.waitForFunction(()=>!state.unsavedChanges);
+  // Fault-injected blocked schema open in a separate real Chromium page: no owner data.
+  // A blocked open must move to safe recovery, and late upgrade/success must not leak a handle.
+  const blockedCtx=await browser.newContext({viewport:{width:390,height:844},locale:'fa-IR'});
+  try{
+    await blockedCtx.addInitScript(()=>{
+      const nativeOpen=IDBFactory.prototype.open;
+      window.nd024BlockedOpen={aborts:0,creates:0,closes:0};
+      IDBFactory.prototype.open=function(...args){
+        if(args[0]!=='nodus-pages-v1')return nativeOpen.apply(this,args);
+        const metric=window.nd024BlockedOpen;
+        const req={result:{objectStoreNames:{contains:()=>false},createObjectStore(){metric.creates++},close(){metric.closes++}},transaction:{abort(){metric.aborts++}}};
+        setTimeout(()=>{req.onblocked?.();setTimeout(()=>{req.onupgradeneeded?.();req.onsuccess?.()},30)},0);
+        return req;
+      };
+    });
+    const p=await blockedCtx.newPage();p.on('pageerror',e=>errors.push('BlockedOpen: '+e.message));
+    await p.goto(TEST_URL,{waitUntil:'load'});
+    await p.waitForFunction(()=>state.hasLoaded&&!!state.storageRecovery);
+    assert.equal(await p.locator('#recovery-modal').isVisible(),true);
+    assert.equal(await p.locator('#recovery-reset').isDisabled(),true);
+    assert.equal(await p.evaluate(()=>state.doc.nodes.length),0);
+    await p.waitForFunction(()=>window.nd024BlockedOpen.closes===1);
+    assert.deepEqual(await p.evaluate(()=>window.nd024BlockedOpen),{aborts:1,creates:0,closes:1});
+    await p.screenshot({path:resolve(dir,'nd024-blocked-open-recovery-fa-mobile.png'),animations:'disabled'});
+    console.log('PASS: 390px FA blocked open enters recovery and closes late connection without IDB writes');
+  }finally{await blockedCtx.close()}
   // An actual readonly IndexedDB transaction can abort after an individual request succeeds.
   // Fault injection is limited to this isolated tab; the saved fixture in the normal tab stays intact.
   const abortPage=await ctx.newPage();abortPage.on('pageerror',e=>errors.push('ABORT: '+e.message));
@@ -457,5 +483,5 @@ try{
 
   assert.deepEqual(errors,[]);
   console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
-  console.log('ND-024: 16/16 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
+  console.log('ND-024: 17/17 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}
