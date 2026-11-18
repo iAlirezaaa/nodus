@@ -12,8 +12,12 @@ const imported={version:1,homeBoardId:'new',boards:[{id:'new',title:'پشتیب�
 const copy=d=>JSON.parse(JSON.stringify(d));
 function harness(fail=false){
  let writes=[],renders=0,notices=[];
- const state={doc:copy(original),hasLoaded:true,restorePending:false,boardId:'old',selected:'1',selectedIds:new Set(['1']),history:['prior'],future:['redo'],groupMode:true,linkFrom:'1',gesture:null,magnetFrame:null,magnetRunning:false,magnetPositions:null,magnetPins:new Set(['1']),viewByBoard:new Map()};
- const context={state,JSON,copy,console:{error:()=>{}},persist:async d=>{writes.push(copy(d));if(fail)throw Error('quota')},saveStatus:()=>{},toast:t=>notices.push(t),L:(fa,en)=>en,render:()=>{renders++},cancelAnimationFrame:()=>{},queueSave:()=>{},flushEditor:()=>{}};
+ const state={doc:copy(original),hasLoaded:true,restorePending:false,storageRecovery:null,storedBaseline:copy(original),localConflict:false,unsavedChanges:false,boardId:'old',selected:'1',selectedIds:new Set(['1']),history:['prior'],future:['redo'],groupMode:true,linkFrom:'1',gesture:null,magnetFrame:null,magnetRunning:false,magnetPositions:null,magnetPins:new Set(['1']),viewByBoard:new Map()};
+ const context={state,JSON,copy,console:{error:()=>{}},
+  persistImportIfUnchanged:async (d,baseline)=>{assert.deepEqual(baseline,original,'import must use observed storage baseline');writes.push(copy(d));if(fail)throw Error('quota')},
+  persistRecoveryIfUnchanged:async()=>{throw Error('Unexpected quarantined recovery path')},
+  $:id=>id==='recovery-modal'?{hidden:true}:id==='canvas'?{focus:()=>{}}:{},
+  saveStatus:()=>{},toast:t=>notices.push(t),L:(fa,en)=>en,render:()=>{renders++},cancelAnimationFrame:()=>{},queueSave:()=>{},flushEditor:()=>{}};
  state.saveQueue=Promise.resolve();
  const get=name=>vm.runInNewContext('('+source[name]+')',context);
  return {state,restore:get('restore'),mutate:get('mutate'),undo:get('undo'),redo:get('redo'),stats:()=>({writes,renders,notices})};

@@ -63,14 +63,14 @@ test('confirmed import commits before unlocking; no fake blank Undo',async()=>{
  const h=harness();h.state.storageRecovery.backupTaken=true;
  assert.equal(await fn('restoreLocalDocument',h.ctx)(good),true);
  assert.deepEqual(h.stats().writes,[good]);assert.equal(h.state.doc,good);
- assert.equal(h.state.storageRecovery,null);assert.deepEqual(h.state.history,[]);
- assert.deepEqual(h.state.future,[]);assert.equal(h.elements['recovery-modal'].hidden,true);
+ assert.equal(h.state.storageRecovery,null);assert.deepEqual(Array.from(h.state.history),[]);
+ assert.deepEqual(Array.from(h.state.future),[]);assert.equal(h.elements['recovery-modal'].hidden,true);
  assert.equal(h.stats().focused,1);
 });
 test('raw JSON export enables recovery; failed JSON serialization does not',()=>{
  const h=harness(),controls={'recovery-import':{disabled:true},'recovery-reset':{disabled:true}};
  let payload,clicks=0;
- const ctx={state:h.state,JSON,Date,Blob:function(parts){payload=parts.join('')},
+ const ctx={state:h.state,JSON,Date,serializeRecoverySafely:fn('serializeRecoverySafely',{Object,Array,Reflect,WeakSet,Number,JSON}),Blob:function(parts){payload=parts.join('')},
  URL:{createObjectURL:()=>'/blob',revokeObjectURL:()=>{}},document:{
  createElement:()=>({click:()=>clicks++,remove:()=>{}}),body:{append:()=>{}}},
  setTimeout:()=>{},toast:()=>{},console:{error:()=>{}},L:(a,b)=>b,$:n=>controls[n]};
@@ -108,7 +108,7 @@ test('recovery retry rereads a valid workspace and clears the quarantine without
  h.ctx.onBoard=()=>[];h.ctx.fit=()=>{};
  const retry=fn('retryRecovery',h.ctx);
  assert.equal(await retry(),true);assert.equal(h.state.doc,good);
- assert.equal(h.state.storageRecovery,null);assert.deepEqual(h.state.history,[]);assert.deepEqual(h.state.future,[]);
+ assert.equal(h.state.storageRecovery,null);assert.deepEqual(Array.from(h.state.history),[]);assert.deepEqual(Array.from(h.state.future),[]);
  assert.equal(h.elements['recovery-modal'].hidden,true);assert.equal(h.stats().writes.length,0);
 });
 test('failed recovery retry keeps the original record locked and revokes stale download consent',async()=>{
@@ -231,7 +231,7 @@ function guardDb(value,{readFail=false,putFail=false}={}){
 }
 test('guarded recovery replaces only the unchanged raw IndexedDB record',async()=>{
  const saved={version:0,homeBoardId:'bad'},fresh=copy(good);
- const safe=fn('serializeRecoverySafely',{});
+ const safe=fn('serializeRecoverySafely',{Object,Array,Reflect,WeakSet,Number,JSON});
  for(const [name,current,opt,shouldSave] of [
   ['unchanged',copy(saved),{},true],['changed by another tab',{version:0,homeBoardId:'different'},{},false],
   ['record deleted',undefined,{},false],['transaction unreadable',copy(saved),{readFail:true},false],
@@ -283,7 +283,7 @@ test('Save retry success permits a subsequent import only after storage acknowle
  let writes=0;const ctx={...h.ctx,copy,persist:async()=>{writes++}};
  assert.equal(await fn('queueSave',ctx)(),true);
  assert.equal(await fn('restoreLocalDocument',ctx)(copy(good)),true);
- assert.equal(writes,2);assert.equal(h.state.doc.homeBoardId,'root');
+ assert.equal(writes,1,'Save retry must persist once');assert.equal(h.stats().writes.length,1,'Import must use its separate guarded persistence path');assert.deepEqual(h.stats().writes[0],good);assert.equal(h.state.doc.homeBoardId,'root');
 });
 test('Details Save only confirms after persistence settles',async()=>{
  const line=script.split('\n').find(s=>s.includes("$('edit-save').onclick="));
