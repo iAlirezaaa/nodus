@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261118T0839Z-nd024-recovery-gates",
   "acquired_at": "2026-11-18T08:39:33.885Z",
-  "heartbeat_at": "2026-11-18T08:45:14.785Z",
-  "expires_at": "2026-11-18T10:15:14.785Z",
+  "heartbeat_at": "2026-11-18T08:50:29.144Z",
+  "expires_at": "2026-11-18T10:20:29.144Z",
   "current_task_id": "ND-024",
   "feature_branch": "fix/nd-024-startup-storage-recovery",
   "checkpoint": {
-    "phase": "ND-024 blocked-localStorage preference resilience implemented branch-only, native CI running",
+    "phase": "ND-024 preference storage fallback implemented; failed first CI isolated harness fixed; final run queued behind old browser",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "UNVERIFIED (Sites skill unavailable, Browser requires originating browser context)",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -18,7 +18,7 @@
     "deployment_status": "NO DEPLOYMENT",
     "next_task": "Obtain native authorized Sites source HEAD/tree/audience, reconcile against GitHub content without overwriting owner edits, independent integration review and two authenticated account permissions before gated merge/deploy; then ND-025 mobile Fit readability.",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "3b10e81e621b6d6eadc3c01f08d207877f5bcd35",
+    "feature_branch_head": "87968cb9866f62e97fc0c2d4c1879e79b57931ee",
     "feature_branch_tree": "9e39f8de225944e2ed186c10f33b09489e3d86ad",
     "feature_branch": "fix/nd-024-startup-storage-recovery",
     "pending_verification": [
@@ -35,7 +35,7 @@
     "observed_control_head": "ebb95e5fb5bc6474e475895dbce6e368edc6baba",
     "site_source_verification": "UNVERIFIED (no native Sites skills and Browser lacks originating context)",
     "active_run_id": null,
-    "observed_at": "2026-11-18T08:45:14.785Z",
+    "observed_at": "2026-11-18T08:50:29.144Z",
     "source_code_commit": "3b10e81e621b6d6eadc3c01f08d207877f5bcd35",
     "test_helper_blob": "25472713ce16ce7fa6658f9c4408df1c4da97805",
     "test_cases_blob": "a826552b67f70144fe5fb9af39653fdb5259283b",
@@ -99,7 +99,7 @@
     "release_status": "In progress / branch-only / no deployment",
     "helper_blob": "86d80cddaa094252c1953c7140473a57dc91d15b",
     "qa_screenshot": "4 PNG in GitHub Actions artifact 14397672708",
-    "ci_run": "44269593423",
+    "ci_run": "44269841376",
     "source_tree_repair": "3255700e9b03d1d0da8059440f9d114bf58d5b23",
     "control_tree_repair": "pending",
     "current_task_id": "ND-024",
@@ -148,7 +148,7 @@
     "main_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "docs_tree": "3f76b2cc5329269cd6299aec795de7c4848f375a",
     "branch_changed_externally": false,
-    "test_fix_commit": "616c45bb7f9d410526a3b1bde526b149547412b8",
+    "test_fix_commit": "87968cb9866f62e97fc0c2d4c1879e79b57931ee",
     "qa_path": "docs/ND-024-MEDIA-OVERLAP-QA.md",
     "qa_blob": "20b78d51c0eb35da4cfebd34d226a11884f56725",
     "run_scope": {
@@ -378,7 +378,10 @@
     "completed_run_id": "nodus-auto-20261118T0811Z-nd024-integrity",
     "screenshot_artifact_id": 14411775183,
     "screenshot_artifact_url": "https://github.com/iAlirezaaa/nodus/actions/runs/44266591852/artifacts/14411775183",
-    "screenshot_visual_inspection": "NOT PERFORMED (artifact successfully generated)"
+    "screenshot_visual_inspection": "NOT PERFORMED (artifact successfully generated)",
+    "ci_previous_run": "44269593423",
+    "ci_previous_result": "331/334 Node (3 VM missing helper), project TypeScript PASS, build PASS, browser still running",
+    "ci_final_status": "PENDING; do not claim pass"
   },
   "last_completed_run": {
     "run_id": "nodus-auto-20261118T0811Z-nd024-integrity",
