@@ -1,6 +1,6 @@
 # رودمپ Nodus
 
-آخرین به‌روزرسانی: ۲۰۲۶-۱۱-۱۷ · مالک: Hades · مخزن: [iAlirezaaa/nodus](https://github.com/iAlirezaaa/nodus)
+آخرین به‌روزرسانی: ۲۰۲۶-۱۱-۱۸ · مالک: Hades · مخزن: [iAlirezaaa/nodus](https://github.com/iAlirezaaa/nodus)
 
 ## هدف محصول
 
@@ -208,3 +208,7 @@ Previous ND-024 fixes are still not part of the live Site. This slice adds a rea
 ### 2026-11-18 04:25 UTC — ND-024 واقعی Chromium و IndexedDB (روی برنچ)
 
 [GitHub Actions #44235991612](https://github.com/iAlirezaaa/nodus/actions/runs/44235991612) در کد `dcf857865c` (tree `2347bd7b`) **۳۱۳/۳۱۳ تست بومی، TypeScript، build و ۱۰/۱۰ سناریوی مرورگر واقعی ۴۱۷۳** را تأیید کرد. چهار اسکرین‌شات واقعی FA/EN در دسکتاپ و ۳۹۰ پیکسل ([artifact #14397672708](https://github.com/iAlirezaaa/nodus/actions/runs/44235991612/artifacts/14397672708)) و آزمون دو تب IndexedDB، ذخیره/reload/تعارض، Enter/Tab، Escape/Undo، composition مصنوعی و نبود write در حرکت calm/off/reduced ثبت شد. **محدوده صرفاً نسخهٔ مستقل Pages با fixture است**، نه حساب کاربری Site یا تست فیزیکی IME. خوانایی عنوان نود در فیت موبایل (~۳۵٪) و متن‌های آمیختهٔ FA/EN هنوز ایرادند (ND-025). منبع فعلی Sites، مخاطبان، دو حساب واقعی، مرورگر Site و بازبینی مستقل **UNVERIFIED/BLOCKED**؛ **ND-024 همچنان In progress، بدون Released و بدون استقرار یا نسخهٔ تازه**. [QA](ND-024-BROWSER-QA.md). قدم بعد: دسترسی به Site و برابری درخت محتوا، تست محصول اصلی، بازبینی مستقل، سپس تصمیم ادغام ایمن.
+
+### 2026-11-18 05:31 UTC — ND-024: media attachment protected across restored documents
+
+**In progress on `fix/nd-024-startup-storage-recovery`; release Blocked.** The existing optional Pages **Details → Media** picker now refuses a stale FileReader when the current workspace document changes—even if the new document reuses the same thought/board IDs—or storage enters restore/recovery/conflict. The old source made one unintended attachment; new source makes **zero** and shows a localized retry message; ordinary selection remains intact. [Code/tests `41a1b9c6`](https://github.com/iAlirezaaa/nodus/commit/41a1b9c671941992142eb5a2dd3e856fa5edf46f), [final browser test `2c17860f`](https://github.com/iAlirezaaa/nodus/commit/2c17860f4dd3816d4acd4617784b79e984bf0c39) (tree `c16a6497e93ba059dac2552ebfbb548d1a48b1b9`). On [Actions #44243401011](https://github.com/iAlirezaaa/nodus/actions/runs/44243401011): **321/321 native tests**, TypeScript **PASS**, production build **PASS**, **11/11** real 4173 Chromium fixture groups, including 0 stale saves/Undo and [five screenshots](https://github.com/iAlirezaaa/nodus/actions/runs/44243401011/artifacts/14401346251). [Full QA](ND-024-MEDIA-RESTORE-RACE-QA.md). These are fixture tests **not** authenticated hosted Site or physical Persian IME. Site head/tree/audience, independent review and actual hosted runtime remain **UNVERIFIED**, so no main merge or Site deployment/version; ND-025 mobile legibility unchanged. Next reconcile Site content tree and audience, run authenticated integration review, then release only if gates pass.
