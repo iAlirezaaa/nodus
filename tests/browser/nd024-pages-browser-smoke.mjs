@@ -188,7 +188,53 @@ try{
   await racePage.screenshot({path:resolve(dir,'nd024-media-stale-restore.png'),animations:'disabled'});
   await racePage.close();
   console.log('PASS: delayed FileReader cannot attach stale media to restored workspace with matching node IDs');
+  // Verify the visible localized failure notice in an actual 4173 Chromium page.
+  // Deliberately trigger the browser FileReader lifecycle without modifying user files.
+  const failurePage=await ctx.newPage();
+  failurePage.on('pageerror',e=>errors.push('Media failure: '+e.message));
+  await failurePage.goto(TEST_URL,{waitUntil:'load'});
+  await failurePage.waitForFunction(()=>state.hasLoaded);
+  await failurePage.locator('#nodes .node').first().click();
+  const failures=await failurePage.evaluate(async()=>{
+    const input=document.getElementById('media-file');
+    const oldReader=window.FileReader;
+    const oldPut=IDBObjectStore.prototype.put;
+    const original=JSON.stringify(state.doc),history=state.history.length;
+    let writes=0;const results=[];
+    try{
+      IDBObjectStore.prototype.put=function(...args){if(this.name==='workspace')writes++;return oldPut.apply(this,args)};
+      for(const mode of ['abort','error','throw']){
+        window.FileReader=class{
+          readAsDataURL(){
+            if(mode==='throw')throw Error('synthetic inaccessible file');
+            if(mode==='abort')this.onabort();
+            else this.onerror();
+          }
+        };
+        Object.defineProperty(input,'files',{configurable:true,value:[{size:24,name:mode+'.png'}]});
+        await input.onchange({target:input});
+        results.push({mode,notice:document.getElementById('toast').textContent,
+          untouched:JSON.stringify(state.doc)===original,
+          undo:state.history.length===history,unsaved:state.unsavedChanges,writes});
+      }
+      return results;
+    }finally{
+      window.FileReader=oldReader;
+      IDBObjectStore.prototype.put=oldPut;
+    }
+  });
+  assert.equal(failures.length,3,JSON.stringify(failures));
+  for(const result of failures){
+    assert.match(result.notice,/Could not read media|خواندن رسانه انجام نشد/,JSON.stringify(result));
+    assert.equal(result.untouched,true,JSON.stringify(result));
+    assert.equal(result.undo,true,JSON.stringify(result));
+    assert.equal(result.unsaved,false,JSON.stringify(result));
+    assert.equal(result.writes,0,JSON.stringify(result));
+  }
+  await failurePage.screenshot({path:resolve(dir,'nd024-media-read-failure.png'),animations:'disabled'});
+  await failurePage.close();
+  console.log('PASS: real Chromium reader abort/error/throw show retry notice with zero workspace writes or Undo');
   assert.deepEqual(errors,[]);
   console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
-  console.log('ND-024: 11/11 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
+  console.log('ND-024: 12/12 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}
