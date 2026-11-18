@@ -25,7 +25,7 @@ function fixture({lang='en',fail=null,recovery=false}={}){
   URL:{createObjectURL(){stats.created++;if(fail==='url')throw Error('createObjectURL denied');return stats.url},
     revokeObjectURL(url){stats.revoked.push(url);if(fail==='revoke')throw Error('revoke denied')}},
   document:{createElement(){return anchor},body:{append(){if(fail==='append')throw Error('append denied')}}},
-  setTimeout(fn){stats.scheduled.push(fn)},
+  setTimeout(fn){if(fail==='timer')throw Error('timer denied');stats.scheduled.push(fn)},
   toast(message){stats.toasts.push(message)},
   L(fa,en){return lang==='fa'?fa:en},
   console:{error(){}},
@@ -80,4 +80,30 @@ test('JSON serialization failure does not crash or pretend export succeeded',()=
 test('failed URL revocation during failed click still leaves a useful error notice',()=>{
  const h=fixture({fail:'click'});h.ctx.URL.revokeObjectURL=()=>{throw Error('cleanup denied')};
  assert.equal(run(h.ctx),false);assert.match(h.stats.toasts.at(-1),/backup|export/i);
+});
+
+test('delayed ordinary-backup URL revocation errors stay isolated after the prepared notification',()=>{
+ const h=fixture({fail:'revoke'});
+ assert.equal(run(h.ctx),true);
+ assert.equal(h.stats.scheduled.length,1);
+ assert.doesNotThrow(()=>h.stats.scheduled[0]());
+ assert.deepEqual(h.stats.revoked,['blob:backup']);
+ assert.equal(h.stats.removed,1);
+ assert.match(h.stats.toasts.at(-1),/prepared/i);
+ assert.deepEqual(h.state.doc,h.original);
+ assert.deepEqual(h.state.history,['undo']);
+ assert.equal(h.state.unsavedChanges,true);
+});
+test('timer scheduling failure revokes URL and reports retry without affecting document or Undo',()=>{
+ const h=fixture({lang:'fa',fail:'timer'});
+ assert.equal(run(h.ctx),false);
+ assert.equal(h.stats.clicks,1);
+ assert.equal(h.stats.scheduled.length,0);
+ assert.deepEqual(h.stats.revoked,['blob:backup']);
+ assert.equal(h.stats.removed,1);
+ assert.match(h.stats.toasts.at(-1),/پشتیبان|دانلود/);
+ assert.deepEqual(h.state.doc,h.original);
+ assert.deepEqual(h.state.history,['undo']);
+ assert.equal(h.state.unsavedChanges,true);
+ assert.equal(h.state.localConflict,true);
 });
