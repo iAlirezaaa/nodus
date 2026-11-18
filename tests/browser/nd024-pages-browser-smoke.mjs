@@ -87,18 +87,67 @@ try{
   await a.reload({waitUntil:'load'});await a.waitForFunction(()=>state.hasLoaded);
   assert.equal(await a.evaluate(()=>state.doc.nodes[0].title),'ایدهٔ آغازین');
   assert.equal(await a.evaluate(()=>state.doc.nodes.length),4);
+  assert.equal(await a.evaluate(()=>state.lang),'fa');
+  await a.screenshot({path:resolve(dir,'nd024-fa-desktop.png'),animations:'disabled'});
   await a.locator('#language').click();assert.equal(await a.evaluate(()=>state.lang),'en');
+  await a.locator('#motion').selectOption('calm');
+  const motionBaseline=await a.evaluate(()=>{
+    window.nd024WorkspaceWrites=0;
+    const oldPut=IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put=function(...args){
+      if(this.name==='workspace')window.nd024WorkspaceWrites++;
+      return oldPut.apply(this,args);
+    };
+    return {document:JSON.stringify(state.doc),history:state.history.length};
+  });
+  await a.locator('#magnet-start').click();
+  await a.waitForFunction(()=>!state.magnetRunning&&!!state.magnetPositions);
+  const motionReport=()=>a.evaluate(()=>({
+    document:JSON.stringify(state.doc),history:state.history.length,
+    writes:window.nd024WorkspaceWrites,unsaved:state.unsavedChanges
+  }));
+  let report=await motionReport();
+  assert.equal(report.document,motionBaseline.document);
+  assert.equal(report.history,motionBaseline.history);
+  assert.equal(report.writes,0);
+  assert.equal(report.unsaved,false);
+  await a.locator('#magnet-reset').click();
   await a.locator('#motion').selectOption('off');
   assert.equal(await a.locator('#canvas').getAttribute('data-motion'),'off');
+  await a.locator('#magnet-start').click();
+  assert.equal(await a.evaluate(()=>state.magnetRunning),false);
+  assert.equal(await a.evaluate(()=>!!state.magnetPositions),true);
+  await a.locator('#magnet-reset').click();
+  await a.emulateMedia({reducedMotion:'reduce'});
+  await a.locator('#motion').selectOption('full');
+  await a.locator('#magnet-start').click();
+  assert.equal(await a.evaluate(()=>state.magnetRunning),false);
+  await a.locator('#magnet-reset').click();
+  report=await motionReport();
+  assert.equal(report.document,motionBaseline.document);
+  assert.equal(report.history,motionBaseline.history);
+  assert.equal(report.writes,0);
+  assert.equal(report.unsaved,false);
+  await a.emulateMedia({reducedMotion:'no-preference'});
+  await a.locator('#motion').selectOption('off');
   await a.screenshot({path:resolve(dir,'nd024-en-desktop.png'),animations:'disabled'});
-  console.log('PASS: reload, EN, motion off and genuine desktop screenshot');
+  console.log('PASS: magnetic calm/off/reduced-motion preview makes zero document writes/Undo entries');
+  console.log('PASS: reload, FA and EN desktop, motion off and real screenshots');
   const m=await ctx.newPage();await m.setViewportSize({width:390,height:844});
   m.on('pageerror',e=>errors.push('M: '+e.message));
   await m.goto(TEST_URL,{waitUntil:'load'});await m.waitForFunction(()=>state.hasLoaded);
   const dim=await m.evaluate(()=>({w:innerWidth,scroll:document.documentElement.scrollWidth,n:state.doc.nodes.length}));
   assert.equal(dim.w,390);assert.equal(dim.n,4);assert.ok(dim.scroll<=392,'390px overflow: '+JSON.stringify(dim));
+  if(await m.evaluate(()=>state.lang)!=='fa')await m.locator('#language').click();
+  assert.equal(await m.evaluate(()=>state.lang),'fa');
+  assert.equal(await m.evaluate(()=>document.documentElement.dir),'rtl');
   await m.screenshot({path:resolve(dir,'nd024-fa-mobile-390.png'),animations:'disabled'});
+  await m.locator('#language').click();
+  assert.equal(await m.evaluate(()=>state.lang),'en');
+  assert.equal(await m.evaluate(()=>document.documentElement.dir),'ltr');
+  assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=392));
+  await m.screenshot({path:resolve(dir,'nd024-en-mobile-390.png'),animations:'disabled'});
   assert.deepEqual(errors,[]);
-  console.log('PASS: 390px viewport without horizontal overflow, real screenshot');
-  console.log('ND-024: 10/10 real Chromium scenario groups; actual accounts/Sites/native IME NOT tested');
+  console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
+  console.log('ND-024: 10/10 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}
