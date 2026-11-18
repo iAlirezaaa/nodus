@@ -289,7 +289,43 @@ try{
     console.log('PASS: real IndexedDB raw export, failed restore, retained consent, retry and reload');
   }finally{await recoverCtx.close()}
 
+
+  // Fresh, isolated Chromium profile: preference storage may be denied independently of IndexedDB.
+  const deniedCtx=await browser.newContext({viewport:{width:390,height:844},locale:'fa-IR'});
+  try{
+    await deniedCtx.addInitScript(()=>{
+      Storage.prototype.getItem=function(){throw new DOMException('Preference read blocked','SecurityError')};
+      Storage.prototype.setItem=function(){throw new DOMException('Preference write blocked','SecurityError')};
+    });
+    const p=await deniedCtx.newPage();p.on('pageerror',e=>errors.push('DeniedPrefs: '+e.message));
+    await p.goto(TEST_URL,{waitUntil:'load'});await p.waitForFunction(()=>state.hasLoaded);
+    assert.equal(await p.evaluate(()=>state.storageRecovery),null);
+    assert.equal(await p.evaluate(()=>state.lang),'fa');
+    assert.equal(await p.evaluate(()=>state.theme),'dark');
+    await p.locator('#add').click();await p.locator('#nodes input').fill('فکر محفوظ');
+    await p.keyboard.press('Shift+Enter');await p.waitForFunction(()=>!state.unsavedChanges);
+    await p.evaluate(()=>{
+      window.preferenceGraphWrites=0;
+      const oldPut=IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put=function(...args){if(this.name==='workspace')window.preferenceGraphWrites++;return oldPut.apply(this,args)};
+    });
+    const doc=await p.evaluate(()=>JSON.stringify(state.doc));
+    const undo=await p.evaluate(()=>state.history.length);
+    await p.locator('#language').click();assert.equal(await p.evaluate(()=>state.lang),'en');
+    await p.locator('#theme').click();assert.equal(await p.evaluate(()=>state.theme),'light');
+    assert.equal(await p.evaluate(()=>JSON.stringify(state.doc)),doc);
+    assert.equal(await p.evaluate(()=>state.history.length),undo);
+    assert.equal(await p.evaluate(()=>window.preferenceGraphWrites),0);
+    await p.screenshot({path:resolve(dir,'nd024-denied-preferences-mobile.png'),animations:'disabled'});
+    await p.reload({waitUntil:'load'});await p.waitForFunction(()=>state.hasLoaded);
+    assert.equal(await p.evaluate(()=>state.doc.nodes[0].title),'فکر محفوظ');
+    assert.equal(await p.evaluate(()=>state.lang),'fa');
+    assert.equal(await p.evaluate(()=>state.theme),'dark');
+    assert.equal(await p.evaluate(()=>state.storageRecovery),null);
+    console.log('PASS: denied localStorage boot, FA/EN and theme toggles, zero preference graph writes, IndexedDB reload');
+  }finally{await deniedCtx.close()}
+
   assert.deepEqual(errors,[]);
   console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
-  console.log('ND-024: 13/13 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
+  console.log('ND-024: 14/14 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}

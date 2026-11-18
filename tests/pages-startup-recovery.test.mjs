@@ -331,3 +331,21 @@ test('ND-024: clean unload stays native, dirty export does not acknowledge save'
  assert.match(script,/state\.unsavedChanges=true;queueSave\(\);render\(\)/);
  assert.doesNotMatch(script.split('\n').find(s=>s.startsWith('function download(){')),/unsavedChanges=false/);
 });
+
+test('blocked preference storage does not prevent boot or safe local recovery',async()=>{
+ const state={doc:{},hasLoaded:false,storageRecovery:null,lang:'fa',theme:'dark',design:{nodeStyle:'neural',density:'comfortable',motion:'calm',background:'dots'},view:{},boardId:null};
+ const localStorage={getItem(){throw Error('SecurityError: preference read denied')},setItem(){throw Error('SecurityError: preference write denied')}};
+ let rendered=0,loaded=0;const ctx={state,localStorage,setup:()=>{},load:async()=>{loaded++;return good},saveStatus:()=>{},L:(fa,en)=>fa,toast:()=>{},$:()=>({clientWidth:390,clientHeight:844}),render:()=>rendered++,showRecovery:()=>{throw Error('unexpected recovery')},onBoard:()=>[],fit:()=>{}};
+ ctx.readPreference=fn('readPreference',ctx);ctx.writePreference=fn('writePreference',ctx);
+ assert.equal(ctx.readPreference('nodus:pages:lang'),null);
+ assert.doesNotThrow(()=>ctx.writePreference('nodus:pages:lang','en'));
+ await fn('init',ctx)();
+ assert.equal(loaded,1);assert.equal(state.hasLoaded,true);assert.equal(state.doc,good);assert.equal(state.lang,'fa');assert.equal(state.theme,'dark');assert.equal(rendered,1);
+});
+test('ordinary preference storage still reads and persists language and theme',()=>{
+ const saved=new Map([['nodus:pages:lang','en'],['nodus:pages:theme','light']]);
+ const ctx={localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,v)}};
+ const read=fn('readPreference',ctx),write=fn('writePreference',ctx);
+ assert.equal(read('nodus:pages:lang'),'en');assert.equal(read('nodus:pages:theme'),'light');
+ write('nodus:pages:theme','dark');assert.equal(saved.get('nodus:pages:theme'),'dark');
+});
