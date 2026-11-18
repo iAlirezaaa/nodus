@@ -23,8 +23,11 @@ function fixture() {
     assert.equal(version, 1);
     return req;
   } };
-  const getDB = vm.runInNewContext('(' + source + ')', { indexedDB, Error });
-  return { req, connection, getDB, counts: () => ({ created, aborted, closed }) };
+  const state = {localConflict:false,unsavedChanges:false,doc:{title:'draft'},history:['undo'],future:['redo']};
+  const notices=[];
+  const context = {indexedDB,Error,db:null,state,saveStatus:msg=>notices.push(msg),toast:msg=>notices.push(msg),L:(fa,en)=>en};
+  const getDB = vm.runInNewContext('(' + source + ')', context);
+  return { req, connection, getDB, context, state, notices, counts: () => ({ created, aborted, closed }) };
 }
 
 test('exact source script parses and inline CSP matches SHA-256', () => {
@@ -64,4 +67,42 @@ test('open failures reject and never upgrade or hand out an editable workspace',
   assert.deepEqual(f.counts(), { created: 0, aborted: 0, closed: 0 });
   const denied = vm.runInNewContext('(' + source + ')', { indexedDB: { open: () => { throw new Error('denied'); } }, Error });
   await assert.rejects(denied(), /denied/);
+});
+
+test('a real active versionchange closes the handle and quarantines edits without replacing draft or Undo', async () => {
+  const f = fixture(); const promise=f.getDB();f.req.onsuccess();assert.equal(await promise,f.connection);
+  f.context.db=f.connection;
+  const doc=f.state.doc,history=f.state.history,future=f.state.future;
+  f.connection.onversionchange({oldVersion:1,newVersion:2});
+  assert.equal(f.counts().closed,1);assert.equal(f.context.db,null);
+  assert.equal(f.state.localConflict,true);assert.equal(f.state.unsavedChanges,true);
+  assert.equal(f.state.doc,doc);assert.equal(f.state.history,history);assert.equal(f.state.future,future);
+  assert.match(f.notices.join(' '),/export JSON and reload/);
+});
+
+test('a stale connection versionchange never clears a newer active connection', async () => {
+  const f=fixture();const p=f.getDB();f.req.onsuccess();await p;
+  const replacement={close(){throw Error('new handle must stay open')}};
+  f.context.db=replacement;
+  f.connection.onversionchange({oldVersion:1,newVersion:2});
+  assert.equal(f.counts().closed,1);assert.equal(f.context.db,replacement);
+  assert.equal(f.state.localConflict,false);assert.equal(f.state.unsavedChanges,false);
+  assert.equal(f.notices.length,0);
+});
+
+test('versionchange with a throwing close is still fail-closed for its active document', async () => {
+  const f=fixture();const p=f.getDB();f.req.onsuccess();await p;
+  f.connection.close=()=>{throw Error('driver refused close')};
+  f.context.db=f.connection;
+  assert.doesNotThrow(()=>f.connection.onversionchange({oldVersion:1,newVersion:2}));
+  assert.equal(f.context.db,null);assert.equal(f.state.localConflict,true);
+  assert.equal(f.state.unsavedChanges,true);
+});
+
+test('startup versionchange closes a connection even if load has not assigned its global handle yet', async () => {
+  const f=fixture();const p=f.getDB();f.req.onsuccess();await p;
+  f.connection.onversionchange({oldVersion:1,newVersion:2});
+  assert.equal(f.counts().closed,1);
+  assert.equal(f.context.db,null);
+  assert.equal(f.state.localConflict,false);
 });

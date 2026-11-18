@@ -64,6 +64,42 @@ try{
     await p.screenshot({path:resolve(dir,'nd024-blocked-open-recovery-en-mobile.png'),animations:'disabled'});
     console.log('PASS: 390px FA blocked open enters recovery and closes late connection without IDB writes');
   }finally{await blockedCtx.close()}
+
+  // Real two-tab version upgrade: old connections must relinquish IndexedDB
+  // and keep current drafts read-only until the user exports and reloads.
+  const versionCtx=await browser.newContext({viewport:{width:390,height:844},locale:'fa-IR'});
+  try{
+    const p=await versionCtx.newPage();p.on('pageerror',e=>errors.push('VersionA: '+e.message));
+    await p.goto(TEST_URL,{waitUntil:'load'});await p.waitForFunction(()=>state.hasLoaded);
+    await p.locator('#add').click();await p.locator('#nodes input').fill('ایدهٔ حفظ‌شده');
+    await p.keyboard.press('Shift+Enter');await p.waitForFunction(()=>!state.unsavedChanges);
+    const q=await versionCtx.newPage();q.on('pageerror',e=>errors.push('VersionB: '+e.message));
+    await q.goto(TEST_URL,{waitUntil:'load'});await q.waitForFunction(()=>state.hasLoaded);
+    const before=await p.evaluate(()=>({doc:JSON.stringify(state.doc),history:JSON.stringify(state.history)}));
+    await p.evaluate(()=>{
+      window.versionChangeWrites=0;
+      const original=IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put=function(...args){if(this.name==='workspace')window.versionChangeWrites++;return original.apply(this,args)};
+    });
+    const upgraded=await q.evaluate(()=>new Promise((resolve,reject)=>{
+      const req=indexedDB.open('nodus-pages-v1',2);
+      const timeout=setTimeout(()=>reject(Error('Upgrade blocked by an old open connection')),4500);
+      req.onupgradeneeded=()=>{};
+      req.onsuccess=()=>{clearTimeout(timeout);req.result.close();resolve(true)};
+      req.onerror=()=>{clearTimeout(timeout);reject(req.error||Error('Upgrade failed'))};
+    }));
+    assert.equal(upgraded,true);
+    await p.waitForFunction(()=>state.localConflict&&db===null);
+    await q.waitForFunction(()=>state.localConflict&&db===null);
+    const after=await p.evaluate(()=>({doc:JSON.stringify(state.doc),history:JSON.stringify(state.history),
+      writes:window.versionChangeWrites,unsaved:state.unsavedChanges,status:document.getElementById('save-status')?.textContent}));
+    assert.equal(after.doc,before.doc);assert.equal(after.history,before.history);
+    assert.equal(after.writes,0);assert.equal(after.unsaved,true);
+    assert.match(await p.locator('#toast').textContent(),/اتصال ذخیره/);
+    await p.screenshot({path:resolve(dir,'nd024-indexeddb-versionchange-fa-mobile.png'),animations:'disabled'});
+    console.log('PASS: real 390px two-tab IndexedDB versionchange releases both connections, preserves draft/Undo, prevents writes');
+  }finally{await versionCtx.close()}
+
   // An actual readonly IndexedDB transaction can abort after an individual request succeeds.
   // Fault injection is limited to this isolated tab; the saved fixture in the normal tab stays intact.
   const abortPage=await ctx.newPage();abortPage.on('pageerror',e=>errors.push('ABORT: '+e.message));
