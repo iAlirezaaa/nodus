@@ -147,7 +147,48 @@ try{
   assert.equal(await m.evaluate(()=>document.documentElement.dir),'ltr');
   assert.ok(await m.evaluate(()=>document.documentElement.scrollWidth<=392));
   await m.screenshot({path:resolve(dir,'nd024-en-mobile-390.png'),animations:'disabled'});
+  // Source-exact Media handler in a real browser: the same ID can survive a
+  // complete workspace restore while a FileReader still owns an old file.
+  const racePage=await ctx.newPage();
+  racePage.on('pageerror',e=>errors.push('Media race: '+e.message));
+  await racePage.goto(TEST_URL,{waitUntil:'load'});
+  await racePage.waitForFunction(()=>state.hasLoaded);
+  await racePage.locator('#nodes .node').first().click();
+  const race=await racePage.evaluate(async()=>{
+    const input=document.getElementById('media-file');
+    const oldReader=window.FileReader;
+    const oldPut=IDBObjectStore.prototype.put;
+    const previousDoc=state.doc,initialHistory=state.history.length;
+    let reader=null,writes=0;
+    try{
+      window.FileReader=class{readAsDataURL(){reader=this}};
+      IDBObjectStore.prototype.put=function(...args){if(this.name==='workspace')writes++;return oldPut.apply(this,args)};
+      Object.defineProperty(input,'files',{configurable:true,value:[{size:24,name:'stale-before-restore.png'}]});
+      const pending=input.onchange({target:input});
+      if(!reader)return {error:'FileReader not started',selected:state.selected};
+      state.doc={...previousDoc,nodes:previousDoc.nodes.map(n=>({...n}))};
+      reader.result='data:image/png;base64,WA==';reader.onload();
+      await pending;
+      await new Promise(resolve=>setTimeout(resolve,40));
+      return {selected:state.selected,historyDelta:state.history.length-initialHistory,
+        attached:state.doc.nodes.some(n=>n.mediaName==='stale-before-restore.png'),
+        writes,unsaved:state.unsavedChanges};
+    }finally{
+      state.doc=previousDoc;
+      window.FileReader=oldReader;
+      IDBObjectStore.prototype.put=oldPut;
+    }
+  });
+  assert.equal(race.error,undefined,JSON.stringify(race));
+  assert.ok(race.selected,'selected thought required for real FileReader path');
+  assert.equal(race.attached,false,'stale attachment must not write to restored thought with same ID');
+  assert.equal(race.historyDelta,0,'stale media must not add an Undo entry');
+  assert.equal(race.writes,0,'stale media must not save the replaced workspace');
+  assert.equal(race.unsaved,false,'stale media must not mark the document dirty');
+  await racePage.screenshot({path:resolve(dir,'nd024-media-stale-restore.png'),animations:'disabled'});
+  await racePage.close();
+  console.log('PASS: delayed FileReader cannot attach stale media to restored workspace with matching node IDs');
   assert.deepEqual(errors,[]);
   console.log('PASS: FA/EN 390px layout/RTL-LTR without overflow and real mobile screenshots');
-  console.log('ND-024: 10/10 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
+  console.log('ND-024: 11/11 real Chromium scenario groups; fixture tabs, not actual accounts/Sites/native IME');
 }finally{if(browser)await browser.close();await new Promise(done=>server.close(done))}
