@@ -96,6 +96,33 @@ try{
     assert.equal(after.doc,before.doc);assert.equal(after.history,before.history);
     assert.equal(after.writes,0);assert.equal(after.unsaved,true);
     assert.match(await p.locator('#toast').textContent(),/اتصال ذخیره/);
+    // ND-024 mobile status: both privacy note and fail-closed save guidance must
+    // remain visible without ellipsis or a horizontal page overflow (FA, 390px).
+    const bannerLayout=await p.evaluate(()=>{
+      const banner=document.getElementById('local-banner');
+      const privacy=document.getElementById('privacy-note');
+      const status=document.getElementById('save-status');
+      const workspace=document.querySelector('.workspace');
+      const bannerRect=banner.getBoundingClientRect(), workspaceRect=workspace.getBoundingClientRect();
+      return {
+        statusWhiteSpace:getComputedStyle(status).whiteSpace,
+        privacyWhiteSpace:getComputedStyle(privacy).whiteSpace,
+        fontSize:Number.parseFloat(getComputedStyle(status).fontSize),
+        statusFits:status.scrollHeight<=status.clientHeight+1 && status.scrollWidth<=status.clientWidth+1,
+        privacyFits:privacy.scrollHeight<=privacy.clientHeight+1 && privacy.scrollWidth<=privacy.clientWidth+1,
+        bannerConnectsWorkspace:Math.abs(bannerRect.bottom-workspaceRect.top)<1,
+        insideViewport:workspaceRect.bottom<=innerHeight+1,
+        documentFits:document.documentElement.scrollWidth<=innerWidth+1
+      };
+    });
+    assert.equal(bannerLayout.statusWhiteSpace,'normal');
+    assert.equal(bannerLayout.privacyWhiteSpace,'normal');
+    assert.ok(bannerLayout.fontSize>=12,JSON.stringify(bannerLayout));
+    assert.ok(bannerLayout.statusFits,JSON.stringify(bannerLayout));
+    assert.ok(bannerLayout.privacyFits,JSON.stringify(bannerLayout));
+    assert.ok(bannerLayout.bannerConnectsWorkspace,JSON.stringify(bannerLayout));
+    assert.ok(bannerLayout.insideViewport,JSON.stringify(bannerLayout));
+    assert.ok(bannerLayout.documentFits,JSON.stringify(bannerLayout));
     await p.screenshot({path:resolve(dir,'nd024-indexeddb-versionchange-fa-mobile.png'),animations:'disabled'});
     console.log('PASS: real 390px two-tab IndexedDB versionchange releases both connections, preserves draft/Undo, prevents writes');
   }finally{await versionCtx.close()}
