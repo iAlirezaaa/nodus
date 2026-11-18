@@ -15,9 +15,22 @@ function fn(name,ctx){
 const good={version:1,homeBoardId:'root',boards:[{id:'root',title:'Root'}],nodes:[],edges:[]};
 const bad={...good,homeBoardId:'missing'};
 const copy=x=>JSON.parse(JSON.stringify(x));
-function db(value,present=value!==undefined,failKey=false){return {transaction:()=>({objectStore:()=>({get:()=>{
- const req={result:value};queueMicrotask(()=>req.onsuccess?.());return req;
-},getKey:()=>{const req={result:present?'main':undefined,error:failKey?Error('probe blocked'):null};queueMicrotask(()=>failKey?req.onerror?.():req.onsuccess?.());return req;}})})}}
+function db(value,present=value!==undefined,failKey=false){
+ let tx;
+ const store={
+  get:()=>{const req={result:value};queueMicrotask(()=>{
+   req.onsuccess?.();
+   // A successful request does not mean the transaction has committed.
+   if(value!==undefined)queueMicrotask(()=>tx.oncomplete?.());
+  });return req},
+  getKey:()=>{const req={result:present?'main':undefined,error:failKey?Error('probe blocked'):null};queueMicrotask(()=>{
+   if(failKey)req.onerror?.();
+   else{req.onsuccess?.();queueMicrotask(()=>tx.oncomplete?.())}
+  });return req}
+ };
+ tx={objectStore:()=>store,abort:()=>queueMicrotask(()=>tx.onabort?.())};
+ return {transaction:()=>tx};
+}
 function harness(){
  const state={hasLoaded:true,restorePending:false,storageRecovery:{raw:bad,rawAvailable:true,backupTaken:false},
  doc:{old:true},boardId:'old',selected:'a',selectedIds:new Set(['a']),history:['prior'],future:['redo'],

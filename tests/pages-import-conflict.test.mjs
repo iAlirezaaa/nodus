@@ -9,14 +9,24 @@ function checkedImport(db){return new Function('db',[source('localImportConflict
 const original={version:1,homeBoardId:'root',boards:[{id:'root',title:'Original'}],nodes:[],edges:[]};
 const imported={...original,boards:[{id:'root',title:'Imported'}]};
 function database(value,present=value!==undefined,{failKey=false,failPut=false}={}){
- let tx;const writes=[];let aborts=0;
- const request=(result,fail=false)=>{const req={result,error:fail?Error('Key read denied'):null};queueMicrotask(()=>fail?req.onerror?.():req.onsuccess?.());return req};
+ let tx,mode='readwrite';const writes=[];let aborts=0;
+ const request=(result,fail=false,finishesRead=false)=>{
+  const req={result,error:fail?Error('Key read denied'):null};
+  queueMicrotask(()=>{
+   if(fail)req.onerror?.();
+   else{
+    req.onsuccess?.();
+    // Only a readonly load commits after the last read; readwrite import waits for put.
+    if(mode==='readonly'&&finishesRead)queueMicrotask(()=>tx.oncomplete?.());
+   }
+  });return req
+ };
  const store={
-  get:()=>request(value),getKey:()=>request(present?'main':undefined,failKey),
+  get:()=>request(value,false,value!==undefined),getKey:()=>request(present?'main':undefined,failKey,true),
   put:snapshot=>{if(failPut)throw Error('Quota exceeded');writes.push(snapshot);queueMicrotask(()=>tx.oncomplete?.())}
  };
  tx={objectStore:()=>store,abort:()=>{aborts++;queueMicrotask(()=>tx.onabort?.())}};
- return {db:{transaction:()=>tx},writes,get aborts(){return aborts}};
+ return {db:{transaction:(storeName,txMode)=>{mode=txMode;return tx}},writes,get aborts(){return aborts}};
 }
 test('ND-024 ordinary import commits atomically with unchanged stored record',async()=>{
  const h=database(original);await checkedImport(h.db)(imported,original);
