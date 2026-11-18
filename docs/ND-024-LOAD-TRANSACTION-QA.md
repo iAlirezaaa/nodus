@@ -11,3 +11,9 @@
 ## Actual implementation and verification
 
 Pending.
+
+## Scope extension recorded before CI workflow edit — 2026-11-18 12:26 UTC
+
+**Observed blocker:** the old exact-push test runner remains active because legacy readonly IndexedDB test doubles never deliver transaction completion, while the branch workflow uses `cancel-in-progress: false`. Superseded push checks are queued behind a hung run (30-minute timeout), preventing timely verification of the corrected fixture. Browser test also surfaced a frame-bound input timing race; its code now waits for actual visible input.
+
+**Acceptance:** on this dedicated ND-024 branch only, newer pushes supersede prior runs in the *same branch ref*, without affecting other branches, user's Site, data, or production deployment; latest commit must complete native Node/TS/build and real Chromium 4173 fixture. Keep exact test port. A cancelled prior CI is not a pass. Add one-line workflow concurrency correction, then verify the final result. Existing run's source cannot be force-reset, and only this ND-024 validation workflow changes.
