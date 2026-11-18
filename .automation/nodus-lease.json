@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": null,
-  "acquired_at": "2026-11-17T23:16:34.419Z",
-  "heartbeat_at": null,
-  "expires_at": null,
+  "owner_run_id": "nodus-auto-20261118T0020Z-nd024-gates",
+  "acquired_at": "2026-11-18T00:20:14.001Z",
+  "heartbeat_at": "2026-11-18T00:20:14.001Z",
+  "expires_at": "2026-11-18T01:50:14.001Z",
   "current_task_id": "ND-024",
   "feature_branch": "fix/nd-024-startup-storage-recovery",
   "checkpoint": {
@@ -317,15 +317,26 @@
     "checked_in_test_blob": "aa15de8df354586c7d835b4e85424b056be38da1",
     "native_full_tests": "NOT RUN: no complete checkout (GitHub DNS unavailable)",
     "sites_tree": "UNVERIFIED: Sites skill unavailable; cannot inspect version/audience",
-    "deployment_version": "NONE"
+    "deployment_version": "NONE",
+    "run_20261118": {
+      "run_id": "nodus-auto-20261118T0020Z-nd024-gates",
+      "base_control_head": "992a7550dffa3b46f0a23b0cc14d4a032a556ab4",
+      "base_control_tree": "ade0933377fbcb95baef31ebd9ecb47d1f135ab5",
+      "main_head": "26fafac05c320ed5db30a0ee908dd816714acdd9",
+      "feature_head": "73316808ecb497db0808c2d3f94be4b8f2c4e175",
+      "site_tree": "UNVERIFIED",
+      "scope": "Recover native gates; if unavailable reproduce and fix one bounded local-first storage regression with exact source tests; keep branch-only",
+      "status": "lease-acquired",
+      "release": "NONE"
+    }
   },
   "last_completed_run": "nodus-auto-20261117T2317Z-nd024-native-recovery",
-  "updated_at": "2026-11-17T23:27:09.942Z",
+  "updated_at": "2026-11-18T00:20:14.001Z",
   "completed_at": "2026-11-17T23:27:09.942Z",
   "last_completed_at": "2026-11-17T23:27:09.942Z",
-  "current_run": null,
-  "status": "idle",
-  "current_run_id": null,
-  "active_run_id": null,
+  "current_run": "nodus-auto-20261118T0020Z-nd024-gates",
+  "status": "running",
+  "current_run_id": "nodus-auto-20261118T0020Z-nd024-gates",
+  "active_run_id": "nodus-auto-20261118T0020Z-nd024-gates",
   "last_activity": "ND-024 in-progress JSON restore guard staged/tested on feature branch; no publication because native/browser/Sites gates unavailable"
 }
