@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-owner-20261119T2222Z-neural-zones",
   "acquired_at": "2026-11-19T22:22:42.931Z",
-  "heartbeat_at": "2026-11-19T22:52:04.341Z",
-  "expires_at": "2026-11-20T00:22:04.341Z",
+  "heartbeat_at": "2026-11-19T22:52:51.041Z",
+  "expires_at": "2026-11-20T00:22:51.041Z",
   "current_task_id": "ND-026",
   "feature_branch": "feat/nd-026-neural-zones",
   "checkpoint": {
@@ -503,7 +503,7 @@
       "applicationTree": "4dde1e5b8ddb9323b608764e5f7ae1e379d80de2",
       "verifiedHead": "613f9a9769ec7cd95496062254eaf9c8299e1ad8",
       "verifiedTree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5",
-      "nextExternalStep": "Site workflow production build, commit/push and package",
+      "nextExternalStep": "Final Site source head read, then owner-private saved-version deployment",
       "currentMain": "1c32d0f43a5a33d402825fd35c2cbdb4e9feb7d8",
       "githubPush": {
         "state": "Feature branch created successfully via GitHub API",
@@ -524,9 +524,19 @@
         "tree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5"
       },
       "siteSync": {
-        "state": "Prepared exact verified tree for Site build",
-        "base": "eb8a9ad1f470447bf15634efbaa47531924901c5",
-        "tree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5"
+        "state": "Source push and package confirmed",
+        "head": "a84a0b29e87ff7f0e933054367fefc26695c157d",
+        "tree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5",
+        "matchesGitHub": true
+      },
+      "package": {
+        "archive": "/workspace/scratch/17a07d6cd554/nodus-nd026-release.tar.gz",
+        "sha256": "428cf0afeef6b996619db6e49c75a2868e399d3b3fa0395fa13243b505c43927",
+        "build": "PASS final exact source"
+      },
+      "publication": {
+        "state": "NOT ATTEMPTED",
+        "baselineVersion": 12
       }
     }
   },
