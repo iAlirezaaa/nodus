@@ -89,7 +89,14 @@ try {
   assert(denseStats.highlighted >= 1, 'Selected thought must remain visually emphasized');
   await page.screenshot({ path: artifacts + '/dense-reading-fa-desktop.png' });
   await page.setViewportSize({ width: 390, height: 844 });
+  // A navigation sidebar open at desktop width must not cover canvas controls after narrowing.
+  await page.locator('.sidebar-scrim').waitFor({ state: 'detached', timeout: 5000 });
   await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-390.png' });
+  // The drawer can still be opened intentionally at mobile width and dismissed normally.
+  await page.getByRole('button', { name: 'بازکردن فهرست' }).click();
+  assert(await page.locator('.sidebar-scrim').isVisible(), 'Mobile navigation must remain available by explicit action');
+  await page.locator('.sidebar-close').click();
+  await page.locator('.sidebar-scrim').waitFor({ state: 'detached', timeout: 5000 });
   const mobile = await page.evaluate(() => ({ width: window.innerWidth, overflow: document.documentElement.scrollWidth > window.innerWidth }));
   assert(!mobile.overflow, 'Mobile document must not overflow horizontally');
   const prev = (await snapshot()).writes;
