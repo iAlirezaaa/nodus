@@ -44,3 +44,11 @@ Next concrete action:
 **Files/boundaries:** Existing workspace and graph mutations stay inside `hooks/use-workspace.ts` and validated graph helpers; canvas presentation/selection changes in `components/Canvas.tsx` and contextual controls. No schema/auth/permission/asset deletion, no change to shared-room access or Site. Tests/README/architecture/QA must reflect actually run checks.
 
 **Status:** ND-011 In progress, ND-013 In progress (owner request supersedes lower-priority queue); neither Verified nor Released. No publication attempted. **Next:** inspect source, implement the bounded graph-template insertion and dense graph highlighting, then test and checkpoint.
+
+## 2026-11-19 02:16 UTC — ND-011/ND-013 browser regression resumed (scoping checkpoint)
+
+**Run:** `nodus-auto-20261119T0213Z-nd011-resume`; lease `automation/nodus-control` acquired with guarded fast-forward. Active branch `feat/nd-011-templates-and-dense-graph`, observed branch `761143b948429c8bddeee893d9e4fd49a5751820`, tree `8f1e7789fd2bfd5f87f27cd97fbe83af35454fcf`; main `26fafac05c320ed5db30a0ee908dd816714acdd9`, tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`. Hosted Site head/tree/audience still unavailable via authorized native Sites skill, so no publish or source overwrite.
+
+**Concrete failure:** GitHub Actions browser job #135235452567 on run #44427333185 failed after real Chromium/fixture interaction: at 390px, `.sidebar-scrim` intercepted the enabled `همسایه‌های بعدی` reading-page button. The responsive sidebar remains open when an already-open desktop viewport narrows; it is only closed on first mount. Tests, TypeScript and production build job passed on that branch run, but browser gate failed.
+
+**Slice and acceptance:** Close the overlay when the viewport crosses the mobile breakpoint, without closing a drawer the user manually opens at a steady mobile width; preserve desktop and focus/keyboard/search navigation, pan/drag and zero workspace writes. Add a real browser assertion for desktop-to-390px transition and reading pager click; require fresh CI native tests/TypeScript/build and browser screenshots on fixed port 4173. Until verified: **In progress on branch, not Released.** No backend/schema/owner-data mutation. Next: implement/test and reconcile Site parity/access independently.
