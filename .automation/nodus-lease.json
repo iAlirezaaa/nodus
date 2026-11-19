@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261119T0812Z-nd013-edge-label",
   "acquired_at": "2026-11-19T08:14:03.491Z",
-  "heartbeat_at": "2026-11-19T08:14:03.491Z",
-  "expires_at": "2026-11-19T09:44:03.495Z",
+  "heartbeat_at": "2026-11-19T08:18:13.307Z",
+  "expires_at": "2026-11-19T09:48:13.307Z",
   "current_task_id": "ND-013",
   "feature_branch": "feat/nd-011-templates-and-dense-graph",
   "checkpoint": {
@@ -137,7 +137,7 @@
     "code_tests": "6/6 native Node22 targeted independent harness, exact helper git blob; helper-only tsc5.8.3 strict pass",
     "last_red": "GitHub exact source blob a67d98c74bac0f6e3950a4e71bb2ec279db99304 matches local git hash-object; native Node22 parseQuotedSearchPhrase returns null for all four ZWNJ/ZWJ-wrapped Persian quoted queries",
     "current_run": "nodus-auto-20261118T011757-nd024-native-ci",
-    "pre_edit_scope_commit": "b71eee2a35557e264f649903996bd88f5b25f021",
+    "pre_edit_scope_commit": "6ca2fe04b80084f6abaf7df3416c4f638348b692",
     "pre_edit_scope_tree": "668b9695780bfab15d91b0f7e6737305c823f432",
     "isolated_verification": "7/7 source-exact V8 synthetic IndexedDB; full native Node, TS, build, 4173 browser pending",
     "verified_tests": "15/15 exact-source V8 cases + 3/3 checked-in tests under V8 Node module facades, CSP SHA256 validated via pure JS",
@@ -429,7 +429,8 @@
     "previous_browser_screenshots": "https://github.com/iAlirezaaa/nodus/actions/runs/44457200758/artifacts/14497889264",
     "visual_note": "Real Chromium 500-neighbor desktop screenshot inspected, canvas selected node centered; mobile 390 original screenshot often shows sparse center after resizing, future ND-013 navigation opportunity",
     "ci_previous_failed_run": 44458034000,
-    "last_run_scope_at": "2026-11-19T08:14:03.491Z"
+    "last_run_scope_at": "2026-11-19T08:14:03.491Z",
+    "last_heartbeat": "2026-11-19T08:18:13.307Z"
   },
   "last_completed_run": "nodus-auto-20261119T0717Z-nd013-visual-density",
   "updated_at": "2026-11-18T20:33:02.446Z",
