@@ -67,6 +67,34 @@ try {
   await page.locator('.search-box input').fill('طرح اولیه');
   await page.locator('.search-results button').filter({ has: page.locator('strong', { hasText: /^طرح اولیه$/ }) }).click();
   await page.locator('[data-node="clarity-inner-start"]').waitFor({ timeout: 10000 });
+  // ND-025: the *real* NodusApp must persist independent view preferences
+  // under account+room+board identities, never the legacy global board key.
+  const scopedViewKey = board => `nodus:view:v2:${encodeURIComponent(`${initial.userId}:personal:${board}`)}`;
+  const homeViewKey = scopedViewKey('clarity-home');
+  const nestedViewKey = scopedViewKey('clarity-design-board');
+  await page.waitForFunction(({ home, nested }) =>
+    !!localStorage.getItem(home) && !!localStorage.getItem(nested),
+    { home: homeViewKey, nested: nestedViewKey }, { polling: 100, timeout: 6000 });
+  const scopedViews = await page.evaluate(({home, nested}) => {
+    const parse = key => JSON.parse(localStorage.getItem(key) ?? 'null');
+    return { home: parse(home), nested: parse(nested),
+      legacyHome: localStorage.getItem('nodus:view:clarity-home'),
+      legacyNested: localStorage.getItem('nodus:view:clarity-design-board') };
+  }, { home: homeViewKey, nested: nestedViewKey });
+  for (const saved of [scopedViews.home, scopedViews.nested]) {
+    assert(saved && Number.isFinite(saved.x) && Number.isFinite(saved.y) && Number.isFinite(saved.zoom) && saved.zoom > 0,
+      'Each scoped board must persist valid viewport coordinates');
+  }
+  assert(scopedViews.legacyHome === null && scopedViews.legacyNested === null,
+    'A scoped viewport must not read/write the ambiguous legacy board-only key');
+  assert(JSON.stringify(scopedViews.home) !== JSON.stringify(scopedViews.nested),
+    'Distinct boards must retain their own fitted view rather than inheriting another board');
+  const foreignAccountViewKey = `nodus:view:v2:${encodeURIComponent('different-fixture-account:personal:clarity-home')}`;
+  const otherRoomViewKey = `nodus:view:v2:${encodeURIComponent(`${initial.userId}:different-fixture-room:clarity-home`)}`;
+  const untouchedSentinel = JSON.stringify({ x: 952, y: -403, zoom: 1.33 });
+  await page.evaluate(({ keys, sentinel }) => keys.forEach(key => localStorage.setItem(key, sentinel)),
+    { keys: [foreignAccountViewKey, otherRoomViewKey], sentinel: untouchedSentinel });
+  await page.screenshot({ path: artifacts + '/viewport-scoped-nested-fa-desktop.png' });
   assert(await page.locator('[data-node="clarity-root"]').count() === 0,
     'Nested navigation must remove home-board nodes from the canvas');
   assert((await snapshot()).writes === writesBeforeNestedNavigation,
@@ -86,6 +114,19 @@ try {
   await page.screenshot({ path: artifacts + '/new-nodes-motion-nested-fa-desktop.png' });
   await page.locator('.breadcrumbs').getByRole('button', { name: 'یک ایده، چند مسیر' }).click();
   await page.locator('[data-node="clarity-root"]').waitFor({ timeout: 10000 });
+  const isolationAfterReturn = await page.evaluate(({home, nested, foreignAccount, otherRoom}) => ({
+    home: JSON.parse(localStorage.getItem(home) ?? 'null'),
+    nested: JSON.parse(localStorage.getItem(nested) ?? 'null'),
+    foreignAccount: localStorage.getItem(foreignAccount),
+    otherRoom: localStorage.getItem(otherRoom)
+  }), { home: homeViewKey, nested: nestedViewKey, foreignAccount: foreignAccountViewKey, otherRoom: otherRoomViewKey });
+  assert(isolationAfterReturn.home?.zoom === scopedViews.home.zoom &&
+    isolationAfterReturn.nested?.zoom === scopedViews.nested.zoom,
+    'Returning between boards must keep both scoped viewport zoom preferences');
+  assert(isolationAfterReturn.foreignAccount === untouchedSentinel &&
+    isolationAfterReturn.otherRoom === untouchedSentinel,
+    'Navigation must never overwrite another account or room viewport');
+  await page.screenshot({ path: artifacts + '/viewport-scoped-home-fa-desktop.png' });
   assert(await page.locator('[data-node="clarity-inner-start"]').count() === 0,
     'Returning home must not show nested-board nodes');
   await page.locator('.sidebar-search').click();
@@ -431,8 +472,8 @@ try {
     autoFlipEvidence.push({ width, ...auto });
   }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-  console.log(JSON.stringify({ result: 'PASS', scenarios: 14, fixture: 'real NodusApp with synthetic session-storage API',
-    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 16, lastWrites: final.writes }));
+  console.log(JSON.stringify({ result: 'PASS', scenarios: 15, fixture: 'real NodusApp with synthetic session-storage API',
+    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 18, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
   console.error('ND-011/013 UI verification FAILED:', error, serverOutput);

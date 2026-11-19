@@ -61,6 +61,11 @@ Inline titles, inspector edits, duplication title changes, and project renaming 
 
 ## Canvas and layouts
 
+### Viewport isolation (ND-025, feature-branch candidate)
+
+Pan and zoom are private browser preferences, never graph document writes. Each Canvas receives an authenticated scope of `userId:room-or-personal:boardId`; both its in-memory viewport cache and `localStorage` preference use that identity. A shared copied board may retain the source board ID, so a board-only key is not safe across accounts or rooms. The former `nodus:view:<boardId>` entries are deliberately left untouched but never read or migrated because their owning account cannot be inferred; the user may need to readjust the view once after upgrade. All canonical graph positions, relationships and Undo are unchanged. An unauthenticated Canvas has only a transient in-memory view and does not persist it.
+
+
 `Canvas.tsx` uses DOM nodes and SVG connections in a transformed world layer. Pointer events provide pan, pointer-centered zoom, pinch, dragging, and bend-handle interaction. Off-screen items are culled, detail changes with zoom, and memoized cards/connections use stable event dispatchers. View changes coalesce into animation frames; dragging recomputes incident edge geometry. These are bounded rendering strategies, not a promise of a particular frame rate for every graph and device.
 
 ### Neural display and saved geometry

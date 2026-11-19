@@ -8,6 +8,7 @@ import { DEFAULT_CANVAS_DESIGN, type CanvasDesign, type LayoutGuide } from '@/li
 import { buildNodeGrowth, defaultNodeGrowth, projectCardNode, type NodeGrowth } from '@/lib/node-growth';
 import { nodeEnergy, type NodeEnergy } from '@/lib/node-energy';
 import { clampReadingCaptionShift, shouldPlaceReadingCaptionAbove } from '@/lib/graph-caption-placement';
+import { canvasViewportStorageKey } from '@/lib/canvas-viewport-storage';
 import { mergeNodeSelection, nodesInSelection, selectionRectangle } from '@/lib/node-selection';
 import { DEFAULT_MAGNETIC_SETTINGS, type MagneticSettings } from '@/lib/magnetic-layout';
 import { useMagneticCanvas, type MagneticViewState } from '@/hooks/use-magnetic-canvas';
@@ -53,6 +54,7 @@ interface Props {
   design?: CanvasDesign;
   magnetic?: MagneticSettings;
   magneticScope?: string;
+  viewScope?: string;
   interactionsPaused?: boolean;
   onMagneticState?: (state: MagneticViewState) => void;
   guides?: LayoutGuide[];
@@ -198,12 +200,15 @@ function revealDelta(start: number, end: number, minimum: number, maximum: numbe
 
 const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   const { document: doc, boardId, language, selectedId, connectFrom, tool } = props;
+  // A shared-copy board ID may match its source ID or another account's board.
+  // Scope viewport memory and storage exactly like other personal canvas settings.
+  const viewStorageKey = canvasViewportStorageKey(props.viewScope);
+  const viewIdentity = viewStorageKey ?? `temporary:${boardId}`;
   const design = props.design ?? DEFAULT_CANVAS_DESIGN, guides = props.guides ?? EMPTY_GUIDES, peers = props.peers ?? EMPTY_PEERS;
   const neural = design.nodeStyle === 'neuron';
   const L = (fa: string, en: string) => language === 'fa' ? fa : en;
   const propsRef = useRef(props);
-  const boardRef = useRef(boardId);
-  useLayoutEffect(() => { propsRef.current = props; boardRef.current = boardId; }, [props, boardId]);
+  useLayoutEffect(() => { propsRef.current = props; }, [props]);
   const surface = useRef<HTMLDivElement>(null);
   const cardElements = useRef(new Map<string, HTMLElement>());
   const pendingFocus = useRef<string | null>(null);
@@ -356,7 +361,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   useEffect(() => { if (!motionAllowed) stopAnimation(); }, [motionAllowed, stopAnimation]);
   const setView = useCallback((next: Viewport, animate = false, immediate = false) => {
     if (!Number.isFinite(next.x) || !Number.isFinite(next.y) || !Number.isFinite(next.zoom) || next.zoom <= 0) return;
-    viewRef.current = next; views.current[boardRef.current] = next; pendingView.current = next;
+    viewRef.current = next; views.current[viewIdentity] = next; pendingView.current = next;
     if (presenceClient.current) reportPresence(presenceClient.current);
     if (animate && motionAllowed) {
       if (animationTimer.current) clearTimeout(animationTimer.current);
@@ -364,7 +369,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
       animationTimer.current = setTimeout(() => { setAnimating(false); animationTimer.current = null; }, 350);
     } else stopAnimation();
     if (animate || immediate) flushImmediately(); else scheduleFrame();
-  }, [flushImmediately, scheduleFrame, stopAnimation, reportPresence, motionAllowed]);
+  }, [flushImmediately, scheduleFrame, stopAnimation, reportPresence, motionAllowed, viewIdentity]);
   const updateMoving = useCallback((next: MovingNode, immediate = false) => {
     movingRef.current = next; movingDirty.current = true;
     if (immediate) flushImmediately(); else scheduleFrame();
@@ -497,19 +502,21 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     return () => { observer.disconnect(); element.removeEventListener('wheel', wheel); };
   }, [zoomAt, setView]);
   useLayoutEffect(() => {
-    if (initialized.current === boardId || !surface.current) return;
-    initialized.current = boardId; cancel(); reportPresence(null); setFocusedCard(null); pendingFocus.current = null;
+    if (initialized.current === viewIdentity || !surface.current) return;
+    initialized.current = viewIdentity; cancel(); reportPresence(null); setFocusedCard(null); pendingFocus.current = null;
     const rect = surface.current.getBoundingClientRect();
-    let saved = views.current[boardId];
-    if (!saved) try { saved = JSON.parse(localStorage.getItem(`nodus:view:${boardId}`) ?? 'null'); } catch { /* Unavailable local preferences. */ }
+    let saved = views.current[viewIdentity];
+    // Never use the legacy board-only key: it cannot identify its owning account/room.
+    if (!saved && viewStorageKey) try { saved = JSON.parse(localStorage.getItem(viewStorageKey) ?? 'null'); } catch { /* Unavailable local preferences. */ }
     if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y) && Number.isFinite(saved.zoom) && saved.zoom > 0 && saved.zoom <= 2.5) setView(saved, false, true);
     else setView(fitViewport(fitNodes, rect.width, rect.height, fitPadding(rect.width, rect.height)), false, true);
-  }, [boardId, fitNodes, setView, cancel, reportPresence]);
+  }, [viewIdentity, viewStorageKey, fitNodes, setView, cancel, reportPresence]);
   useEffect(() => () => reportPresence(null), [boardId, reportPresence]);
   useEffect(() => {
-    const timer = setTimeout(() => { try { localStorage.setItem(`nodus:view:${boardId}`, JSON.stringify(view)); } catch { /* Preference storage is optional. */ } }, 300);
+    if (!viewStorageKey) return; // No identity, no cross-account persistence.
+    const timer = setTimeout(() => { try { localStorage.setItem(viewStorageKey, JSON.stringify(view)); } catch { /* Preference storage is optional. */ } }, 300);
     return () => clearTimeout(timer);
-  }, [view, boardId]);
+  }, [view, viewStorageKey]);
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (event.type === 'keydown' && event.key === 'Escape' && !event.ctrlKey && !event.metaKey && !event.altKey && gesture.current) {
