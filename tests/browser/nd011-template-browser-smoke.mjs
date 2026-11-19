@@ -105,19 +105,27 @@ try {
   await page.screenshot({ path: artifacts + '/new-nodes-motion-reduced-fa-desktop.png' });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on');
+  // Hover a real graph neuron before suspension: a preview remaining open when
+  // the tab is hidden can obscure the graph after the user returns.
+  await page.locator('[data-node="clarity-root"] .neuron-core').hover({ force: true });
+  await page.locator('.node-hover-preview').waitFor({ timeout: 5000 });
   await page.evaluate(() => {
     // Simulate a background tab deterministically; not a physical tab-switch claim.
     Object.defineProperty(document, 'hidden', { configurable: true, value: true });
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' && !document.querySelector('[data-node].is-entering'));
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' &&
+    !document.querySelector('[data-node].is-entering') && !document.querySelector('.node-hover-preview'));
   assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Hidden document must not save graph data');
   await page.evaluate(() => {
     delete document.hidden;
     delete document.visibilityState;
     document.dispatchEvent(new Event('visibilitychange'));
   });
+  assert(await page.locator('.node-hover-preview').count() === 0,
+    'Restoring visibility must not resurrect a stale hover preview');
+  await page.screenshot({ path: artifacts + '/hidden-tab-hover-retired-fa-desktop.png' });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off');
   assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Switching presentation motion must not change persisted nodes');
@@ -383,8 +391,8 @@ try {
     autoFlipEvidence.push({ width, ...auto });
   }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-  console.log(JSON.stringify({ result: 'PASS', scenarios: 12, fixture: 'real NodusApp with synthetic session-storage API',
-    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 14, lastWrites: final.writes }));
+  console.log(JSON.stringify({ result: 'PASS', scenarios: 13, fixture: 'real NodusApp with synthetic session-storage API',
+    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 15, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
   console.error('ND-011/013 UI verification FAILED:', error, serverOutput);
