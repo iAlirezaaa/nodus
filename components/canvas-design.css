@@ -137,3 +137,17 @@
   .canvas .connection-flow { stroke-dasharray: 3 22; opacity: .32; }
 }
 @media (pointer: coarse) { .node-hover-preview footer button { min-height: 34px; } }
+
+/* ND-013: reading window is strictly presentational; muted nodes remain pointer and keyboard targets. */
+.canvas[data-spotlight='true'] .thought-node[data-spotlight-member='false'] { opacity: .13; filter: grayscale(.65); transition: opacity .16s ease, filter .16s ease; }
+.canvas[data-spotlight='true'] .connections .connection[data-spotlight-member='false'] { opacity: .07; }
+.canvas[data-spotlight='true'] .connections .connection[data-spotlight-member='false'] .connection-flow,
+.canvas[data-spotlight='true'] .connections .connection[data-spotlight-member='false'] .connection-signal { display: none; }
+.canvas[data-spotlight='true'] .node-neuron[data-spotlight-member='false'] h3.neuron-label { visibility: hidden; }
+.canvas[data-spotlight='true'] .thought-node[data-spotlight-member='false']:hover,
+.canvas[data-spotlight='true'] .thought-node[data-spotlight-member='false']:focus-within { opacity: 1; filter: none; }
+.canvas[data-spotlight='true'] .node-neuron[data-spotlight-member='true'] h3.neuron-label { visibility: visible !important; max-width: 235px !important; white-space: normal !important; text-overflow: clip !important; -webkit-line-clamp: 2 !important; font-weight: 650; background: color-mix(in srgb, var(--bg) 96%, transparent); }
+.canvas[data-spotlight='true'] .thought-node[data-spotlight-member='true'] { z-index: 4; }
+@media (prefers-reduced-motion: reduce) {
+  .canvas[data-spotlight='true'] .thought-node { transition: none !important; }
+}
