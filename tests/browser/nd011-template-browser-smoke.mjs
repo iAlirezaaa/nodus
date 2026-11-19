@@ -310,6 +310,8 @@ try {
     assert(auto.captionBottom <= auto.coreTop + 2 && auto.captionTop >= auto.areaTop + 6,
       'Automatically flipped caption must fit above the core within the canvas: ' + JSON.stringify({ width, auto }));
     assert((await snapshot()).writes === beforeWrites, 'Panning/auto-caption placement must not save the workspace');
+    assert(await page.locator('.node-hover-preview').count() === 0,
+      'Middle-button panning must not leave a preview covering the readable network at ' + width + 'px');
     await page.screenshot({ path: artifacts + '/dense-reading-auto-flip-fa-mobile-' + width + '.png' });
     autoFlipEvidence.push({ width, ...auto });
   }

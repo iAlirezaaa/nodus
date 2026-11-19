@@ -290,7 +290,8 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   useLayoutEffect(() => { zoomFloorRef.current = zoomFloor; }, [zoomFloor]);
   const hoverNode = useCallback((id: string, active: boolean) => {
     if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
-    if (active) { if (!gesture.current && !bendingEdge.current) setHoveredId(id); }
+    // Do not mount an obstructive preview during or just after a pan gesture.
+    if (active) { if (!gesture.current && !bendingEdge.current && pointers.current.size === 0 && Date.now() >= suppressClickUntil.current) setHoveredId(id); }
     else hoverTimer.current = setTimeout(() => { setHoveredId(current => current === id ? null : current); hoverTimer.current = null; }, 180);
   }, []);
   const clearHover = useCallback(() => {
@@ -567,6 +568,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     for (const memberId of groupIds) { const display = nodeMap.get(memberId), saved = baseNodeMap.get(memberId); if (display && saved) group.set(memberId, { id: memberId, boardId, baseX: saved.x, baseY: saved.y, x: display.x, y: display.y }); }
     gesture.current = { mode: selecting ? 'select' : pan ? 'pan' : 'node', pointerId: event.pointerId, id, startX: event.clientX, startY: event.clientY, worldX: at.x, worldY: at.y, x: pan ? viewRef.current.x : node?.x ?? at.x, y: pan ? viewRef.current.y : node?.y ?? at.y, moved: false,
       group, additive, preserveGroup, selectionStart: selection, selectionNodes: selecting ? [...baseProjections.values()] : undefined, selectionMerge: event.shiftKey ? 'add' : 'replace' };
+    if (pan) clearHover();
     if (selecting) { clearHover(); updateMarquee(selectionRectangle(at, at), undefined, true); }
   };
   const move = (event: React.PointerEvent) => {
