@@ -1,4 +1,5 @@
 import type { GraphNode, NodeColor, TaskStatus, Workspace } from './types';
+import { pruneBoardZoneMembers } from './zones';
 
 export type SelectionPoint = { x: number; y: number };
 export type SelectionRectangle = SelectionPoint & { width: number; height: number };
@@ -125,9 +126,17 @@ export function deleteSelectedNodes(document: Workspace, boardId: string, ids: r
     nodes.push(next);
   }
   const edges = document.edges.filter(edge => !removedBoards.has(edge.boardId) && !removedNodes.has(edge.sourceId) && !removedNodes.has(edge.targetId));
+  const survivingBoards = removedBoards.size ? document.boards.filter(board => !removedBoards.has(board.id)) : document.boards;
+  let zonesChanged = false;
+  const boards = survivingBoards.map(board => {
+    if (!board.zones?.length) return board;
+    const next = pruneBoardZoneMembers(board, new Set((boardNodes.get(board.id) ?? []).filter(id => !removedNodes.has(id))));
+    if (next !== board) zonesChanged = true;
+    return next;
+  });
   return {
     ...document,
-    boards: removedBoards.size ? document.boards.filter(board => !removedBoards.has(board.id)) : document.boards,
+    boards: zonesChanged ? boards : survivingBoards,
     nodes,
     edges: edges.length === document.edges.length ? document.edges : edges,
   };

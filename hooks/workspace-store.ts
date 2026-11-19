@@ -64,6 +64,9 @@ export function copyWorkspaceAsRoots(current: Workspace, recovered: Workspace, l
       ...board, id: boards.get(board.id)!,
       title: board.parentNodeId ? board.title : board.title.slice(0,500-suffix.length) + suffix,
       parentNodeId: board.parentNodeId ? nodes.get(board.parentNodeId)! : null,
+      ...(board.zones ? { zones: board.zones.map(zone => ({
+        ...zone, id: crypto.randomUUID(), nodeIds: zone.nodeIds.map(id => nodes.get(id)!).filter(Boolean),
+      })) } : {}),
     }))],
     nodes: [...current.nodes, ...recovered.nodes.map(node => ({
       ...node, id: nodes.get(node.id)!, boardId: boards.get(node.boardId)!,

@@ -26,6 +26,9 @@
 .selection-toolbar .selection-toolbar-delete { color: var(--danger); }
 .selection-toolbar .selection-toolbar-delete:hover:not(:disabled) { color: var(--danger); background: color-mix(in srgb, var(--danger) 11%, transparent); }
 .selection-toolbar-divider { width: 1px; height: 23px; background: var(--border); }
+.selection-toolbar .selection-toolbar-create-zone { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; min-height: 44px; margin-top: 7px; padding: 8px; border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); border-radius: 9px; color: var(--foreground); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); font-size: 11px; line-height: 1.5; }
+.selection-toolbar-create-zone > svg { flex: none; color: var(--accent); }
+.selection-toolbar .selection-toolbar-create-zone:hover:not(:disabled) { border-color: var(--accent); background: var(--surface-hover); }
 .selection-toolbar-hint { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 9px; color: var(--muted); font-size: 9px; line-height: 1.5; text-align: center; }
 .selection-toolbar-hint > span:first-child { display: flex; align-items: center; justify-content: center; gap: 3px; }
 .selection-toolbar-hint kbd { padding: 0 4px; font-size: 9px; direction: ltr; }

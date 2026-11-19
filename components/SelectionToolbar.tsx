@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { Check, CheckCircle2, ChevronDown, Circle, CircleDashed, CircleDot, Layers, Lightbulb, Redo2, Trash2, Undo2, X } from 'lucide-react';
+import { Check, CheckCircle2, ChevronDown, Circle, CircleDashed, CircleDot, Group, Layers, Lightbulb, Redo2, Trash2, Undo2, X } from 'lucide-react';
 import type { Language, NodeColor, TaskStatus } from '@/lib/types';
 import './selection-toolbar.css';
 
@@ -19,6 +19,7 @@ export interface SelectionToolbarProps {
   onClear: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  onCreateZone?: () => void;
 }
 
 const COLORS: { value: NodeColor; fa: string; en: string }[] = [
@@ -38,7 +39,7 @@ const STATUSES = [
 ] as const;
 
 /** Selection actions stay in the canvas section, including their local popovers. */
-export default function SelectionToolbar({ count, language, color, status, readOnly = false, canUndo, canRedo, onColor, onStatus, onDelete, onClear, onUndo, onRedo }: SelectionToolbarProps) {
+export default function SelectionToolbar({ count, language, color, status, readOnly = false, canUndo, canRedo, onColor, onStatus, onDelete, onClear, onUndo, onRedo, onCreateZone }: SelectionToolbarProps) {
   const [open, setOpen] = useState<'color' | 'status' | null>(null);
   const root = useRef<HTMLElement>(null);
   const paletteTrigger = useRef<HTMLButtonElement>(null);
@@ -118,6 +119,10 @@ export default function SelectionToolbar({ count, language, color, status, readO
       <button type="button" className="selection-toolbar-icon" disabled={readOnly || !canRedo} onClick={() => { if (!readOnly && canRedo) onRedo(); }}
         aria-label={L('انجام دوباره', 'Redo')} title={L('انجام دوباره', 'Redo')}><Redo2 size={17} aria-hidden="true" /></button>
     </div>
+    {onCreateZone && <button type="button" className="selection-toolbar-create-zone" disabled={readOnly}
+      onClick={() => { if (!readOnly) { setOpen(null); onCreateZone(); } }}>
+      <Group size={16} aria-hidden="true" /><span>{L('ساخت Zone از انتخاب‌ها', 'Create zone from selection')}</span>
+    </button>}
     <div className="selection-toolbar-hint">
       <span><kbd>Shift</kbd>{L(' + کلیک یا کشیدنِ کادر: افزودن به انتخاب', ' + click or drag a box to add')}</span>
       <span>{L('فکرِ انتخاب‌شده را بکش تا گروه جابه‌جا شود.', 'Drag a selected thought to move the group.')}</span>

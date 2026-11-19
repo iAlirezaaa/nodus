@@ -9,6 +9,7 @@ import { buildNodeGrowth, defaultNodeGrowth, projectCardNode, type NodeGrowth } 
 import { nodeEnergy, type NodeEnergy } from '@/lib/node-energy';
 import { clampReadingCaptionShift, shouldPlaceReadingCaptionAbove } from '@/lib/graph-caption-placement';
 import { canvasViewportStorageKey } from '@/lib/canvas-viewport-storage';
+import { nodeUsesNeuron, zoneBounds } from '@/lib/zone-geometry';
 import { mergeNodeSelection, nodesInSelection, selectionRectangle } from '@/lib/node-selection';
 import { DEFAULT_MAGNETIC_SETTINGS, type MagneticSettings } from '@/lib/magnetic-layout';
 import { useMagneticCanvas, type MagneticViewState } from '@/hooks/use-magnetic-canvas';
@@ -18,6 +19,7 @@ import type { PresencePeer } from '@/lib/collaboration';
 import type { GraphEdge, GraphNode, Language, NodeKind, Viewport, Workspace } from '@/lib/types';
 import './canvas-flow.css';
 import './canvas-design.css';
+import './zones.css';
 
 export const kindIcons = { note: StickyNote, image: ImageIcon, video: Video, audio: AudioLines, pdf: FileText, file: FileIcon, link: Link2, project: Layers };
 export const kindName = (kind: NodeKind, language: Language) => ({ note: ['یادداشت', 'Note'], image: ['تصویر', 'Image'], video: ['ویدیو', 'Video'], audio: ['صدا', 'Audio'], pdf: ['پی‌دی‌اف', 'PDF'], file: ['فایل', 'File'], link: ['لینک', 'Link'], project: ['پروژه', 'Project'] }[kind][language === 'fa' ? 0 : 1]);
@@ -63,6 +65,7 @@ interface Props {
   inlineEdit?: InlineEditSession | null;
   onEdit?: (id: string) => void;
   onDetails?: (id: string) => void;
+  onEditZone?: (id: string) => void;
   onEditCommit?: (id: string, title: string, action: InlineEditAction) => void;
   onEditDirtyChange?: (id: string, dirty: boolean) => void;
   onNodeKeyDown?: (id: string, event: React.KeyboardEvent<HTMLElement>) => void;
@@ -251,11 +254,11 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   const baseNodeMap = useMemo(() => new Map(baseNodes.map(node => [node.id, node])), [baseNodes]);
   const edges = useMemo(() => doc.edges.filter(edge => edge.boardId === boardId), [doc.edges, boardId]);
   const motionAllowed = useCanvasMotion();
-  const storedProjections = useMemo(() => new Map(baseNodes.map(node => [node.id, projectNode(node, growthById.get(node.id) ?? defaultNodeGrowth, neural, design.density)])), [baseNodes, growthById, neural, design.density]);
+  const storedProjections = useMemo(() => new Map(baseNodes.map(node => [node.id, projectNode(node, growthById.get(node.id) ?? defaultNodeGrowth, nodeUsesNeuron(node, neural), design.density)])), [baseNodes, growthById, neural, design.density]);
   const magneticPoints = useMemo(() => baseNodes.map(node => {
     const projected = storedProjections.get(node.id)!;
     return { id:node.id, x:node.x+node.width/2, y:node.y+node.height/2,
-      radius: neural ? Math.max(28,projected.width/2+18) : Math.hypot(projected.width,projected.height)/2+12,
+      radius: nodeUsesNeuron(node, neural) ? Math.max(28,projected.width/2+18) : Math.hypot(projected.width,projected.height)/2+12,
       mass: 1 + ((growthById.get(node.id)?.scale ?? 1)-1)*.45 };
   }), [baseNodes,storedProjections,neural,growthById]);
   const magnetic = useMagneticCanvas({ scope:props.magneticScope ?? boardId, nodes:baseNodes, edges, points:magneticPoints,
@@ -269,20 +272,28 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   }) : magnetic.nodes, [magnetic.nodes, moving]);
   const nodeMap = useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes]);
   const expandedId = props.inlineEdit?.nodeId === hoveredId || moving || selectedSet.size > 1 || props.multiSelectMode || marquee ? null : hoveredId;
-  const baseProjections = useMemo(() => magnetic.hasPositions ? new Map(magnetic.nodes.map(node => [node.id, projectNode(node, growthById.get(node.id) ?? defaultNodeGrowth, neural, design.density)])) : storedProjections, [magnetic.nodes,magnetic.hasPositions,storedProjections,growthById,neural,design.density]);
+  const baseProjections = useMemo(() => magnetic.hasPositions ? new Map(magnetic.nodes.map(node => [node.id, projectNode(node, growthById.get(node.id) ?? defaultNodeGrowth, nodeUsesNeuron(node, neural), design.density)])) : storedProjections, [magnetic.nodes,magnetic.hasPositions,storedProjections,growthById,neural,design.density]);
   const projections = useMemo(() => {
     if (!moving && !expandedId) return baseProjections;
     const projected = new Map(baseProjections);
     for (const id of new Set([...(moving?.group?.keys() ?? []), moving?.id, expandedId])) {
       const node = id ? nodeMap.get(id) : undefined;
-      if (node) projected.set(node.id, projectNode(node, growthById.get(node.id) ?? defaultNodeGrowth, neural, design.density, node.id === expandedId));
+      if (node) projected.set(node.id, projectNode(node, growthById.get(node.id) ?? defaultNodeGrowth, nodeUsesNeuron(node, neural), design.density, node.id === expandedId));
     }
     return projected;
   }, [baseProjections, moving, expandedId, nodeMap, growthById, neural, design.density]);
+  const zones = useMemo(() => doc.boards.find(board => board.id === boardId)?.zones ?? [], [doc.boards, boardId]);
+  const zoneProjections = useMemo(() => {
+    const bounds = new Map([...projections].map(([id, node]) => [id, projectionBounds(node, nodeUsesNeuron(node, neural))]));
+    return zones.flatMap(zone => { const box = zoneBounds(zone, bounds); return box ? [{ zone, box }] : []; });
+  }, [zones, projections, neural]);
   const fitNodes = useMemo(() => {
-    const projected = [...baseProjections.values()].map(node => projectionBounds(node, neural));
-    return !baseNodes.length || !guides.length ? projected : [...projected, ...guides.map(guide => ({ ...baseNodes[0], id: `guide-${guide.id}`, x: guide.x, y: guide.y, width: guide.width, height: guide.height }))];
-  }, [baseNodes, baseProjections, neural, guides]);
+    const projected = [...baseProjections.values()].map(node => projectionBounds(node, nodeUsesNeuron(node, neural)));
+    if (!baseNodes.length) return projected;
+    const bounds = new Map(projected.map(node => [node.id, node]));
+    const groups = zones.flatMap(zone => { const box = zoneBounds(zone, bounds); return box ? [{ ...baseNodes[0], ...box, id: `zone-${zone.id}` }] : []; });
+    return [...projected, ...groups, ...guides.map(guide => ({ ...baseNodes[0], id: `guide-${guide.id}`, x: guide.x, y: guide.y, width: guide.width, height: guide.height }))];
+  }, [baseNodes, baseProjections, neural, guides, zones]);
   const recentItems = useRecentGraphItems(baseNodes, edges, boardId, motionAllowed);
   const zoomFloor = useMemo(() => Math.min(.15, fitViewport(fitNodes, size.width, size.height, fitPadding(size.width, size.height)).zoom * .5), [fitNodes, size]);
   const boardPeers = useMemo(() => peers.filter(peer => peer.boardId === boardId).slice(0, 50), [peers, boardId]);
@@ -411,7 +422,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   }, []);
   const revealNode = useCallback((id: string, focus = true, minimumZoom = 0) => {
     const projected = baseProjections.get(id); if (!projected) return;
-    const node = projectionBounds(projected, neural);
+    const node = projectionBounds(projected, nodeUsesNeuron(projected, neural));
     const bounds = measuredSize.current ?? size;
     const marginX = Math.min(44, bounds.width * .09), top = Math.min(134, bounds.height * .23), bottom = Math.min(bounds.width <= 650 ? 220 : 195, bounds.height * .35);
     const previous = viewRef.current;
@@ -422,7 +433,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
       y: (top + bounds.height - bottom) / 2 - (node.y + node.height / 2) * zoom,
       zoom,
     };
-    const display = projectionBounds(projected, neural, current.zoom);
+    const display = projectionBounds(projected, nodeUsesNeuron(projected, neural), current.zoom);
     const left = display.x * current.zoom + current.x, upper = display.y * current.zoom + current.y;
     const dx = revealDelta(left, left + display.width * current.zoom, marginX, bounds.width - marginX);
     const dy = revealDelta(upper, upper + display.height * current.zoom, top, bounds.height - bottom);
@@ -700,7 +711,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   }), [selectEdge, point, contextMenu, keyboardMenu, cancel]);
   const visibleNodes = useMemo(() => nodes.filter(node => {
     if (capturedNodes.has(node.id) || props.inlineEdit?.nodeId === node.id || focusedCard === node.id || hoveredId === node.id) return true;
-    const projected = projectionBounds(projections.get(node.id)!, neural, view.zoom);
+    const projected = projectionBounds(projections.get(node.id)!, nodeUsesNeuron(node, neural), view.zoom);
     const x = projected.x * view.zoom + view.x, y = projected.y * view.zoom + view.y;
     return x + projected.width * view.zoom > -150 && x < size.width + 150 && y + projected.height * view.zoom > -150 && y < size.height + 150;
   }), [nodes,capturedNodes,props.inlineEdit?.nodeId,focusedCard,hoveredId,projections,neural,view,size]);
@@ -779,7 +790,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     const center = (left + right) / 2;
     const top = previewProjection.y * view.zoom + view.y, bottom = (previewProjection.y + previewProjection.height) * view.zoom + view.y;
     previewX = clamp(center - previewWidth / 2, 12, size.width - previewWidth - 12);
-    const minimumY = Math.min(122, size.height * .18), below = bottom + (neural ? 72 : 14);
+    const minimumY = Math.min(122, size.height * .18), below = bottom + (previewNode && nodeUsesNeuron(previewNode, neural) ? 72 : 14);
     const roomBelow = size.height - 60 - below, roomAbove = top - minimumY - 14;
     if (roomBelow >= previewHeight) previewY = below;
     else if (roomAbove >= previewHeight) previewY = top - previewHeight - 14;
@@ -797,7 +808,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
 
   // Clamp only visible, readable-network captions on narrow canvases. This is view state,
   // not a document position change; pan/zoom recompute it without persistence writes.
-  const mobileReadingLabels = !!props.spotlightNodeIds && neural && size.width <= 650;
+  const mobileReadingLabels = !!props.spotlightNodeIds && size.width <= 650;
   const maximumReadingLabelScale = Math.max(1, 1 / view.zoom);
   const readingCaptionMaxWidth = mobileReadingLabels
     ? Math.min(235, Math.max(32, (size.width - 24) / (view.zoom * maximumReadingLabelScale))) : 235;
@@ -817,19 +828,25 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     <div className="canvas-atmosphere" aria-hidden="true" />
     <div className={`canvas-world ${animating ? 'is-animating' : ''}`} style={{ transform: `translate3d(${view.x}px,${view.y}px,0) scale(${view.zoom})` }}>
       {guides.filter(guide => guide.x * view.zoom + view.x < size.width + 200 && (guide.x + guide.width) * view.zoom + view.x > -200 && guide.y * view.zoom + view.y < size.height + 200 && (guide.y + guide.height) * view.zoom + view.y > -200).map(guide => <div key={guide.id} className={`layout-guide layout-guide-${guide.kind}`} style={{ left: guide.x, top: guide.y, width: guide.width, height: guide.height, '--guide-color': colors[guide.color ?? design.accent] } as React.CSSProperties} aria-hidden="true"><span className="layout-guide-title">{guide.title}<small>{guide.subtitle}</small></span></div>)}
+      {zoneProjections.filter(({ box }) => box.x * view.zoom + view.x < size.width + 200 && (box.x + box.width) * view.zoom + view.x > -200 && box.y * view.zoom + view.y < size.height + 200 && (box.y + box.height) * view.zoom + view.y > -200).map(({ zone, box }) => <div key={zone.id} className="graph-zone" data-zone={zone.id} data-color={zone.color} data-detail={view.zoom < .65 ? 'overview' : 'full'} data-selected={zone.nodeIds.some(id => selectedSet.has(id))} style={{ left: box.x, top: box.y, width: box.width, height: box.height }} dir={language === 'fa' ? 'rtl' : 'ltr'}>
+        <button type="button" className="graph-zone__header" onPointerDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()} onContextMenu={event => { event.preventDefault(); event.stopPropagation(); }} onKeyDown={event => event.stopPropagation()} onClick={() => propsRef.current.onEditZone?.(zone.id)} aria-label={L(`ویرایش Zone: ${zone.title}`, `Edit zone: ${zone.title}`)}>
+          <span className="graph-zone__title"><Layers size={15} aria-hidden="true" /><span className="graph-zone__name" dir="auto" title={zone.title}>{zone.title}</span><span className="graph-zone__count">{new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en').format(zone.nodeIds.length)}</span></span>
+          {zone.description && <span className="graph-zone__description" dir="auto">{zone.description}</span>}
+        </button>
+      </div>)}
       <svg className="connections" aria-label={L('ارتباط‌ها', 'Connections')}>{visibleEdges.map(drawing => <Connection key={drawing.edge.id} drawing={drawing} selected={props.selectedEdgeId === drawing.edge.id} dispatch={edgeDispatch} language={language} signal={signalIds.has(drawing.edge.id) && (props.spotlightEdgeIds?.has(drawing.edge.id) ?? true)} spotlighted={props.spotlightEdgeIds?.has(drawing.edge.id) ?? true} energy={energyById.get((growthById.get(drawing.source.id)?.mass ?? 0) >= (growthById.get(drawing.target.id)?.mass ?? 0) ? drawing.source.id : drawing.target.id)!} handleScale={props.selectedEdgeId === drawing.edge.id ? 1 / view.zoom : 1} canBend={!!props.onEdgeBend} canDelete={!!props.onDeleteEdge} showLabel={design.connectionLabels} />)}</svg>
       {visibleNodes.map(node => <NodeCard key={node.id} node={node}
-        captionAbove={mobileReadingLabels && !!props.spotlightNodeIds?.has(node.id) && shouldPlaceReadingCaptionAbove(
+        captionAbove={nodeUsesNeuron(node, neural) && mobileReadingLabels && !!props.spotlightNodeIds?.has(node.id) && shouldPlaceReadingCaptionAbove(
           (projections.get(node.id)!.y + projections.get(node.id)!.height / 2) * view.zoom + view.y,
           size.height, projections.get(node.id)!.width * view.zoom / 2,
           80 * view.zoom * (selectedSet.has(node.id) || expandedId === node.id ? maximumReadingLabelScale : Math.min(4, maximumReadingLabelScale))
         )}
-        captionShift={mobileReadingLabels ? clampReadingCaptionShift(
+        captionShift={nodeUsesNeuron(node, neural) && mobileReadingLabels ? clampReadingCaptionShift(
           (projections.get(node.id)!.x + projections.get(node.id)!.width / 2) * view.zoom + view.x,
           size.width, view.zoom, selectedSet.has(node.id) || expandedId === node.id ? maximumReadingLabelScale : Math.min(4, maximumReadingLabelScale), readingCaptionMaxWidth
         ) : 0} spotlighted={props.spotlightNodeIds?.has(node.id) ?? true} projected={projections.get(node.id)!} growth={growthById.get(node.id) ?? defaultNodeGrowth} hovered={expandedId === node.id} selected={selectedSet.has(node.id)} connecting={connectFrom === node.id} detail={detail} miniature={miniature} language={language} tabStop={rovingId === node.id}
         edit={props.inlineEdit?.nodeId === node.id ? props.inlineEdit : null} dispatch={cardDispatch} register={registerCard}
-        neural={neural} density={design.density} dragging={moving?.id === node.id || !!moving?.group?.has(node.id)} pinned={magnetic.pinned.has(node.id)} presenceLabel={selectedByPeers.has(node.id) ? `${selectedByPeers.get(node.id)!.label}${selectedByPeers.get(node.id)!.count > 1 ? ` +${selectedByPeers.get(node.id)!.count - 1}` : ''}` : undefined} presenceColor={selectedByPeers.get(node.id)?.color}
+        neural={nodeUsesNeuron(node, neural)} density={design.density} dragging={moving?.id === node.id || !!moving?.group?.has(node.id)} pinned={magnetic.pinned.has(node.id)} presenceLabel={selectedByPeers.has(node.id) ? `${selectedByPeers.get(node.id)!.label}${selectedByPeers.get(node.id)!.count > 1 ? ` +${selectedByPeers.get(node.id)!.count - 1}` : ''}` : undefined} presenceColor={selectedByPeers.get(node.id)?.color}
         entering={motionAllowed && recentItems.nodes.has(node.id)} canToggleTask={!!props.onToggleTask} taskDone={taskProgress.get(node.id)?.done ?? 0} taskTotal={taskProgress.get(node.id)?.total ?? 0}
         projectCount={node.childBoardId ? childCount.get(node.childBoardId) ?? 0 : 0} projectMiniature={node.childBoardId ? projectMiniatures.get(node.childBoardId) ?? EMPTY_MINIATURE : EMPTY_MINIATURE} />)}
       {marquee && <div className="canvas-selection-marquee" data-selection-marquee aria-hidden="true" style={{ left: marquee.x, top: marquee.y, width: marquee.width, height: marquee.height }}><span>{selectedSet.size} {L('فکر', 'thoughts')}</span></div>}

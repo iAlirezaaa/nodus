@@ -19,8 +19,8 @@ export interface PresencePayload { sessionId: string; boardId: string; x: number
 const ID = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 const forbidden = new Set(['__proto__', 'prototype', 'constructor']);
 const fields: Record<Exclude<OperationTarget, 'workspace'>, Set<string>> = {
-  board: new Set(['title', 'description', 'parentNodeId', 'createdAt', 'layout']),
-  node: new Set(['boardId', 'kind', 'title', 'text', 'x', 'y', 'width', 'height', 'color', 'asset', 'url', 'childBoardId', 'createdAt', 'task', 'appearance', 'annotations', 'scheduledAt']),
+  board: new Set(['title', 'description', 'parentNodeId', 'createdAt', 'layout', 'zones']),
+  node: new Set(['boardId', 'kind', 'title', 'text', 'x', 'y', 'width', 'height', 'color', 'asset', 'url', 'childBoardId', 'createdAt', 'task', 'appearance', 'presentation', 'annotations', 'scheduledAt']),
   edge: new Set(['boardId', 'sourceId', 'targetId', 'label', 'route', 'stroke', 'color', 'width', 'animated', 'bend']),
 };
 const nested: Record<string, Set<string>> = {
@@ -95,7 +95,7 @@ export function validateOperations(input: unknown): WorkspaceOperation[] {
   });
 }
 
-/** Diff top-level entities and object fields; annotation arrays remain an atomic field. */
+/** Diff top-level entities and object fields; annotation and zone arrays remain atomic fields. */
 export function diffWorkspace(base: Workspace, next: Workspace): WorkspaceOperation[] {
   if (base === next) return [];
   if (base.version !== 1 || next.version !== 1) throw new Error('Unsupported workspace format.');

@@ -1,4 +1,5 @@
 import { uid } from './graph';
+import { pruneBoardZoneMembers } from './zones';
 import type { Board, Language, Workspace } from './types';
 
 export interface PersonalSpaceInfo {
@@ -51,7 +52,8 @@ export function deletePersonalSpace(document: Workspace, rootBoardId: string, la
   const removedNodes = new Set<string>();
   for (const node of document.nodes) if (removedBoards.has(node.boardId)) removedNodes.add(node.id);
 
-  const boards = document.boards.filter(board => !removedBoards.has(board.id));
+  const available = new Set(document.nodes.filter(node => !removedNodes.has(node.id)).map(node => node.id));
+  const boards = document.boards.filter(board => !removedBoards.has(board.id)).map(board => pruneBoardZoneMembers(board, available));
   const nodes = document.nodes.filter(node => !removedNodes.has(node.id)).map(node => {
     // Valid workspaces cannot point across roots, but a stale reference must not
     // become a dangling task or project pointer after removing its destination.

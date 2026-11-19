@@ -1,4 +1,5 @@
 import type { Board, GraphNode, NodeKind, Viewport, Workspace } from './types';
+import { pruneBoardZoneMembers } from './zones';
 
 const DEFAULT_WIDTH = 244;
 const DEFAULT_HEIGHT = 172;
@@ -208,7 +209,7 @@ export function deleteNode(doc: Workspace, nodeId: string): Workspace {
   }
   return {
     ...doc,
-    boards: doc.boards.filter(board => !removedBoards.has(board.id)),
+    boards: doc.boards.filter(board => !removedBoards.has(board.id)).map(board => pruneBoardZoneMembers(board, new Set((boardNodes.get(board.id) ?? []).filter(node => !removedNodes.has(node.id)).map(node => node.id)))),
     nodes: doc.nodes
       .filter(node => !removedNodes.has(node.id) && !removedBoards.has(node.boardId))
       .map(node => {

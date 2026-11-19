@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { Check, CheckCircle2, ChevronDown, Circle, CircleDot, Lightbulb, X } from 'lucide-react';
-import type { Language, NodeColor, TaskStatus } from '@/lib/types';
+import { Check, CheckCircle2, ChevronDown, Circle, CircleDashed, CircleDot, Lightbulb, Square, X } from 'lucide-react';
+import type { GraphNode, Language, NodeColor, TaskStatus } from '@/lib/types';
 import './node-quick-settings.css';
 
 export interface NodeQuickSettingsProps {
@@ -11,8 +11,10 @@ export interface NodeQuickSettingsProps {
   status: TaskStatus | null;
   language: Language;
   readOnly?: boolean;
+  presentation?: GraphNode['presentation'];
   onColor: (color: NodeColor) => void;
   onStatus: (status: TaskStatus | null) => void;
+  onPresentation?: (value: GraphNode['presentation']) => void;
 }
 
 const COLORS: { value: NodeColor; fa: string; en: string }[] = [
@@ -31,8 +33,14 @@ const STATUSES = [
   { value: 'done', fa: 'انجام‌شده', en: 'Done', Icon: CheckCircle2 },
 ] as const;
 
+const PRESENTATIONS = [
+  { value: undefined, fa: 'پیش‌فرض', en: 'Default', Icon: CircleDashed },
+  { value: 'neuron', fa: 'نورون', en: 'Neuron', Icon: CircleDot },
+  { value: 'card', fa: 'کارت', en: 'Card', Icon: Square },
+] as const;
+
 /** Small selection control; its popover stays inside the dock and modal inert scope. */
-export default function NodeQuickSettings({ nodeId, color, status, language, readOnly = false, onColor, onStatus }: NodeQuickSettingsProps) {
+export default function NodeQuickSettings({ nodeId, color, status, language, readOnly = false, presentation, onColor, onStatus, onPresentation }: NodeQuickSettingsProps) {
   const [openForNodeId, setOpenForNodeId] = useState<string | null>(null);
   const open = openForNodeId === nodeId;
   const root = useRef<HTMLDivElement>(null);
@@ -42,6 +50,8 @@ export default function NodeQuickSettings({ nodeId, color, status, language, rea
   const headingId = useId();
   const colorHeadingId = useId();
   const statusHeadingId = useId();
+  const presentationHeadingId = useId();
+  const presentationNoteId = useId();
   const L = (fa: string, en: string) => language === 'fa' ? fa : en;
   const currentColor = COLORS.find(item => item.value === color)!;
   const currentStatus = STATUSES.find(item => item.value === status)!;
@@ -114,6 +124,17 @@ export default function NodeQuickSettings({ nodeId, color, status, language, rea
         </button>)}
       </div>
       <p className="node-quick-note">{L('ایده: بدون وضعیت انجام · بقیه: تسک قابل پیگیری', 'Idea has no task status. Other states track a task.')}</p>
+      {onPresentation && <>
+        <div className="node-quick-section-heading node-quick-presentation-heading"><span id={presentationHeadingId}>{L('نمایش فکر', 'Thought display')}</span></div>
+        <div className="node-quick-presentations" role="group" aria-labelledby={presentationHeadingId} aria-describedby={presentationNoteId}>
+          {PRESENTATIONS.map(({ value, fa, en, Icon }) => <button key={value ?? 'default'} type="button" className="node-quick-presentation"
+            data-presentation-choice={value ?? 'default'} aria-pressed={presentation === value} disabled={readOnly}
+            onClick={() => { if (!readOnly && value !== presentation) onPresentation(value); }}>
+            <Icon size={17} aria-hidden="true" /><span>{L(fa, en)}</span>
+          </button>)}
+        </div>
+        <p id={presentationNoteId} className="node-quick-note">{L('پیش‌فرض از طراحی برنامه پیروی می‌کند. نورون و کارت، نمایش همین فکر را تغییر می‌دهند.', 'Default follows the app design. Neuron and Card change only this thought’s display.')}</p>
+      </>}
     </div>}
   </div>;
 }

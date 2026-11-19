@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Neural zones · Synthetic Nodus fixture</title>
+    <style>
+      #fixture-badge { position: fixed; bottom: 7px; left: 7px; z-index: 2147483647; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: min(480px, calc(100vw - 14px)); padding: 6px 9px; border: 1px solid #87a778; border-radius: 7px; background: #15251cf2; color: #d8f1ce; font: 11px/1.5 ui-monospace, monospace; box-shadow: 0 3px 16px #0004; }
+      #fixture-badge button, #fixture-badge summary { padding: 4px 7px; border: 1px solid #87a778; border-radius: 4px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+      #fixture-badge details[open] { position: fixed; bottom: 48px; left: 7px; right: 7px; max-height: 40vh; overflow: auto; padding: 12px; border: 1px solid #87a778; border-radius: 8px; background: #15251c; }
+      #fixture-document { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+      @media (max-width: 600px) { #fixture-badge { font-size: 10px; gap: 4px; } #fixture-status { flex-basis: 100%; } }
+    </style>
+    <script type="module">
+      import RefreshRuntime from '/@react-refresh';
+      if (!window.__vite_plugin_react_preamble_installed__) {
+        RefreshRuntime.injectIntoGlobalHook(window);
+        window.$RefreshReg$ = () => {};
+        window.$RefreshSig$ = () => type => type;
+        window.__vite_plugin_react_preamble_installed__ = true;
+      }
+    </script>
+  </head>
+  <body>
+    <div id="fixture-root"></div>
+    <aside id="fixture-badge" aria-label="Synthetic fixture controls" dir="ltr">
+      <output id="fixture-status" role="status" aria-live="polite">SYNTHETIC FIXTURE · No real account data</output>
+      <button id="fixture-reset" type="button">Reset fixture</button>
+      <button id="fixture-reduced-motion" type="button" aria-pressed="false">Simulate reduced motion</button>
+      <button id="fixture-hidden-page" type="button" aria-pressed="false">Simulate hidden page</button>
+      <details><summary>Saved fixture document</summary><pre id="fixture-document" aria-label="Read-only saved synthetic workspace"></pre></details>
+    </aside>
+    <script type="module" src="./neural-zones-fixture.tsx"></script>
+  </body>
+</html>

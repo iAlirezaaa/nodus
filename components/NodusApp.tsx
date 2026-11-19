@@ -7,6 +7,8 @@ import CanvasContextMenu, { type ContextAction } from './CanvasContextMenu';
 import EdgeInspector from './EdgeInspector';
 import DesignPanel, { layoutName } from './DesignPanel';
 import TemplatePanel from './TemplatePanel';
+import ZonePanel, { type ZoneInput } from './ZonePanel';
+import { deleteZoneDraft, saveZoneDraft, ZoneEditConflict } from '@/lib/zone-editor';
 import CollaborationPanel from './CollaborationPanel';
 import Modal, { type ModalOrigin } from './Modal';
 import MagneticPanel from './MagneticPanel';
@@ -34,9 +36,9 @@ import { graphSpotlight } from '@/lib/graph-spotlight';
 import { snapshotBoard } from '@/lib/board-snapshot';
 import { validateWorkspace } from '@/lib/server/validation';
 import { MAX_UPLOAD_BYTES } from '@/lib/types';
-import type { AssetMeta, GraphEdge, GraphNode, Language, NodeColor, NodeKind, TaskStatus, Workspace } from '@/lib/types';
+import type { AssetMeta, GraphEdge, GraphNode, GraphZone, Language, NodeColor, NodeKind, TaskStatus, Workspace } from '@/lib/types';
 
-type Dialog='search'|'branches'|'help'|'new-board'|'rename'|'delete-node'|'delete-selection'|'delete-space'|'export'|'design'|'templates'|'collaboration'|null;
+type Dialog='search'|'branches'|'help'|'new-board'|'rename'|'delete-node'|'delete-selection'|'delete-space'|'export'|'design'|'templates'|'zones'|'collaboration'|null;
 function BrandMark(){return <svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><path d="M9 26V10L27 26V10" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="10" r="3" fill="currentColor"/><circle cx="27" cy="26" r="3" fill="currentColor"/><circle cx="27" cy="10" r="2.2" fill="currentColor"/></svg>;}
 function fileKind(mime:string):NodeKind{return mime.startsWith('image/')&&mime!=='image/svg+xml'?'image':mime.startsWith('video/')?'video':mime.startsWith('audio/')?'audio':mime==='application/pdf'?'pdf':'file';}
 function downloadJson(data:unknown,name:string){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const u=URL.createObjectURL(blob);const a=window.document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),2000);}
@@ -59,6 +61,9 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
   const [magneticState,setMagneticState]=useState<MagneticViewState>({status:'paused',dirty:false,pinnedCount:0,persistenceError:false});
   const receiveMagneticState=useCallback((next:MagneticViewState)=>setMagneticState(previous=>previous.status===next.status&&previous.dirty===next.dirty&&previous.pinnedCount===next.pinnedCount&&previous.persistenceError===next.persistenceError?previous:next),[]);
   const [contextMenu,setContextMenu]=useState<CanvasContextMenuPayload|null>(null);
+  const [initialZoneId,setInitialZoneId]=useState<string|null>(null);
+  const [zoneDirty,setZoneDirty]=useState(false);const zoneDirtyRef=useRef(false);
+  const [zoneClosePrompt,setZoneClosePrompt]=useState(false);
   const [annotationDraft,setAnnotationDraft]=useState(false);const [toastUndo,setToastUndo]=useState(false);
   const [sidebar,setSidebar]=useState(true);const [tool,setTool]=useState<'select'|'hand'>('select');const [connectFrom,setConnectFrom]=useState<string|null>(null);
   const [zoom,setZoom]=useState(1);const [spotlightEnabled,setSpotlightEnabled]=useState(false);const [spotlightPage,setSpotlightPage]=useState(0);const [dialog,setDialog]=useState<Dialog>(null);const [addMenu,setAddMenu]=useState(false);const [query,setQuery]=useState('');
@@ -125,7 +130,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
     }catch(error){notice(error instanceof Error?error.message:String(error));}
   };
   useEffect(()=>{setMagnetOpen(false);setInspectorClosing(false);setMultiSelectMode(false);setPendingDeleteSelection(null);},[boardId,roomId]);
-  useEffect(()=>{ws.setRemotePaused(flow.editing||annotationDraft);},[flow.editing,annotationDraft,ws.setRemotePaused]);
+  useEffect(()=>{ws.setRemotePaused(flow.editing||annotationDraft||zoneDirty);},[flow.editing,annotationDraft,zoneDirty,ws.setRemotePaused]);
   useEffect(()=>()=>ws.setRemotePaused(false),[ws.setRemotePaused]);
   const changeAnnotationDraft=useCallback((dirty:boolean)=>{if(dirty)ws.setRemotePaused(true);setAnnotationDraft(dirty);},[ws.setRemotePaused]);
   const switchRoom=useCallback(async(id:string|null)=>{
@@ -154,10 +159,26 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
       notice(L(result.added+' گرهٔ قابل‌ویرایش اضافه شد.',result.added+' editable nodes added.'),true);
     }catch(error){notice(error instanceof Error?error.message:String(error));}
   },[ws.readOnly,ws.update,flow.finish,boardId,language,notice,L,setSelected]);
+  const changeZoneDirty=useCallback((dirty:boolean)=>{zoneDirtyRef.current=dirty;setZoneDirty(dirty);if(!dirty)setZoneClosePrompt(false);if(dirty)ws.setRemotePaused(true);},[ws.setRemotePaused]);
+  const openZones=useCallback((id:string|null=null)=>{if(!flow.finish())return;setInitialZoneId(id);setZoneClosePrompt(false);setContextMenu(null);setAddMenu(false);setDialog('zones');},[flow.finish]);
+  const closeZones=useCallback(()=>{if(zoneDirtyRef.current){setZoneClosePrompt(true);return;}setDialog(null);setZoneClosePrompt(false);},[]);
+  const zoneError=useCallback((error:unknown)=>{notice(error instanceof ZoneEditConflict?L('این Zone تغییر کرده است؛ پیش‌نویس را نگه دار و نسخهٔ تازه را باز کن.','This zone changed. Keep your draft and reopen the latest version.'):error instanceof Error?error.message:String(error));},[notice,L]);
+  const saveZone=useCallback((id:string|null,input:ZoneInput,original?:GraphZone|null)=>{
+    if(ws.readOnly)return false;
+    let accepted=false,changed=false;
+    try{ws.update(current=>{const next=saveZoneDraft(current,boardId,id,input,original);changed=next!==current;accepted=true;return next;});if(accepted){setZoneClosePrompt(false);notice(L('Zone ذخیره شد.','Zone saved.'),changed);return true;}notice(L('فضا آمادهٔ ذخیره نیست؛ پیش‌نویس را نگه دار.','Workspace not ready. Keep your draft.'));}
+    catch(error){zoneError(error);}return false;
+  },[ws.readOnly,ws.update,boardId,notice,L,zoneError]);
+  const deleteZone=useCallback((id:string,original?:GraphZone)=>{
+    if(ws.readOnly)return false;
+    let accepted=false;
+    try{ws.update(current=>{const next=deleteZoneDraft(current,boardId,id,original);accepted=true;return next;});if(accepted)notice(L('Zone حذف شد؛ فکرها و اتصال‌ها حفظ شدند.','Zone removed; thoughts and connections kept.'),true);}
+    catch(error){zoneError(error);}return accepted;
+  },[ws.readOnly,ws.update,boardId,notice,L,zoneError]);
   finishFlowRef.current=flow.finish;
   useEffect(()=>{
     const beforeUnload=(event:BeforeUnloadEvent)=>{
-      if(!finishFlowRef.current()||(inspector.current&&!inspector.current.flushPending())){event.preventDefault();event.returnValue='';}
+      if(zoneDirtyRef.current||!finishFlowRef.current()||(inspector.current&&!inspector.current.flushPending())){event.preventDefault();event.returnValue='';}
     };
     window.addEventListener('beforeunload',beforeUnload,true);
     return()=>window.removeEventListener('beforeunload',beforeUnload,true);
@@ -356,7 +377,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
   },[dialog,pendingDeleteSelection,doc]);
   const targetSpace=targetSpaceId?boardMap.get(targetSpaceId):undefined;
   const targetSpaceContents=useMemo(()=>dialog==='delete-space'&&doc&&targetSpaceId?inspectPersonalSpace(doc,targetSpaceId):null,[dialog,doc,targetSpaceId]);
-  const writing=flow.dirty||annotationDraft;
+  const writing=flow.dirty||annotationDraft||zoneDirty;
   const stateLabel=writing?L('در حال نوشتن…','Writing…'):!doc?(ws.loading?L('در حال بازکردن فضا','Opening workspace…'):L('فضا باز نشده','Workspace not loaded')):{saved:L('ذخیره شد','All changes saved'),saving:L('در حال ذخیره','Saving…'),pending:L('در انتظار ذخیره','Changes pending'),offline:L('ذخیره انجام نشد','Save interrupted'),conflict:L('اختلاف نسخه','Version conflict')}[ws.saveState];
   const title=board?.title||L('فضای فکر','Thinking space');
   const boardTasks=useMemo(()=>nodes.reduce((count,n)=>n.task?{total:count.total+1,done:count.done+(n.task.status==='done'?1:0)}:count,{total:0,done:0}),[nodes]);
@@ -372,6 +393,10 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
     {id:'project',label:L('ورود به پروژهٔ داخلی','Open nested project'),hint:'Ctrl Enter',run:()=>openNode(menuNode.id)},
     {id:'connect',label:L('اتصال به فکر دیگر','Connect to another thought'),run:()=>beginConnect(menuNode.id)},
     {id:'pin',label:canvas.current?.isMagneticPinned(menuNode.id)?L('آزاد کردن در شبکهٔ مگنتی','Unpin from magnetic graph'):L('ثابت نگه‌داشتن در شبکهٔ مگنتی','Pin in magnetic graph'),run:()=>canvas.current?.toggleMagneticPin(menuNode.id)},
+    {id:'neuron-display',label:L('نمایش به صورت نقطه','Display as dot'),separator:true,disabled:ws.readOnly,run:()=>changeNode(menuNode.id,{presentation:'neuron'})},
+    {id:'card-display',label:L('نمایش به صورت کارت','Display as card'),disabled:ws.readOnly,run:()=>changeNode(menuNode.id,{presentation:'card'})},
+    {id:'inherited-display',label:L('پیروی از نمای بوم','Use canvas display'),disabled:ws.readOnly,run:()=>changeNode(menuNode.id,{presentation:undefined})},
+    {id:'zone',label:L('ساخت Zone از انتخاب‌ها','Create zone from selection'),disabled:ws.readOnly,run:()=>openZones()},
     {id:'card',label:L('ظاهر: کارت','Style: card'),separator:true,run:()=>changeNode(menuNode.id,{appearance:'card'})},
     {id:'sticky',label:L('ظاهر: برگهٔ یادداشت','Style: sticky note'),run:()=>changeNode(menuNode.id,{appearance:'sticky'})},
     {id:'outline',label:L('ظاهر: کادر ساده','Style: outline'),run:()=>changeNode(menuNode.id,{appearance:'outline'})},
@@ -416,6 +441,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
       <div className="workspace-body">
         <section className="canvas-section">
           {doc&&board?<><div className={`canvas-heading${spotlight ? " is-reading" : ""}`}><div><span className="eyebrow">{trail.length>1?L('درون یک ایده','INSIDE AN IDEA'):L('بومِ زندهٔ تو','YOUR LIVING CANVAS')}</span><div className="canvas-title-row"><h1 dir="auto">{title}</h1><button className="icon-button small" onClick={()=>{setBoardName(title);setDialog('rename');}} aria-label={L('تغییر نام فضا','Rename space')}><Pencil size={13}/></button></div><p>{nodes.length} {L('گره','nodes')}<span>·</span>{edges.length} {L('ارتباط','connections')}<span>·</span>{boardTasks.total?<span className="task-board-count">{boardTasks.done}/{boardTasks.total} {L('تسک انجام‌شده','tasks done')}</span>:L('امکان‌های تازه','room to grow')}{activeLayout&&<span className="canvas-view-caption">{layoutName(activeLayout.kind,language)}</span>}</p></div><div className="canvas-reading-actions">
+              <button type="button" className="icon-button arrange-button zones-launch" onClick={()=>openZones()} aria-label={L('Zoneها و توضیحات','Zones and descriptions')} title={L('گروه‌بندی فکرها با عنوان و توضیح','Group thoughts with a title and description')}><Layers size={17}/><span>{L('زون‌ها','Zones')}</span>{!!board?.zones?.length&&<small>{new Intl.NumberFormat(language==='fa'?'fa-IR':'en').format(board.zones.length)}</small>}</button>
               <button type="button" className="icon-button arrange-button" disabled={!doc||ws.readOnly} onClick={()=>{if(flow.finish())setDialog('templates');}} title={L('قالب‌های قابل‌ویرایش','Editable starter templates')} aria-label={L('افزودن قالب آماده','Add starter template')}><Layers size={17}/><span>{L('قالب‌ها','Templates')}</span></button>
               <button type="button" className="icon-button arrange-button reading-toggle" aria-pressed={!!spotlight} disabled={!nodes.length} onClick={()=>{
                 if(!selected){notice(L('اول یک گره را انتخاب کن.','Select a thought first.'));canvas.current?.focusSurface();return;}
@@ -423,7 +449,7 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
               }} title={L('مطالعهٔ یک فکر و همسایه‌ها؛ بدون حذف یا ذخیره','Read a thought and its neighbors without hiding or saving data')} aria-label={L('نمای خوانای شبکه','Readable network view')}><Search size={16}/><span>{L('مطالعه','Read')}</span></button>
               {spotlight&&<div className="reading-pages"><button type="button" disabled={spotlight.page===0} onClick={()=>setSpotlightPage(spotlight.page-1)} aria-label={L('همسایه‌های قبلی','Previous neighbors')}><ChevronLeft size={15}/></button><span role="status" aria-live="polite" aria-atomic="true">{spotlight.neighborCount === 0 ? L('همسایه‌ای نیست','No neighbors') : L(spotlight.rangeStart+'–'+spotlight.rangeEnd+' از '+spotlight.neighborCount+' همسایه', spotlight.rangeStart+'–'+spotlight.rangeEnd+' of '+spotlight.neighborCount+' neighbors')} · {spotlight.page+1}/{spotlight.pageCount}</span><button type="button" disabled={spotlight.page===spotlight.pageCount-1} onClick={()=>setSpotlightPage(spotlight.page+1)} aria-label={L('همسایه‌های بعدی','Next neighbors')}><ChevronRight size={15}/></button></div>}
               <button className="icon-button arrange-button" onClick={()=>{if(flow.finish())setDialog('design');}} title={L('چیدمان و ظاهر بوم','Canvas layout and style')} aria-label={L('چیدمان و ظاهر بوم','Canvas layout and style')}><Settings2 size={17}/><span>{L('چیدمان','Layout')}</span></button></div></div>
-          <Canvas ref={canvas} document={flow.canvasDocument??doc} boardId={boardId} selectedId={selected} selectedIds={selectionIds} multiSelectMode={multiSelectMode} selectedEdgeId={selectedEdge} spotlightNodeIds={spotlight?.nodeIds} spotlightEdgeIds={spotlight?.edgeIds} language={language} tool={tool} connectFrom={connectFrom} onSelect={selectNode} onSelectMany={selectMany} onSelectEdge={selectEdge} onOpen={openNode} onMove={moveNode} onMoveMany={moveMany} onConnect={connect} onStartConnect={beginConnect} onBranch={quickChild} onCreate={createAt} onDropFiles={dropFiles} onZoomChange={setZoom} inlineEdit={flow.inlineEdit} onEdit={flow.edit} onEditCommit={flow.commit} onEditDirtyChange={flow.onDirtyChange} onNodeKeyDown={cardKey} onDetails={showDetails} onToggleTask={ws.readOnly?undefined:cycleTask} onContextMenu={openContext} onEdgeBend={bendEdge} onDeleteEdge={deleteEdge} design={preferences.design} guides={preferences.magnetic.enabled||magneticState.dirty?[]:guides} peers={presence.peers} onPointerPresence={presence.reportPointer} magnetic={preferences.magnetic} magneticScope={canvasScope} viewScope={canvasScope} interactionsPaused={!!dialog||inspectorOpen||!!contextMenu} onMagneticState={receiveMagneticState}/>
+          <Canvas ref={canvas} document={flow.canvasDocument??doc} boardId={boardId} selectedId={selected} selectedIds={selectionIds} multiSelectMode={multiSelectMode} selectedEdgeId={selectedEdge} spotlightNodeIds={spotlight?.nodeIds} spotlightEdgeIds={spotlight?.edgeIds} language={language} tool={tool} connectFrom={connectFrom} onSelect={selectNode} onSelectMany={selectMany} onSelectEdge={selectEdge} onOpen={openNode} onMove={moveNode} onMoveMany={moveMany} onConnect={connect} onStartConnect={beginConnect} onBranch={quickChild} onCreate={createAt} onDropFiles={dropFiles} onZoomChange={setZoom} inlineEdit={flow.inlineEdit} onEdit={flow.edit} onEditCommit={flow.commit} onEditDirtyChange={flow.onDirtyChange} onNodeKeyDown={cardKey} onDetails={showDetails} onEditZone={openZones} onToggleTask={ws.readOnly?undefined:cycleTask} onContextMenu={openContext} onEdgeBend={bendEdge} onDeleteEdge={deleteEdge} design={preferences.design} guides={preferences.magnetic.enabled||magneticState.dirty?[]:guides} peers={presence.peers} onPointerPresence={presence.reportPointer} magnetic={preferences.magnetic} magneticScope={canvasScope} viewScope={canvasScope} interactionsPaused={!!dialog||inspectorOpen||!!contextMenu} onMagneticState={receiveMagneticState}/>
           {connectFrom&&<div className="connect-banner"><Link2 size={15}/><span>{L('حالا روی گره مقصد بزن.','Now choose the destination node.')}</span><button className="icon-button small" onClick={()=>setConnectFrom(null)} aria-label={L('لغو اتصال','Cancel connection')}><X size={16}/></button></div>}
           {edge&&<EdgeInspector edge={edge} nodes={nodes} language={language} onChange={patch=>changeEdge(edge.id,patch)} onDelete={()=>deleteEdge(edge.id)} onClose={()=>{setSelectedEdge(null);canvas.current?.focusSurface();}}/>}
           <div className="magnetic-ui" style={{'--magnetic-accent':`var(--${preferences.design.accent})`} as React.CSSProperties}>
@@ -431,10 +457,10 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
             {magnetOpen&&!flow.editing&&!inspectorOpen&&!dialog&&!contextMenu&&!selectedEdge&&<MagneticPanel settings={preferences.magnetic} onChange={preferences.setMagnetic} language={language} status={magneticState.status} pinnedCount={magneticState.pinnedCount} onReheat={()=>canvas.current?.reheatMagnetic()} onApply={applyMagnet} onReset={restoreMagnet} onClose={closeMagnet} canApply={!ws.readOnly&&!flow.editing} dirty={magneticState.dirty} persistenceError={magneticState.persistenceError||preferences.persistenceError}/>}
           </div>
           {!connectFrom&&!inspectorOpen&&(selectionNodes.length>1?<SelectionToolbar count={selectionNodes.length} language={language} color={selectionColor} status={selectionStatus} readOnly={ws.readOnly} canUndo={ws.canUndo} canRedo={ws.canRedo}
-            onColor={color=>updateSelection({color})} onStatus={status=>updateSelection({status})} onDelete={requestDeleteSelection}
+            onColor={color=>updateSelection({color})} onStatus={status=>updateSelection({status})} onDelete={requestDeleteSelection} onCreateZone={()=>openZones()}
             onClear={()=>{selectNode(null);canvas.current?.focusSurface();}} onUndo={()=>{if(!ws.readOnly)ws.undo();canvas.current?.focusSurface();}} onRedo={()=>{if(!ws.readOnly)ws.redo();canvas.current?.focusSurface();}}/>
           :<CanvasDock language={language} selectedTitle={node?.title} isTask={!!node?.task} editing={flow.editing} tool={tool} menuOpen={addMenu} setMenuOpen={setAddMenu} multiSelectMode={multiSelectMode} onMultiSelectModeChange={changeMultiSelectMode}
-            selectionSettings={node&&<NodeQuickSettings key={node.id} nodeId={node.id} color={node.color} status={node.task?.status??null} language={language} readOnly={ws.readOnly} onColor={color=>{if(!ws.readOnly)changeNode(node.id,{color});}} onStatus={status=>quickStatus(node.id,status)}/>}
+            selectionSettings={node&&<NodeQuickSettings key={node.id} nodeId={node.id} color={node.color} status={node.task?.status??null} language={language} readOnly={ws.readOnly} onColor={color=>{if(!ws.readOnly)changeNode(node.id,{color});}} onStatus={status=>quickStatus(node.id,status)} presentation={node.presentation} onPresentation={presentation=>{if(!ws.readOnly)changeNode(node.id,{presentation});}}/>}
             canUndo={ws.canUndo} canRedo={ws.canRedo} onUndo={()=>ws.undo()} onRedo={()=>ws.redo()} onToolChange={next=>{setTool(next);canvas.current?.focusSurface();}}
             onNewThought={()=>flow.begin()} onNewTask={()=>flow.beginTask()} onNewProject={()=>add('project')} onNewLink={()=>add('link')} onUpload={()=>pickFiles()}
             onSibling={()=>{if(node)flow.begin(node.id,'sibling');}} onChild={()=>{if(node)flow.begin(node.id,'child');}} onEdit={()=>{if(node)flow.edit(node.id);}}
@@ -452,6 +478,10 @@ export default function NodusApp({initialRoomId=null}:{initialRoomId?:string|nul
     {!!uploadErrors.length&&<div className="upload-errors" role="alert"><header><strong>{L('بعضی فایل‌ها اضافه نشدند','Some files were not added')}</strong><button className="icon-button small" onClick={()=>setUploadErrors([])} aria-label={L('بستن','Close')}><X size={16}/></button></header>{uploadErrors.map((error,i)=><p key={i} dir="auto">{error}</p>)}</div>}
     {contextMenu&&<CanvasContextMenu key={`${contextMenu.kind}:${contextMenu.id??'canvas'}:${contextMenu.clientX}:${contextMenu.clientY}`} x={contextMenu.clientX} y={contextMenu.clientY} title={menuNode?.title??menuEdge?.label??L('ادامهٔ فکر','Keep thinking')} actions={contextActions} language={language} onDismiss={dismissContext}/>}
     {toast&&<div className="toast" role="status"><Check size={15}/><span>{toast}</span>{toastUndo&&ws.canUndo&&<button className="toast-undo" onClick={()=>{ws.undo();setToast(null);}}>{L('بازگردانی','Undo')}</button>}<button onClick={()=>setToast(null)} aria-label={L('بستن پیام','Dismiss message')}><X size={14}/></button></div>}
+    {dialog==='zones'&&doc&&<Modal title={L('Zoneها؛ محدوده‌های فکر','Zones · spaces for related thoughts')} onClose={closeZones} wide className="zones-dialog">
+      {zoneClosePrompt&&<div className="zones-close-confirm zones-confirm" role="alert"><p>{L('تغییرات این Zone هنوز ذخیره نشده‌اند.','Your zone changes have not been saved.')}</p><div><button type="button" className="primary-button" autoFocus onClick={()=>setZoneClosePrompt(false)}>{L('ادامهٔ ویرایش','Keep editing')}</button><button type="button" className="secondary-button" onClick={()=>{changeZoneDirty(false);setZoneClosePrompt(false);setDialog(null);}}>{L('بستن بدون ذخیره','Discard and close')}</button></div></div>}
+      <ZonePanel key={canvasScope} language={language} zones={board?.zones??[]} nodes={nodes} selectedIds={selectionIds} readOnly={ws.readOnly} initialZoneId={initialZoneId} onSave={saveZone} onDelete={deleteZone} onDirtyChange={changeZoneDirty} onSelectMembers={ids=>{selectMany(ids);setDialog(null);requestAnimationFrame(()=>{if(ids[0])canvas.current?.revealNode(ids[0],true,.7);});}}/>
+    </Modal>}
     {dialog==='templates'&&doc&&<TemplatePanel language={language} canApply={!ws.readOnly&&!ws.loading} onApply={applyStarterTemplate} onClose={()=>setDialog(null)}/>}
     {dialog==='design'&&doc&&<DesignPanel nodes={nodes} edges={edges} design={preferences.design} options={activeLayout??preferences.layout} language={language} persistenceError={preferences.persistenceError} onDesign={preferences.setDesign} onApply={applyLayout} onClose={()=>setDialog(null)}/>}
     {dialog==='collaboration'&&shareDocument&&<CollaborationPanel roomId={roomId} room={ws.room} members={ws.members} currentDocument={shareDocument} language={language} userId={ws.getUserId()||null} onSwitchRoom={switchRoom} onNotice={notice} onClose={()=>setDialog(null)}/>}

@@ -2,6 +2,8 @@ export type NodeKind = 'note' | 'image' | 'video' | 'audio' | 'pdf' | 'file' | '
 export type NodeColor = 'sage' | 'blue' | 'amber' | 'rose' | 'violet' | 'gray';
 export type TaskStatus = 'todo' | 'doing' | 'done';
 export type NodeAppearance = 'card' | 'sticky' | 'outline';
+/** Optional per-node override; absence follows the viewer's canvas mode. */
+export type NodePresentation = 'neuron' | 'card';
 export type EdgeRoute = 'curve' | 'straight' | 'elbow';
 export type EdgeStroke = 'solid' | 'dashed' | 'dotted';
 export interface NodeAnnotation {
@@ -25,8 +27,10 @@ export interface BoardLayout {
   /** Fixed lane separation from the most recent arrangement, in world pixels. */
   columnStep?: number;
 }
-export interface Board { id: string; title: string; description: string; parentNodeId: string | null; createdAt: string; layout?: BoardLayout; }
-export interface GraphNode { id: string; boardId: string; kind: NodeKind; title: string; text: string; x: number; y: number; width: number; height: number; color: NodeColor; asset: AssetMeta | null; url: string; childBoardId: string | null; createdAt: string; scheduledAt?: string; task?: { status: TaskStatus; parentId: string | null }; appearance?: NodeAppearance; annotations?: NodeAnnotation[]; }
+/** A visual group of existing ideas, independent of graph edges and containment. */
+export interface GraphZone { id: string; title: string; description: string; color: NodeColor; nodeIds: string[]; }
+export interface Board { id: string; title: string; description: string; parentNodeId: string | null; createdAt: string; layout?: BoardLayout; zones?: GraphZone[]; }
+export interface GraphNode { id: string; boardId: string; kind: NodeKind; title: string; text: string; x: number; y: number; width: number; height: number; color: NodeColor; asset: AssetMeta | null; url: string; childBoardId: string | null; createdAt: string; scheduledAt?: string; task?: { status: TaskStatus; parentId: string | null }; appearance?: NodeAppearance; presentation?: NodePresentation; annotations?: NodeAnnotation[]; }
 export interface GraphEdge { id: string; boardId: string; sourceId: string; targetId: string; label: string; route?: EdgeRoute; stroke?: EdgeStroke; color?: NodeColor; width?: number; animated?: boolean; bend?: { x: number; y: number }; }
 export interface Workspace { version: 1; homeBoardId: string; boards: Board[]; nodes: GraphNode[]; edges: GraphEdge[]; }
 export interface Viewport { x: number; y: number; zoom: number; }

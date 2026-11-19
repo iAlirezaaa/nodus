@@ -15,9 +15,10 @@ function validDate(value: unknown): boolean {
 }
 
 /** Shared by incremental client mutations and the authoritative save validator. */
-export function assertNodeFeatureMetadata(node: Pick<GraphNode, 'title' | 'text' | 'task' | 'appearance' | 'annotations' | 'scheduledAt'>): void {
+export function assertNodeFeatureMetadata(node: Pick<GraphNode, 'title' | 'text' | 'task' | 'appearance' | 'presentation' | 'annotations' | 'scheduledAt'>): void {
   if (node.scheduledAt !== undefined && !isCalendarDate(node.scheduledAt)) throw new Error('The timeline date must be a valid calendar date (YYYY-MM-DD).');
   if (node.appearance !== undefined && !APPEARANCES.has(node.appearance)) throw new Error('The node appearance is not supported.');
+  if (node.presentation !== undefined && node.presentation !== 'neuron' && node.presentation !== 'card') throw new Error('The node presentation is not supported.');
   if (node.task !== undefined) {
     if (!object(node.task) || !STATUSES.has(node.task.status as string)
       || (node.task.parentId !== null && (typeof node.task.parentId !== 'string' || !ID.test(node.task.parentId)))) {
@@ -131,6 +132,7 @@ export function patchNode(document: Workspace, id: string, patch: Partial<GraphN
   }
   if (next.task === undefined) delete next.task;
   if (next.appearance === undefined) delete next.appearance;
+  if (next.presentation === undefined) delete next.presentation;
   if (next.scheduledAt === undefined) delete next.scheduledAt;
   if (next.annotations === undefined) delete next.annotations;
   assertNodeFeatureMetadata(next);

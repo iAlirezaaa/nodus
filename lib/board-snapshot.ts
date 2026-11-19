@@ -1,4 +1,5 @@
 import type { Workspace } from './types';
+import { pruneBoardZoneMembers } from './zones';
 
 /** Sharing a board includes only its nested projects, never its sibling spaces. */
 export function snapshotBoard(document: Workspace, boardId: string): Workspace {
@@ -18,7 +19,10 @@ export function snapshotBoard(document: Workspace, boardId: string): Workspace {
   }
   return {
     version: 1, homeBoardId: boardId,
-    boards: document.boards.filter(board => included.has(board.id)).map(board => board.id === boardId ? { ...board, parentNodeId: null } : board),
+    boards: document.boards.filter(board => included.has(board.id)).map(board => {
+      const scoped = pruneBoardZoneMembers(board, new Set((byBoard.get(board.id) ?? []).map(node => node.id)));
+      return board.id === boardId ? { ...scoped, parentNodeId: null } : scoped;
+    }),
     nodes: document.nodes.filter(node => included.has(node.boardId)),
     edges: document.edges.filter(edge => included.has(edge.boardId)),
   };

@@ -1,0 +1,4 @@
+SYNTHETIC FIXTURE
+
+Story connects Film, Series, Book and Teaser.
+Decoupage connects Film and Series.

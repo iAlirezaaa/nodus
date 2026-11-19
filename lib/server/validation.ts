@@ -1,5 +1,6 @@
 import type { AssetMeta, Board, GraphEdge, GraphNode, Workspace } from '../types';
 import { assertNodeFeatureMetadata } from '../node-features.ts';
+import { assertBoardZones } from '../zones.ts';
 import { ApiError } from './errors';
 
 export const MAX_WORKSPACE_BYTES = 5 * 1024 * 1024;
@@ -140,6 +141,8 @@ export function validateWorkspace(input: unknown): Workspace {
     for (const id of path) taskState.set(id, 2);
   }
   for (const board of boards.values()) {
+    try { assertBoardZones(board, nodes); }
+    catch (error) { fail(error instanceof Error ? error.message : 'Zone metadata is invalid.'); }
     if (board.parentNodeId !== null) {
       const parent = nodes.get(board.parentNodeId);
       if (!parent || parent.childBoardId !== board.id) fail('A project must be linked from its containing node.');
