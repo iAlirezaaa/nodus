@@ -1,0 +1,29 @@
+.starter-template-panel { padding: 16px 20px 20px; display: grid; gap: 14px; }
+.starter-template-panel > .dialog-description { margin: 0; line-height: 1.8; }
+.starter-template-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.starter-template-picker button { min-height: 76px; padding: 11px 13px; text-align: start; color: var(--foreground); background: var(--surface); border: 1px solid var(--border); border-radius: 11px; }
+.starter-template-picker button > span { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.starter-template-picker button strong { font-size: 13px; }
+.starter-template-picker button small { display: block; font-size: 11px; line-height: 1.7; margin-top: 5px; color: var(--muted); }
+.starter-template-picker button.is-selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.starter-template-picker button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.starter-preview { border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px; background: var(--surface); }
+.starter-preview header { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.starter-preview header > strong { font-size: 13px; }
+.starter-preview header > span { margin-inline-start: auto; color: var(--muted); font-size: 11px; }
+.starter-preview ul { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; max-height: 190px; overflow: auto; }
+.starter-preview li { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 1.8; max-width: calc(100% - 8px); }
+.starter-preview li > i { flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; }
+.starter-preview li > small { color: var(--muted); }
+.starter-undo-note { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 11px; color: var(--muted); }
+@media (max-width: 570px) {
+  .starter-template-panel { padding: 12px 14px 16px; gap: 12px; }
+  .starter-template-picker { grid-template-columns: 1fr; }
+  .starter-template-picker button { min-height: 56px; }
+  .starter-preview ul { max-height: 150px; }
+  .starter-template-panel .dialog-footer { display: flex; flex-wrap: wrap; gap: 8px; }
+  .starter-template-panel .dialog-footer button { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .starter-template-panel *, .starter-template-panel *::before, .starter-template-panel *::after { transition: none !important; }
+}

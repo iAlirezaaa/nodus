@@ -70,7 +70,7 @@ function resetFixture() {
   epoch += 1; appRoot.unmount();
   for (const key of [`nodus:workspace:draft:${CLARITY_FIXTURE_USER}`, `nodus:workspace:recovery:${CLARITY_FIXTURE_USER}`]) localStorage.removeItem(key);
   const viewScope = encodeURIComponent(`${CLARITY_FIXTURE_USER}:personal:`);
-  for (const key of Object.keys(localStorage)) if (key.startsWith(`nodus:magnetic-view:v1:${viewScope}`) || key.startsWith(`nodus:canvas-design:v1:${viewScope}`)) localStorage.removeItem(key);
+  for (const key of Object.keys(localStorage)) if (key.startsWith(`nodus:magnetic-view:v1:${viewScope}`) || key.startsWith(`nodus:canvas-design:v1:${viewScope}`) || key.startsWith(`nodus:view:v2:${viewScope}`)) localStorage.removeItem(key);
   for (const board of server.document.boards) localStorage.removeItem(`nodus:view:${board.id}`);
   if (server.document.boards.some(board => board.id === localStorage.getItem('nodus:board'))) localStorage.removeItem('nodus:board');
   const annotationPrefix = `nodus:annotation-draft:v1:${encodeURIComponent(`${CLARITY_FIXTURE_USER}:personal`)}:`;
