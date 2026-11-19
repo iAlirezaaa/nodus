@@ -37,7 +37,7 @@ export function graphSpotlight(
   const page = Math.min(pageCount - 1, Math.max(0, Number.isFinite(requestedPage) ? Math.floor(requestedPage) : 0));
   const displayed = ordered.slice(page * limit, (page + 1) * limit);
   const nodeIds = new Set([focusId!, ...displayed]);
-  const edgeIds = new Set(edges.filter(edge => edge.boardId === focus.boardId &&
+  const edgeIds = new Set(edges.filter(edge => edge.boardId === focus.boardId && edge.sourceId !== edge.targetId &&
     ((edge.sourceId === focusId && nodeIds.has(edge.targetId)) || (edge.targetId === focusId && nodeIds.has(edge.sourceId))))
     .map(edge => edge.id));
   return { focusId: focusId!, nodeIds, edgeIds, neighborCount: ordered.length, page, pageCount, shown: displayed.length };
