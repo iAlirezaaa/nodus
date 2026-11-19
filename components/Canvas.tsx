@@ -295,13 +295,20 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   const hoverNode = useCallback((id: string, active: boolean) => {
     if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
     // Do not mount an obstructive preview during or just after a pan gesture.
-    if (active) { if (!gesture.current && !bendingEdge.current && pointers.current.size === 0 && Date.now() >= suppressClickUntil.current) setHoveredId(id); }
+    if (active) { if (!document.hidden && !gesture.current && !bendingEdge.current && pointers.current.size === 0 && Date.now() >= suppressClickUntil.current) setHoveredId(id); }
     else hoverTimer.current = setTimeout(() => { setHoveredId(current => current === id ? null : current); hoverTimer.current = null; }, 180);
   }, []);
   const clearHover = useCallback(() => {
     if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
     setHoveredId(null);
   }, []);
+  // A backgrounded canvas must not keep an obstructive hover preview open.
+  // Resume with a fresh hover only; this is presentation state, not graph data.
+  useEffect(() => {
+    const onVisibilityChange = () => { if (document.hidden) clearHover(); };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [clearHover]);
   const point = useCallback((clientX: number, clientY: number) => {
     const rect = surface.current?.getBoundingClientRect();
     return { x: (clientX - (rect?.left ?? 0) - viewRef.current.x) / viewRef.current.zoom, y: (clientY - (rect?.top ?? 0) - viewRef.current.y) / viewRef.current.zoom };

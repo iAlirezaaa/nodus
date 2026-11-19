@@ -115,8 +115,11 @@ try {
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
     document.dispatchEvent(new Event('visibilitychange'));
   });
+  // Chromium pauses requestAnimationFrame when a document is hidden: wait using
+  // explicit timer polling, otherwise Playwright's default RAF may time out.
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' &&
-    !document.querySelector('[data-node].is-entering') && !document.querySelector('.node-hover-preview'));
+    !document.querySelector('[data-node].is-entering') && !document.querySelector('.node-hover-preview'), null,
+    { polling: 100, timeout: 8000 });
   assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Hidden document must not save graph data');
   await page.evaluate(() => {
     delete document.hidden;
