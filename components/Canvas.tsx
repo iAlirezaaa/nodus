@@ -471,6 +471,17 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     for (const id of captures.current.keys()) release(id, false);
     updateCapturedNodes();
   }, [updateMoving, updateMarquee, release, updateCapturedNodes, clearHover]);
+  // A backgrounded tab may never receive the matching pointerup. Retire a
+  // captured drag/pan/pinch before a late release could persist a stale move.
+  // cancel() restores the pre-drag selection without committing node positions.
+  useEffect(() => {
+    const retireHiddenGesture = () => {
+      if (document.hidden && (gesture.current || pinch.current || pointers.current.size || captures.current.size)) cancel();
+    };
+    document.addEventListener('visibilitychange', retireHiddenGesture);
+    retireHiddenGesture();
+    return () => document.removeEventListener('visibilitychange', retireHiddenGesture);
+  }, [cancel]);
   useLayoutEffect(() => {
     const active = gesture.current;
     if (active?.mode !== 'node' || !active.group) return;

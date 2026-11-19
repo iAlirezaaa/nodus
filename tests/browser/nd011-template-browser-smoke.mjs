@@ -139,6 +139,63 @@ try {
     'Returning between boards must not write the document');
   await page.locator('.breadcrumbs').getByRole('button', { name: 'یک ایده، چند مسیر' }).click();
   await page.locator('[data-node="clarity-root"]').waitFor({ timeout: 10000 });
+  // ND-013: backgrounding during a captured drag must discard the staged
+  // position, not commit it on a delayed pointerup after the tab returns.
+  await page.locator('.zoom-controls [aria-label="نمایش تمام بوم"]').click();
+  const dragOrigin = (await snapshot()).document.nodes.find(node => node.id === 'clarity-root');
+  const writesBeforeHiddenDrag = (await snapshot()).writes;
+  const rootCore = page.locator('[data-node="clarity-root"] .neuron-core');
+  await rootCore.hover({ force: true });
+  const rootCoreBounds = await rootCore.boundingBox();
+  assert(rootCoreBounds && rootCoreBounds.width > 0 && rootCoreBounds.height > 0,
+    'Root neuron must be onscreen for the captured-pointer regression');
+  const rootCenter = { x: rootCoreBounds.x + rootCoreBounds.width / 2, y: rootCoreBounds.y + rootCoreBounds.height / 2 };
+  await page.mouse.move(rootCenter.x, rootCenter.y);
+  await page.mouse.down();
+  await page.mouse.move(rootCenter.x + 44, rootCenter.y + 28, { steps: 4 });
+  await page.waitForFunction(() => !!document.querySelector('[data-node="clarity-root"].is-node-dragging'),
+    null, { polling: 100, timeout: 6000 });
+  await page.evaluate(() => {
+    // Deterministic visibility override, not a genuine OS tab switch.
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.waitForFunction(() => !document.querySelector('[data-node="clarity-root"].is-node-dragging') &&
+    !document.querySelector('[data-selection-marquee]') &&
+    document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off',
+    null, { polling: 100, timeout: 7000 });
+  await page.mouse.up();
+  const afterHiddenDrag = await snapshot();
+  const unchangedRoot = afterHiddenDrag.document.nodes.find(node => node.id === 'clarity-root');
+  assert(afterHiddenDrag.writes === writesBeforeHiddenDrag &&
+    unchangedRoot.x === dragOrigin.x && unchangedRoot.y === dragOrigin.y,
+    'Background cancellation and a late pointerup must not commit the staged node position');
+  await page.evaluate(() => {
+    delete document.hidden;
+    delete document.visibilityState;
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on',
+    null, { polling: 100, timeout: 7000 });
+  // A fresh captured drag must remain possible; Escape cancels without a write.
+  await rootCore.hover({ force: true });
+  const freshBounds = await rootCore.boundingBox();
+  assert(freshBounds, 'Root neuron must remain available after visibility recovery');
+  const freshCenter = { x: freshBounds.x + freshBounds.width / 2, y: freshBounds.y + freshBounds.height / 2 };
+  await page.mouse.move(freshCenter.x, freshCenter.y);
+  await page.mouse.down();
+  await page.mouse.move(freshCenter.x + 38, freshCenter.y + 24, { steps: 4 });
+  await page.waitForFunction(() => !!document.querySelector('[data-node="clarity-root"].is-node-dragging'),
+    null, { polling: 100, timeout: 6000 });
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('[data-node="clarity-root"].is-node-dragging'),
+    null, { polling: 100, timeout: 7000 });
+  await page.mouse.up();
+  assert((await snapshot()).writes === writesBeforeHiddenDrag,
+    'Fresh draggable interaction followed by Escape must not write the graph');
+  await page.mouse.move(2, 2);
+  await page.screenshot({ path: artifacts + '/hidden-drag-cancelled-fa-desktop.png' });
   const beforeMotionPrefsWrites = (await snapshot()).writes;
   // Preserve the original baseline hover state before the later zoom/pan
   // interruption checks, which deliberately move graph nodes and cull cards.
@@ -473,7 +530,7 @@ try {
   }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
   console.log(JSON.stringify({ result: 'PASS', scenarios: 15, fixture: 'real NodusApp with synthetic session-storage API',
-    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 18, lastWrites: final.writes }));
+    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 19, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
   console.error('ND-011/013 UI verification FAILED:', error, serverOutput);
