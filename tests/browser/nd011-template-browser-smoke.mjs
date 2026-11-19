@@ -99,29 +99,15 @@ try {
   await page.locator('.breadcrumbs').getByRole('button', { name: 'یک ایده، چند مسیر' }).click();
   await page.locator('[data-node="clarity-root"]').waitFor({ timeout: 10000 });
   const beforeMotionPrefsWrites = (await snapshot()).writes;
-  // Begin a real Fit/Zoom viewport transition while motion is enabled,
-  // then revoke motion permission mid-flight (no stale class/timer).
-  await page.getByRole('button', { name: 'بزرگ‌نمایی' }).click();
-  await page.locator('.canvas-world.is-animating').waitFor({ timeout: 4000 });
+  // Preserve the original baseline hover state before the later zoom/pan
+  // interruption checks, which deliberately move graph nodes and cull cards.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' &&
     !document.querySelector('[data-node].is-entering') && !document.querySelector('.canvas-world.is-animating'));
-  // A second animated command issued while reduced-motion is active must
-  // still change viewport immediately, but never add a transition class.
-  const zoomBeforeReduced = await page.locator('.zoom-value').innerText();
-  await page.getByRole('button', { name: 'بزرگ‌نمایی' }).click();
-  assert(await page.locator('.canvas-world.is-animating').count() === 0,
-    'Reduced motion must not start a viewport animation after Zoom');
-  assert(await page.locator('.zoom-value').innerText() !== zoomBeforeReduced,
-    'Zoom must remain usable when motion is disabled');
-  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Reduced motion and viewport zoom must not save graph data');
+  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Reduced motion must not save graph data');
   await page.screenshot({ path: artifacts + '/new-nodes-motion-reduced-fa-desktop.png' });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on');
-  // Two preceding zoom commands may move the home thought outside the
-  // virtualized viewport. Fit first: the target must exist before hover.
-  await page.getByRole('button', { name: 'نمایش تمام بوم' }).click();
-  await page.locator('[data-node="clarity-root"] .neuron-core').waitFor({ timeout: 10000 });
   // Hover a real graph neuron before suspension: a preview remaining open when
   // the tab is hidden can obscure the graph after the user returns.
   await page.locator('[data-node="clarity-root"] .neuron-core').hover({ force: true });
@@ -151,9 +137,23 @@ try {
   assert(await page.locator('.node-hover-preview').count() === 0,
     'Restoring visibility must not resurrect a stale hover preview');
   await page.screenshot({ path: artifacts + '/hidden-tab-hover-retired-fa-desktop.png' });
+  // Run interruption checks after the established hover/hidden-page scenario:
+  // intentional zooms can move the root outside the viewport and suppress hover.
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on');
+  await page.getByRole('button', { name: 'بزرگ‌نمایی' }).click();
+  await page.locator('.canvas-world.is-animating').waitFor({ timeout: 4000 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off');
-  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Switching presentation motion must not change persisted nodes');
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' &&
+    !document.querySelector('.canvas-world.is-animating'));
+  const zoomBeforeReduced = await page.locator('.zoom-value').innerText();
+  await page.getByRole('button', { name: 'بزرگ‌نمایی' }).click();
+  assert(await page.locator('.canvas-world.is-animating').count() === 0,
+    'Reduced motion must not start a viewport animation after Zoom');
+  assert(await page.locator('.zoom-value').innerText() !== zoomBeforeReduced,
+    'Zoom must remain usable when motion is disabled');
+  assert((await snapshot()).writes === beforeMotionPrefsWrites,
+    'View animations, reduced motion and hidden-page Fit must not save graph data');
+  await page.screenshot({ path: artifacts + '/viewport-zoom-reduced-fa-desktop.png' });
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('[data-node]').first().waitFor();
   assert((await snapshot()).document.nodes.length === initial.document.nodes.length + 12, 'Both home and nested templates must survive reload');
@@ -432,7 +432,7 @@ try {
   }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
   console.log(JSON.stringify({ result: 'PASS', scenarios: 14, fixture: 'real NodusApp with synthetic session-storage API',
-    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 15, lastWrites: final.writes }));
+    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 16, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
   console.error('ND-011/013 UI verification FAILED:', error, serverOutput);
