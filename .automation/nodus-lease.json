@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261119T191811Z-nd013-tab-guard",
   "acquired_at": "2026-11-19T19:18:11.302Z",
-  "heartbeat_at": "2026-11-19T19:26:15.337Z",
-  "expires_at": "2026-11-19T20:56:15.337Z",
+  "heartbeat_at": "2026-11-19T19:37:01.559Z",
+  "expires_at": "2026-11-19T21:07:01.559Z",
   "current_task_id": "ND-013",
   "feature_branch": "feat/nd-011-templates-and-dense-graph",
   "checkpoint": {
-    "phase": "Code fixed: no viewport is-animating while reduced-motion/hidden, and in-flight timer cancelled; browser test fixed for virtualized home node; exact CI on commit 42345fb pending",
+    "phase": "ND-013 code ready; CI in flight for browser gate after test-only correction (third attempt). Original Site blocked",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "BLOCKED: skills__list empty; original Site head/tree/audience/version unverified",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -18,8 +18,8 @@
     "deployment_status": "NOT ATTEMPTED — inaccessible original Site head/tree/audience",
     "next_task": "Add focused board-navigation old-timer browser regression and actual background tab motion/no-graph-write checks; independent ND-011/013 review, two real auth accounts, authorized Site tree/audience parity; then guarded GitHub/Sites release",
     "automation_id": "Automation_7d6aae4eda24819196a386dcb94e59d8",
-    "feature_branch_head": "42345fb07cdfd6bf3cb5f2ce71ebf3ab6e2edd5a",
-    "feature_branch_tree": "0891e1ef283f38d61a25fca5de11b36b59a441ec",
+    "feature_branch_head": "fdc3cff5eb743ca633f935d4ba19c3fe7bdd582e",
+    "feature_branch_tree": "e1e06c1a848227c718a9d8cc11f700263cacbbd9",
     "feature_branch": "feat/nd-011-templates-and-dense-graph",
     "pending_verification": [
       "Source-level browser regression at port 4173",
@@ -38,7 +38,7 @@
     "test_helper_blob": "25472713ce16ce7fa6658f9c4408df1c4da97805",
     "test_cases_blob": "a826552b67f70144fe5fb9af39653fdb5259283b",
     "test_result": "232/232 Node, TS PASS, build PASS on CI run 44505828173; Chromium not yet complete",
-    "publication_status": "NONE; original Site and main untouched",
+    "publication_status": "NONE",
     "search_source_blob": "41af4f3a0ce2ec9e55aa8d2229c8da8f3c3d63da",
     "relevance_test_blob": "b0e54dfaabfac759b28a34b04d805d33d974bb84",
     "scoping_commit": "c21e85b8577fb2e9461e92f3d4338990a0b8185f",
@@ -456,7 +456,11 @@
     "test_red_commit": "8218ea7b8dac972d505f93c8fba28cb7829a77ee",
     "browser_test_blob": "1a91f141043d93191df790ce18e7ea9565448c29",
     "github_repo_visibility": "public (unexpected; untouched)",
-    "failed_ci": "44597552519: Node 232/232 TS/build PASS, Chromium FAIL because two added zooms culled targeted node before hover (test selector, not source runtime); corrected and re-run"
+    "failed_ci": "44597552519: Node 232/232 TS/build PASS, Chromium FAIL because two added zooms culled targeted node before hover (test selector, not source runtime); corrected and re-run",
+    "test_ci_failed": [
+      "44597552519: virtualized hover target after zoom",
+      "44598232023: preview suppressed by zoom/fit timing"
+    ]
   },
   "last_completed_run": "nodus-auto-20261119T1811Z-nd013-regression",
   "updated_at": "2026-11-19T17:29:59.459Z",
