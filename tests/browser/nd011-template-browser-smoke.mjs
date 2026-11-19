@@ -60,6 +60,44 @@ try {
   await page.waitForFunction(({key, total}) => JSON.parse(sessionStorage.getItem(key) ?? 'null')?.document?.nodes?.length === total, {key: storageKey, total: initial.document.nodes.length + 6}, { timeout: 25000 });
   await page.waitForFunction(() => document.querySelector('[data-node].is-entering') !== null, null, { timeout: 6000 });
   await page.screenshot({ path: artifacts + '/new-nodes-motion-normal-fa-desktop.png' });
+  // Live entry classes on the home board cannot outlive navigation to a
+  // nested board. Navigate by the real search/breadcrumb UI, without remount.
+  const writesBeforeNestedNavigation = (await snapshot()).writes;
+  await page.locator('.sidebar-search').click();
+  await page.locator('.search-box input').fill('طرح اولیه');
+  await page.locator('.search-results button').first().click();
+  await page.locator('[data-node="clarity-inner-start"]').waitFor({ timeout: 10000 });
+  assert(await page.locator('[data-node="clarity-root"]').count() === 0,
+    'Nested navigation must remove home-board nodes from the canvas');
+  assert((await snapshot()).writes === writesBeforeNestedNavigation,
+    'Navigating to a nested board must not write the document');
+  const nestedCountBefore = (await snapshot()).document.nodes.length;
+  await page.getByRole('button', { name: 'افزودن قالب آماده' }).click();
+  await page.locator('[data-starter-template="brainstorm"]').click();
+  await page.getByRole('button', { name: 'افزودن به همین بوم' }).click();
+  await page.waitForFunction(({key,total}) =>
+    JSON.parse(sessionStorage.getItem(key) ?? 'null')?.document?.nodes?.length === total,
+    {key: storageKey, total: nestedCountBefore + 6}, { timeout: 25000 });
+  await page.waitForFunction(() => document.querySelectorAll('[data-node].is-entering').length > 0,
+    null, { timeout: 6000 });
+  const nestedInserted = await snapshot();
+  assert(nestedInserted.document.nodes.filter(node => node.boardId === 'clarity-design-board').length === 8,
+    'Nested template must preserve both original notes and add six only inside that board');
+  await page.screenshot({ path: artifacts + '/new-nodes-motion-nested-fa-desktop.png' });
+  await page.locator('.breadcrumbs').getByRole('button', { name: 'یک ایده، چند مسیر' }).click();
+  await page.locator('[data-node="clarity-root"]').waitFor({ timeout: 10000 });
+  assert(await page.locator('[data-node="clarity-inner-start"]').count() === 0,
+    'Returning home must not show nested-board nodes');
+  await page.locator('.sidebar-search').click();
+  await page.locator('.search-box input').fill('طرح اولیه');
+  await page.locator('.search-results button').first().click();
+  await page.locator('[data-node="clarity-inner-start"]').waitFor({ timeout: 10000 });
+  assert(await page.locator('[data-node].is-entering').count() === 0,
+    'Re-entering a populated nested board must not replay a stale entry animation');
+  assert((await snapshot()).writes === nestedInserted.writes,
+    'Returning between boards must not write the document');
+  await page.locator('.breadcrumbs').getByRole('button', { name: 'یک ایده، چند مسیر' }).click();
+  await page.locator('[data-node="clarity-root"]').waitFor({ timeout: 10000 });
   const beforeMotionPrefsWrites = (await snapshot()).writes;
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' && !document.querySelector('[data-node].is-entering'));
@@ -85,7 +123,7 @@ try {
   assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Switching presentation motion must not change persisted nodes');
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('[data-node]').first().waitFor();
-  assert((await snapshot()).document.nodes.length === initial.document.nodes.length + 6, 'Persisted template must survive reload');
+  assert((await snapshot()).document.nodes.length === initial.document.nodes.length + 12, 'Both home and nested templates must survive reload');
   await page.evaluate(key => {
     const state = JSON.parse(sessionStorage.getItem(key));
     const root = state.document.nodes.find(n => n.id === 'clarity-root');
@@ -345,8 +383,8 @@ try {
     autoFlipEvidence.push({ width, ...auto });
   }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-  console.log(JSON.stringify({ result: 'PASS', scenarios: 11, fixture: 'real NodusApp with synthetic session-storage API',
-    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 13, lastWrites: final.writes }));
+  console.log(JSON.stringify({ result: 'PASS', scenarios: 12, fixture: 'real NodusApp with synthetic session-storage API',
+    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 14, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
   console.error('ND-011/013 UI verification FAILED:', error, serverOutput);
