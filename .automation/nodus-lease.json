@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-owner-20261119T2222Z-neural-zones",
   "acquired_at": "2026-11-19T22:22:42.931Z",
-  "heartbeat_at": "2026-11-19T22:56:45.602Z",
-  "expires_at": "2026-11-20T00:26:45.602Z",
+  "heartbeat_at": "2026-11-19T22:57:09.728Z",
+  "expires_at": "2026-11-20T00:27:09.728Z",
   "current_task_id": "ND-026",
   "feature_branch": "feat/nd-026-neural-zones",
   "checkpoint": {
@@ -503,7 +503,7 @@
       "applicationTree": "4dde1e5b8ddb9323b608764e5f7ae1e379d80de2",
       "verifiedHead": "613f9a9769ec7cd95496062254eaf9c8299e1ad8",
       "verifiedTree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5",
-      "nextExternalStep": "Sync docs-only Site source; keep confirmed version 13 deployment",
+      "nextExternalStep": "Site docs source push/package only; no duplicate deployment",
       "currentMain": "4a7fc65524c53cf8ad58762a3eab90c692c45c3a",
       "githubPush": {
         "state": "Feature branch created successfully via GitHub API",
@@ -546,9 +546,10 @@
         "livePage": "Opened existing ChatGPT sign-in gate; no production account login"
       },
       "docsSync": {
-        "state": "GitHub main updated; Site docs sync pending",
+        "state": "Prepared matching Site documentation tree",
         "githubCommit": "4a7fc65524c53cf8ad58762a3eab90c692c45c3a",
-        "tree": "de5294e65cc6809d300e24e11417856d60bc6355"
+        "tree": "de5294e65cc6809d300e24e11417856d60bc6355",
+        "siteBase": "a84a0b29e87ff7f0e933054367fefc26695c157d"
       }
     }
   },
