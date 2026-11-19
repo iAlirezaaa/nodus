@@ -156,12 +156,13 @@ try {
       node.setAttribute('data-caption-side', 'above');
       const style = getComputedStyle(label);
       const labelBox = label.getBoundingClientRect(), coreBox = core.getBoundingClientRect();
-      const result = { top: style.top, bottom: style.bottom, origin: style.transformOrigin,
+      const result = { bottom: style.bottom, origin: style.transformOrigin,
+        originOnBottom: Math.abs(Number.parseFloat(style.transformOrigin.split(' ')[1]) - label.offsetHeight) < 2,
         labelBottom: labelBox.bottom, coreTop: coreBox.top };
       if (original === null) node.removeAttribute('data-caption-side'); else node.setAttribute('data-caption-side', original);
       return result;
     });
-    if (aboveRule) assert(aboveRule.top === 'auto' && aboveRule.bottom !== 'auto' &&
+    if (aboveRule) assert(aboveRule.originOnBottom && Number.isFinite(Number.parseFloat(aboveRule.bottom)) &&
       aboveRule.labelBottom <= aboveRule.coreTop + 1,
       'Above-core reading captions must not cover the source neuron: ' + JSON.stringify(aboveRule));
     await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-' + width + '.png' });
