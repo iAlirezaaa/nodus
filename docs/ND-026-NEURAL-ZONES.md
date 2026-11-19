@@ -40,7 +40,7 @@ Far-zoom Zone heading readability remains a follow-up within ND-026: headers cur
 
 ## Status
 
-**Verified — 2026-11-19 22:42 UTC. Not Released yet.** The implementation and the checks below are complete on `feat/nd-026-neural-zones`. Final release commit/tree and deployment identification will be recorded by the publishing run after the corresponding guarded actions. No ND-026 production activation is claimed by this entry.
+**Released first usable slice — 2026-11-19 22:53 UTC (20 November in Tehran).** Native Sites publication succeeded for version **13**. The reviewed feature is integrated into main, and the built GitHub/Sites sources have identical trees. The existing owner-only audience and DB/BUCKET bindings are preserved. The roadmap distinguishes this delivered slice from the deferred large-map work below.
 
 ## Implemented controls and data behavior
 
@@ -51,7 +51,7 @@ Far-zoom Zone heading readability remains a follow-up within ND-026: headers cur
 - Optional `Board.zones` and `GraphNode.presentation` fields preserve the version-1 document format. Zone membership is validated against the same board. Deleting a Zone retains its content; deleting nodes cleans stale memberships. Snapshot and import/recovery paths preserve and remap valid metadata.
 - Zone editors compare their opening snapshot inside the workspace transaction. Shared Zone arrays use the existing atomic guarded protocol. Unsaved drafts are protected on close; an unchanged save does not offer an Undo for an unrelated previous edit.
 
-The reviewed prior template/dense-reading/viewport work was integrated at `7d988fe`. Its earlier feature branch remains preserved. This integration adds no new CI workflow, schedule or other automation.
+The reviewed prior template/dense-reading/viewport work was integrated at GitHub commit `e12f0b8e733a25f93c546d17c3181319284b1579` (tree-equivalent local merge `7d988fe`). Its earlier feature branch remains preserved. This integration adds no new CI workflow, schedule or other automation.
 
 ## Verification of this run
 
@@ -98,8 +98,15 @@ These captures show the application running with synthetic fixtures; they are no
 
 ## Release checkpoint and next step
 
-- Feature branch: `feat/nd-026-neural-zones`.
-- Reviewed prior integration: `7d988fe`.
-- Verified application commit: `4bf71c6abe6d1c62b37196e749df8f75be8be2f9`; tree: `4dde1e5b8ddb9323b608764e5f7ae1e379d80de2`. Publication metadata is recorded separately from the application commit.
-- ND-026 deployment/version: pending; the scope baseline above remains Site version 12 until a new deployment is confirmed.
-- Next: recheck execution ownership and both remote heads, record the final source identity, publish the matching verified bundle to the existing Site, confirm the feature is active, reconcile GitHub/Sites content trees, and only then mark this slice Released. Preserve the existing Site audience and owner data throughout.
+- Feature branch: `feat/nd-026-neural-zones`, integrated into main without force; prior feature commits remain in the merge ancestry.
+- Application implementation on GitHub: `8b275f3e10ebfc25bd428e68942e017e0599626c`; tree `4dde1e5b8ddb9323b608764e5f7ae1e379d80de2`. This is tree-equivalent to the locally verified `4bf71c6abe6d1c62b37196e749df8f75be8be2f9`. GitHub Git-data APIs were used after ordinary Git push reported unavailable HTTPS write credentials; the contents and reviewed ancestry were preserved.
+- Released GitHub source: `1c32d0f43a5a33d402825fd35c2cbdb4e9feb7d8`.
+- Released Site source: `a84a0b29e87ff7f0e933054367fefc26695c157d`.
+- Exact common release source tree: `89a7402cc8a5965d60f90ebb74c30e87fffa12e5`.
+- Existing Site: `appgprj_6af58606fb9c81918541f056a898c1a2`; [live Nodus](https://nodus-hades.ialirezaaa.chatgpt.site/).
+- Version **13**: `appgprj_6af58606fb9c81918541f056a898c1a2~appgver_251bc3cc8bb481918c0bdf748e7d9c82`.
+- Deployment `appgdep_6aff7ddf3a108191b253f83068e76424`: **succeeded**, native confirmation `2026-11-19T22:53:37.976127+00:00`.
+- The final archive was rebuilt from the exact Site source with the supported build/package helper. Local gzip archive SHA-256: `428cf0afeef6b996619db6e49c75a2868e399d3b3fa0395fa13243b505c43927`. Saved tar content hash: `sha256:b8688e2de8e4a82b377eb9e2664f7141df0d474ad39617aa9eea5231be3c1ccb`.
+- The live URL opened at the existing ChatGPT sign-in gate. Production sign-in was not performed, and owner content was not used for testing. Publication confirmation is the native successful deployment of the exact tested source; the screenshots above remain synthetic UI evidence.
+- This post-publication documentation is synchronized to both source repositories without a second functional release. The control-branch checkpoint records final documentation heads/tree and guarded lease cleanup.
+- Next: improve Zone heading readability at far zoom and add non-destructive collapsed-zone navigation for large maps, preserving shared nodes and cycles. Automatic clustering/bundling and a media library remain unimplemented future slices. ND-024 remains untouched on its separate unfinished branch.

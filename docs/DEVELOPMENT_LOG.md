@@ -1,5 +1,17 @@
 # Nodus development log
 
+## 2026-11-19 22:53 UTC — ND-026 Released: version 13 active
+
+**Outcome:** Verified → Released for the first described-Zone/mixed-node slice. The native deployment `appgdep_6aff7ddf3a108191b253f83068e76424` succeeded at `2026-11-19T22:53:37.976127+00:00`. Existing [Nodus](https://nodus-hades.ialirezaaa.chatgpt.site/) now serves version **13**, saved version `appgprj_6af58606fb9c81918541f056a898c1a2~appgver_251bc3cc8bb481918c0bdf748e7d9c82`. Current custom owner-only audience, DB and BUCKET stayed unchanged. No owner-data migration, schedule change or third-party message occurred.
+
+**Controls and improvement:** Zones in the board toolbar and group-selection toolbar; title/description/color/member editing from each Zone heading; per-node Default / Neuron / Card in quick settings and context menu. Shared ideas remain single nodes and retain nonlinear connections. Removing a Zone does not remove its ideas. The reviewed template and dense-reading/viewport branch was also integrated; existing global designs are not reported as newly invented. ND-011 and ND-013 retain unfinished broader criteria, with delivered slices now active. ND-025 viewport isolation is activated. ND-024 remains untouched on its separate branch.
+
+**Source evidence:** GitHub application `8b275f3e10ebfc25bd428e68942e017e0599626c` (tree `4dde1e5b8ddb9323b608764e5f7ae1e379d80de2`); GitHub release source/main `1c32d0f43a5a33d402825fd35c2cbdb4e9feb7d8`; Site source `a84a0b29e87ff7f0e933054367fefc26695c157d`; exact common source tree `89a7402cc8a5965d60f90ebb74c30e87fffa12e5`. GitHub's authorized Git-data APIs recreated the reviewed local commit chain with identical trees after direct Git HTTPS push failed before writing anything. Main advanced with expected SHA and force=false; no contributor history was discarded. This documentation follow-up is source-synchronized without republishing unchanged runtime code; final documentation heads/tree are in the guarded control checkpoint.
+
+**Fresh gates:** 261/261 native Node tests, TypeScript, independent review, actual FA/EN browser fixtures at 4173 including 320/390 px layouts, save/reload/Undo, Enter/Tab/Persian/ZWNJ, selection/drag/pan and mixed image/file cards; final exact-source production build/package PASS. [Detailed observations and four real screenshots](ND-026-NEURAL-ZONES.md). Zero added document writes observed for pan and view/motion operations. Reduced/hidden tests were DEV simulations; physical IME/touch, actual hidden browser state and two genuine production accounts were not verified. The published URL was opened and retained its existing ChatGPT sign-in gate; no production login or owner content was used as test data.
+
+**Next:** Within ND-026, make Zone headers readable at distant overview zoom, then implement non-destructive Zone collapse/navigation without hiding shared ideas unexpectedly. Automatic clustering, edge bundling and a full media library remain future slices. Lease is released guarded after final source synchronization; only this run's preview is stopped.
+
 ## 2026-11-19 22:48 UTC — ND-026 verified: described Zones and mixed neuron/cards
 
 **State:** In progress → Verified on `feat/nd-026-neural-zones`; publication still pending. Application commit `4bf71c6abe6d1c62b37196e749df8f75be8be2f9`, tree `4dde1e5b8ddb9323b608764e5f7ae1e379d80de2`. Reviewed prior template/dense-network fixes were integrated at `7d988fe`, preserving the prior branch and omitting the new CI workflow. No schedule or automation was changed.

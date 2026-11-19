@@ -1,5 +1,7 @@
 # ND-011 + ND-013 responsive reading regression — 2026-11-19
 
+> **Activation update — 2026-11-19 22:53 UTC:** The independently reviewed template, dense-reading and viewport slices from this branch were integrated into ND-026 and activated in Site version 13. Earlier Blocked/branch-only statements below are historical run records. Broader ND-011/ND-013 criteria and genuine-account/physical-device limitations remain open. See [current release identity and fresh evidence](ND-026-NEURAL-ZONES.md).
+
 Status: **In progress on feature branch; original Site release Blocked**. No Site production deployment or data write was attempted.
 
 ## Reproducible failure and correction
