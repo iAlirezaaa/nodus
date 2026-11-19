@@ -153,19 +153,26 @@ try {
   const dragOrigin = (await snapshot()).document.nodes.find(node => node.id === 'clarity-root');
   const writesBeforeHiddenDrag = (await snapshot()).writes;
   const rootCore = page.locator('[data-node="clarity-root"] .neuron-core');
-  // The prior explicit hover can open a preview overlay before pointerdown,
-  // turning a genuine node drag into a background pan. Start from a clear
-  // pointer/preview state and interact with the visible core directly.
-  await page.mouse.move(12, 12);
-  await page.waitForFunction(() => !document.querySelector('[data-node-preview]'),
-    null, { polling: 100, timeout: 6000 });
   const rootCoreBounds = await rootCore.boundingBox();
   assert(rootCoreBounds && rootCoreBounds.width > 0 && rootCoreBounds.height > 0,
-    'Root neuron must be onscreen for the captured-pointer regression');
+    'Root neuron must be onscreen for the hidden-gesture regression');
   const rootCenter = { x: rootCoreBounds.x + rootCoreBounds.width / 2, y: rootCoreBounds.y + rootCoreBounds.height / 2 };
-  await page.mouse.move(rootCenter.x, rootCenter.y);
-  await page.mouse.down();
-  await page.mouse.move(rootCenter.x + 44, rootCenter.y + 28, { steps: 4 });
+  // The backgrounding half of this test is already a simulated visibility
+  // event. Stage its pointer sequence deterministically through the real
+  // React canvas handlers as well: physical mouse hover can open the preview
+  // before pointerdown, so its transient overlay makes this fixture flaky.
+  // This is a browser DOM-pointer simulation, NOT physical drag/capture proof.
+  await page.evaluate(({ x, y }) => {
+    const node = document.querySelector('[data-node="clarity-root"]');
+    const canvas = document.querySelector('[data-canvas]');
+    if (!node || !canvas) throw new Error('Root neuron/canvas unavailable for hidden gesture');
+    const pointer = (kind, clientX, clientY) => new PointerEvent(kind, {
+      bubbles: true, cancelable: true, pointerId: 901, pointerType: 'mouse',
+      isPrimary: true, button: 0, buttons: 1, clientX, clientY
+    });
+    node.dispatchEvent(pointer('pointerdown', x, y));
+    canvas.dispatchEvent(pointer('pointermove', x + 44, y + 28));
+  }, rootCenter);
   await page.waitForFunction(() => !!document.querySelector('[data-node="clarity-root"].is-node-dragging'),
     null, { polling: 100, timeout: 6000 });
   await page.evaluate(() => {
@@ -178,7 +185,12 @@ try {
     !document.querySelector('[data-selection-marquee]') &&
     document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off',
     null, { polling: 100, timeout: 7000 });
-  await page.mouse.up();
+  await page.evaluate(({ x, y }) => {
+    document.querySelector('[data-canvas]')?.dispatchEvent(new PointerEvent('pointerup', {
+      bubbles: true, pointerId: 901, pointerType: 'mouse', isPrimary: true,
+      button: 0, buttons: 0, clientX: x + 44, clientY: y + 28
+    }));
+  }, rootCenter);
   const afterHiddenDrag = await snapshot();
   const unchangedRoot = afterHiddenDrag.document.nodes.find(node => node.id === 'clarity-root');
   assert(afterHiddenDrag.writes === writesBeforeHiddenDrag &&
