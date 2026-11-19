@@ -145,6 +145,25 @@ try {
     });
     assert(captions.every(caption => caption.left >= 8 && caption.right <= width - 8),
       'Readable captions may not clip at viewport edges (' + width + 'px): ' + JSON.stringify(captions));
+    // Exercise the actual mobile neuron CSS above-core state with an isolated DOM
+    // fixture override. Pure geometry tests separately cover React's side decision.
+    const aboveRule = await page.evaluate(() => {
+      const node = [...document.querySelectorAll('[data-canvas][data-spotlight="true"] .node-neuron[data-spotlight-member="true"]')]
+        .find(item => { const box = item.getBoundingClientRect(); return box.width > 0 && box.top < innerHeight && box.bottom > 0; });
+      if (!node) return null;
+      const original = node.getAttribute('data-caption-side');
+      const label = node.querySelector('.neuron-caption'), core = node.querySelector('.neuron-core');
+      node.setAttribute('data-caption-side', 'above');
+      const style = getComputedStyle(label);
+      const labelBox = label.getBoundingClientRect(), coreBox = core.getBoundingClientRect();
+      const result = { top: style.top, bottom: style.bottom, origin: style.transformOrigin,
+        labelBottom: labelBox.bottom, coreTop: coreBox.top };
+      if (original === null) node.removeAttribute('data-caption-side'); else node.setAttribute('data-caption-side', original);
+      return result;
+    });
+    if (aboveRule) assert(aboveRule.top === 'auto' && aboveRule.bottom !== 'auto' &&
+      aboveRule.labelBottom <= aboveRule.coreTop + 1,
+      'Above-core reading captions must not cover the source neuron: ' + JSON.stringify(aboveRule));
     await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-' + width + '.png' });
   }
   await page.setViewportSize({ width: 390, height: 844 });

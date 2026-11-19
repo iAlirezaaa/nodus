@@ -34,3 +34,28 @@ test('invalid geometry cannot create a NaN transform', () => {
   for (const bad of [NaN, Infinity, -1, 0]) assert.equal(clampReadingCaptionShift(8, 320, bad, 1, 235), 0);
   assert.equal(clampReadingCaptionShift(20, 0, 1, 1, 235), 0);
 });
+
+import { shouldPlaceReadingCaptionAbove } from '../lib/graph-caption-placement.ts';
+
+test('reading label flips above near the bottom when its entire height fits', () => {
+  assert.equal(shouldPlaceReadingCaptionAbove(760, 844, 28, 90), true);
+  assert.equal(shouldPlaceReadingCaptionAbove(620, 844, 28, 90), false);
+  assert.equal(shouldPlaceReadingCaptionAbove(760, 844, 28, 20), false);
+});
+
+test('top-edge and offscreen nodes never flip just to move text', () => {
+  assert.equal(shouldPlaceReadingCaptionAbove(45, 844, 28, 90), false);
+  assert.equal(shouldPlaceReadingCaptionAbove(840, 844, 800, 90), false);
+  assert.equal(shouldPlaceReadingCaptionAbove(-5, 844, 28, 90), false);
+  assert.equal(shouldPlaceReadingCaptionAbove(900, 844, 28, 90), false);
+});
+
+test('screen-space placement is stable for compensated low zoom and invalid geometry', () => {
+  assert.equal(shouldPlaceReadingCaptionAbove(768, 844, 25, 80), true);
+  assert.equal(shouldPlaceReadingCaptionAbove(768, 844, 25, 125), true);
+  for (const bad of [NaN, Infinity, -Infinity]) {
+    assert.equal(shouldPlaceReadingCaptionAbove(bad, 844, 20, 60), false);
+    assert.equal(shouldPlaceReadingCaptionAbove(760, bad, 20, 60), false);
+    assert.equal(shouldPlaceReadingCaptionAbove(760, 844, 20, bad), false);
+  }
+});

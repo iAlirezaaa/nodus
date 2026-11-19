@@ -13,3 +13,20 @@ export function clampReadingCaptionShift(
   const target = Math.max(left, Math.min(right, screenCenter));
   return (target - screenCenter) / zoom;
 }
+
+/**
+ * Visual-only placement for labels near the bottom of a narrow reading canvas.
+ * Inputs are screen pixels; never change persisted graph geometry.
+ * Keep the default below-core placement unless the full caption fits above.
+ */
+export function shouldPlaceReadingCaptionAbove(
+  screenCenterY: number, viewportHeight: number, coreRadiusPx: number, captionHeightPx: number,
+): boolean {
+  if (![screenCenterY, viewportHeight, coreRadiusPx, captionHeightPx].every(Number.isFinite) ||
+      viewportHeight <= 24 || coreRadiusPx < 0 || captionHeightPx <= 0 ||
+      screenCenterY < 0 || screenCenterY > viewportHeight) return false;
+  const gutter = 12;
+  const availableBelow = viewportHeight - screenCenterY - coreRadiusPx - gutter;
+  const availableAbove = screenCenterY - coreRadiusPx - gutter;
+  return availableBelow < captionHeightPx && availableAbove >= captionHeightPx;
+}

@@ -166,3 +166,13 @@
     overflow-wrap: anywhere;
   }
 }
+
+/* ND-013: keep a readable mobile thought caption visible at the bottom edge.
+   Bottom anchoring and bottom transform-origin account for zoom-scaled content. */
+@media (max-width: 650px) {
+  .canvas[data-spotlight='true'] .node-neuron[data-caption-side='above'] .neuron-caption {
+    top: auto;
+    bottom: calc(50% + var(--neuron-size) / 2 + 8px * var(--label-scale));
+    transform-origin: center bottom;
+  }
+}
