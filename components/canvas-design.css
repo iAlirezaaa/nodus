@@ -151,3 +151,7 @@
 @media (prefers-reduced-motion: reduce) {
   .canvas[data-spotlight='true'] .thought-node { transition: none !important; }
 }
+
+/* ND-013: keep the pre-existing magnetic launcher outside new template/reading controls. */
+.magnet-launch { top: 148px; inset-inline-end: 20px; }
+@media (max-width: 650px) { .magnet-launch { top: 132px; inset-inline-end: 20px; } }
