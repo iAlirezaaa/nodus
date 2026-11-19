@@ -183,7 +183,8 @@ try {
     await page.locator('[data-canvas][data-spotlight="true"]').waitFor();
     const caption = await page.locator('.reading-pages > span').innerText();
     assert(scene.boardNodes === count, 'Fixed graph should have exactly '+count+' nodes on active board: '+JSON.stringify(scene));
-    assert(caption.includes('1–10 از ' + scene.neighbors + ' همسایه'),
+    const expectedCaption = scene.neighbors ? '1–' + Math.min(10, scene.neighbors) + ' از ' + scene.neighbors + ' همسایه' : 'همسایه‌ای نیست';
+    assert(caption.includes(expectedCaption),
       'Unexpected range for the '+count+'-neighbor graph: '+caption+' / '+JSON.stringify(scene));
     assert((await snapshot()).writes === scene.writes, 'Read-only matrix must not cause document writes');
     assert(await page.locator('[data-node][data-spotlight-member="true"]').count() >= 1,
