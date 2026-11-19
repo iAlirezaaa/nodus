@@ -155,7 +155,7 @@ function useCanvasMotion() {
   }, []);
   return allowed;
 }
-function useRecentGraphItems(nodes: GraphNode[], edges: GraphEdge[], boardId: string) {
+function useRecentGraphItems(nodes: GraphNode[], edges: GraphEdge[], boardId: string, motionAllowed: boolean) {
   const known = useRef<{ boardId: string; nodes: Set<string>; edges: Set<string> } | null>(null);
   const pending = useRef<RecentGraphItems>({ nodes: new Set(), edges: new Set() });
   const current = useRef(EMPTY_RECENT);
@@ -164,9 +164,13 @@ function useRecentGraphItems(nodes: GraphNode[], edges: GraphEdge[], boardId: st
   useEffect(() => {
     const next = { boardId, nodes: new Set(nodes.map(node => node.id)), edges: new Set(edges.map(edge => edge.id)) };
     const previous = known.current; known.current = next;
-    if (!previous || previous.boardId !== boardId) {
+    if (!previous || previous.boardId !== boardId || !motionAllowed) {
+      // A previous board's four-second timer must not retire the next board's
+      // incoming nodes early. A hidden/reduced-motion page needs no enter RAF.
       pending.current = { nodes: new Set(), edges: new Set() }; current.current = EMPTY_RECENT;
       if (frame.current !== null) { cancelAnimationFrame(frame.current); frame.current = null; }
+      if (timer.current !== null) { clearTimeout(timer.current); timer.current = null; }
+      setRecent(EMPTY_RECENT);
       return;
     }
     for (const id of next.nodes) if (!previous.nodes.has(id)) pending.current.nodes.add(id);
@@ -182,7 +186,7 @@ function useRecentGraphItems(nodes: GraphNode[], edges: GraphEdge[], boardId: st
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => { current.current = EMPTY_RECENT; setRecent(EMPTY_RECENT); timer.current = null; }, 4000);
     });
-  }, [nodes, edges, boardId]);
+  }, [nodes, edges, boardId, motionAllowed]);
   useEffect(() => () => { if (frame.current !== null) cancelAnimationFrame(frame.current); if (timer.current) clearTimeout(timer.current); }, []);
   return recent;
 }
@@ -274,7 +278,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     const projected = [...baseProjections.values()].map(node => projectionBounds(node, neural));
     return !baseNodes.length || !guides.length ? projected : [...projected, ...guides.map(guide => ({ ...baseNodes[0], id: `guide-${guide.id}`, x: guide.x, y: guide.y, width: guide.width, height: guide.height }))];
   }, [baseNodes, baseProjections, neural, guides]);
-  const recentItems = useRecentGraphItems(baseNodes, edges, boardId);
+  const recentItems = useRecentGraphItems(baseNodes, edges, boardId, motionAllowed);
   const zoomFloor = useMemo(() => Math.min(.15, fitViewport(fitNodes, size.width, size.height, fitPadding(size.width, size.height)).zoom * .5), [fitNodes, size]);
   const boardPeers = useMemo(() => peers.filter(peer => peer.boardId === boardId).slice(0, 50), [peers, boardId]);
   const selectedByPeers = useMemo(() => {

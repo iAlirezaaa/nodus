@@ -50,10 +50,39 @@ try {
   await undo.waitFor({ timeout: 7000 });
   await undo.click();
   await page.waitForFunction(({key, total}) => JSON.parse(sessionStorage.getItem(key) ?? 'null')?.document?.nodes?.length === total, {key: storageKey, total: initial.document.nodes.length}, { timeout: 25000 });
+  // Real browser motion gate: moving between full motion, reduced motion and
+  // a simulated hidden document must not write graph data or keep entry classes.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on');
   await page.getByRole('button', { name: 'افزودن قالب آماده' }).click();
   await page.locator('[data-starter-template="brainstorm"]').click();
   await page.getByRole('button', { name: 'افزودن به همین بوم' }).click();
   await page.waitForFunction(({key, total}) => JSON.parse(sessionStorage.getItem(key) ?? 'null')?.document?.nodes?.length === total, {key: storageKey, total: initial.document.nodes.length + 6}, { timeout: 25000 });
+  await page.waitForFunction(() => document.querySelector('[data-node].is-entering') !== null, null, { timeout: 6000 });
+  await page.screenshot({ path: artifacts + '/new-nodes-motion-normal-fa-desktop.png' });
+  const beforeMotionPrefsWrites = (await snapshot()).writes;
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' && !document.querySelector('[data-node].is-entering'));
+  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Reduced motion must not save graph data');
+  await page.screenshot({ path: artifacts + '/new-nodes-motion-reduced-fa-desktop.png' });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on');
+  await page.evaluate(() => {
+    // Simulate a background tab deterministically; not a physical tab-switch claim.
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' && !document.querySelector('[data-node].is-entering'));
+  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Hidden document must not save graph data');
+  await page.evaluate(() => {
+    delete document.hidden;
+    delete document.visibilityState;
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off');
+  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Switching presentation motion must not change persisted nodes');
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('[data-node]').first().waitFor();
   assert((await snapshot()).document.nodes.length === initial.document.nodes.length + 6, 'Persisted template must survive reload');
@@ -316,8 +345,8 @@ try {
     autoFlipEvidence.push({ width, ...auto });
   }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-  console.log(JSON.stringify({ result: 'PASS', scenarios: 10, fixture: 'real NodusApp with synthetic session-storage API',
-    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 11, lastWrites: final.writes }));
+  console.log(JSON.stringify({ result: 'PASS', scenarios: 11, fixture: 'real NodusApp with synthetic session-storage API',
+    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 13, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
   console.error('ND-011/013 UI verification FAILED:', error, serverOutput);
