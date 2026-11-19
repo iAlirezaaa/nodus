@@ -140,3 +140,13 @@ Next concrete action:
 **Blocked release gates:** Current original Site source HEAD/tree, audience, D1/R2 and version unavailable because native Sites skill is not installed; hosted screenshot and two actual authenticated users with permission/revocation/conflict not tested; independent integration review and full non-reduced/hidden-page motion QA still pending. Original Site and user data untouched. GitHub repo visibility currently reports `public` despite private intention; no access policy changed. No merge, Site save, publish or deployment ID.
 
 **Next:** Resolve remaining extreme-edge label clipping while safeguarding selection/focus; then complete independent review, Site source/audience parity and authenticated gates before considering guarded release. Screenshots and fixture results are not proof of a real production login.
+
+## 2026-11-19 08:16 UTC — ND-013 peripheral neuron-label placement (pre-edit scope)
+
+**Lease:** `nodus-auto-20261119T0812Z-nd013-edge-label` obtained through `automation/nodus-control` guarded CAS. **Source:** main `26fafac05c320ed5db30a0ee908dd816714acdd9` tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`; active feature `9b45cd549bb285230b20e3c1e66a0b5cfc75a91d` tree `b1e85de7925d8b1a163b942af45b424e66c20a34`; hosted Site head/tree/audience **UNVERIFIED** (no authorized Sites skill), so no publication planned.
+
+**User problem:** Real 390px Chromium English screenshot of the dense readable-neuron network still clips a peripheral label at the extreme left. Current neuron captions are centered at their node and can spill beyond the viewport, hiding part of a readable label even when the node itself is inside. **Slice:** derive a bounded, mobile-reading-only horizontal caption shift from current view and projected center, leave graph positions untouched; preserve selected/keyboard-readable labels and task badges, RTL/LTR, drag/pan, zoom, focus and exact saved graph. No per-frame persistence or new animation loop.
+
+**Acceptance:** 320px and 390px FA/EN, near-left/right caption centers stay within margin when possible; ordinary mode remains unchanged; no new document writes, Undo/save/reload unaffected; pure placement tests plus project TS/build; real 4173 Chromium and screenshot required for visual QA. Keep work **In progress on branch only** if runtime or Sites gates are unavailable; two genuine accounts, original Site tree parity and integration review still pending.
+
+**Affected boundaries:** `components/Canvas.tsx`, `components/canvas-design.css`, small display-only placement helper and tests/browser regression. No API, schema, workspace mutation or audience changes. **Next:** implement deterministic view-only clamp, run verification, append QA, release lease guarded.
