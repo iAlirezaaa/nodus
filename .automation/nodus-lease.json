@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-owner-20261119T2222Z-neural-zones",
   "acquired_at": "2026-11-19T22:22:42.931Z",
-  "heartbeat_at": "2026-11-19T22:51:21.195Z",
-  "expires_at": "2026-11-20T00:21:21.195Z",
+  "heartbeat_at": "2026-11-19T22:52:04.341Z",
+  "expires_at": "2026-11-20T00:22:04.341Z",
   "current_task_id": "ND-026",
   "feature_branch": "feat/nd-026-neural-zones",
   "checkpoint": {
@@ -503,7 +503,7 @@
       "applicationTree": "4dde1e5b8ddb9323b608764e5f7ae1e379d80de2",
       "verifiedHead": "613f9a9769ec7cd95496062254eaf9c8299e1ad8",
       "verifiedTree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5",
-      "nextExternalStep": "Fresh Site source open, exact tree copy and production build/package",
+      "nextExternalStep": "Site workflow production build, commit/push and package",
       "currentMain": "1c32d0f43a5a33d402825fd35c2cbdb4e9feb7d8",
       "githubPush": {
         "state": "Feature branch created successfully via GitHub API",
@@ -524,8 +524,9 @@
         "tree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5"
       },
       "siteSync": {
-        "state": "PENDING",
-        "base": "eb8a9ad1f470447bf15634efbaa47531924901c5"
+        "state": "Prepared exact verified tree for Site build",
+        "base": "eb8a9ad1f470447bf15634efbaa47531924901c5",
+        "tree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5"
       }
     }
   },
