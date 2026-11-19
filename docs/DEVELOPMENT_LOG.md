@@ -1,5 +1,11 @@
 # Nodus development log
 
+## 2026-11-19 22:24 UTC — ND-026 pre-edit scope
+
+Owner explicitly requested implementation and publication of the approved neural/card/zone design. The current run obtained guarded ownership via control commit `c72320943d43b42ee8cd268bd4ef48eb359fa3e0`, preserving the previous run and feature branch. Branch `feat/nd-026-neural-zones` starts from current main `26fafac05c320ed5db30a0ee908dd816714acdd9`. Original Site source `eb8a9ad1f470447bf15634efbaa47531924901c5` and main have the same tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`; Site version 12 and custom owner-only audience were read successfully.
+
+Problem, usable slice, acceptance and persistence/UI boundaries are in [ND-026 scope](ND-026-NEURAL-ZONES.md). Implement described zones from selected nodes and per-node neuron/card presentation while retaining graph identity, coordinates, cycles, Undo and durable storage. Native tests, TypeScript, build, FA/EN desktop/mobile browser on 4173 and independent review precede guarded publication. Synthetic collaboration evidence is reported separately from real accounts. No new publication yet; status In progress.
+
 This log records actual development and publication outcomes. Future runs read the newest entry together with [the roadmap](ROADMAP.md) and [the development loop](DEVELOPMENT_LOOP.md). Historical tests are not a claim that those checks ran again in a later documentation-only change.
 
 ## 2026-11-12 — ND-000: establish the continuous-development plan
