@@ -115,11 +115,12 @@ try {
         pagerLayoutOverlap: overlaps(pager, layoutButton),
         pagerMagnetOverlap: overlaps(pager, magnetic),
         pagerOutside: pager.left < 0 || pager.right > innerWidth,
+        pagerCountClipped: (() => { const label = document.querySelector('.reading-pages > span'); return label.scrollWidth > label.clientWidth + 1 || label.scrollHeight > label.clientHeight + 1; })(),
         documentOverflows: document.documentElement.scrollWidth > innerWidth };
     });
     assert(!layout.titleOutside && layout.titleWhiteSpace === 'normal' && layout.titleLines <= 2.2,
       'Mobile title must remain legible within two lines: ' + JSON.stringify(layout));
-    assert(!layout.titleActionsOverlap && !layout.pagerLayoutOverlap && !layout.pagerMagnetOverlap && !layout.pagerOutside && !layout.documentOverflows,
+    assert(!layout.titleActionsOverlap && !layout.pagerLayoutOverlap && !layout.pagerMagnetOverlap && !layout.pagerOutside && !layout.pagerCountClipped && !layout.documentOverflows,
       'Mobile reading controls collide or overflow at ' + width + 'px: ' + JSON.stringify(layout));
     await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-' + width + '.png' });
   }

@@ -684,7 +684,7 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
     padding: 2px 4px;
     box-shadow: var(--canvas-shadow);
   }
-  .canvas-heading .reading-pages > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .canvas-heading .reading-pages > span { min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
   /* Keep the existing magnet launcher below even a two-line heading and wrapped pager. */
   .magnet-launch { top: 250px; }
 }
