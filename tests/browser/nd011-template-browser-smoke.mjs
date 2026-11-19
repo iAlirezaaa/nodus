@@ -65,7 +65,7 @@ try {
   const writesBeforeNestedNavigation = (await snapshot()).writes;
   await page.locator('.sidebar-search').click();
   await page.locator('.search-box input').fill('طرح اولیه');
-  await page.locator('.search-results button').first().click();
+  await page.locator('.search-results button').filter({ has: page.locator('strong', { hasText: /^طرح اولیه$/ }) }).click();
   await page.locator('[data-node="clarity-inner-start"]').waitFor({ timeout: 10000 });
   assert(await page.locator('[data-node="clarity-root"]').count() === 0,
     'Nested navigation must remove home-board nodes from the canvas');
@@ -90,7 +90,7 @@ try {
     'Returning home must not show nested-board nodes');
   await page.locator('.sidebar-search').click();
   await page.locator('.search-box input').fill('طرح اولیه');
-  await page.locator('.search-results button').first().click();
+  await page.locator('.search-results button').filter({ has: page.locator('strong', { hasText: /^طرح اولیه$/ }) }).click();
   await page.locator('[data-node="clarity-inner-start"]').waitFor({ timeout: 10000 });
   assert(await page.locator('[data-node].is-entering').count() === 0,
     'Re-entering a populated nested board must not replay a stale entry animation');
