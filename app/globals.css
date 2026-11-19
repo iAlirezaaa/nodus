@@ -661,6 +661,18 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
 @media (max-width: 650px) {
   /* Give the board name its own row instead of truncating it beside three controls. */
   .canvas-heading { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: stretch; gap: 10px; }
+  /* Only the mobile reading surface shields its heading from bright graph captions.
+     The gradient does not change layout, hit testing or document state. */
+  .canvas-heading.is-reading { isolation: isolate; }
+  .canvas-heading.is-reading::before {
+    content: "";
+    position: absolute;
+    inset: -12px -12px -16px;
+    z-index: -1;
+    border-radius: 14px;
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 76%, transparent 100%);
+    pointer-events: none;
+  }
   .canvas-heading > div:first-child { min-width: 0; }
   .canvas-heading .canvas-title-row h1 {
     max-width: calc(100vw - 116px);

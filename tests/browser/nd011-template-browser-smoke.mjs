@@ -109,9 +109,14 @@ try {
       const layoutButton = rect('.canvas-reading-actions .arrange-button:last-child');
       const pagerButtons = [rect('.canvas-heading .reading-pages button:first-child'), rect('.canvas-heading .reading-pages button:last-child')];
       const titleElement = document.querySelector('.canvas-heading h1');
+      const headingElement = document.querySelector('.canvas-heading');
+      const headerShield = getComputedStyle(headingElement, '::before');
       const lineHeight = Number.parseFloat(getComputedStyle(titleElement).lineHeight);
       return { viewport: innerWidth, titleWhiteSpace: getComputedStyle(titleElement).whiteSpace,
         titleLines: title.height / lineHeight, titleOutside: title.left < 0 || title.right > innerWidth,
+        headerShieldVisible: headingElement.classList.contains('is-reading') &&
+          headerShield.content !== 'none' && headerShield.backgroundImage.includes('linear-gradient') &&
+          headerShield.pointerEvents === 'none',
         titleActionsOverlap: overlaps(title, actions),
         pagerLayoutOverlap: overlaps(pager, layoutButton),
         pagerMagnetOverlap: overlaps(pager, magnetic),
@@ -123,6 +128,7 @@ try {
     });
     assert(!layout.titleOutside && layout.titleWhiteSpace === 'normal' && layout.titleLines <= 2.2,
       'Mobile title must remain legible within two lines: ' + JSON.stringify(layout));
+    assert(layout.headerShieldVisible, 'Mobile reading heading must shield title without intercepting pointer events: ' + JSON.stringify(layout));
     assert(!layout.titleActionsOverlap && !layout.pagerLayoutOverlap && !layout.pagerMagnetOverlap && !layout.pagerOutside && !layout.pagerTapTargetsSmall && !layout.pagerTapTargetsOutside && !layout.pagerCountClipped && !layout.documentOverflows,
       'Mobile reading controls collide or overflow at ' + width + 'px: ' + JSON.stringify(layout));
     await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-' + width + '.png' });
@@ -149,6 +155,13 @@ try {
   const final = await snapshot();
   assert(final.document.nodes.length === denseStats.nodes, 'Reading mode must preserve every node');
   assert(final.writes === prev, 'Presentation and language toggles must not cause graph writes');
+  // Exiting reading mode must remove the mobile overlay immediately, without saving or
+  // stealing clicks from ordinary node editing and graph navigation.
+  await page.getByRole('button', { name: 'Readable network view' }).click();
+  assert(await page.locator('.canvas-heading.is-reading').count() === 0, 'Reading shield must be removed on exit');
+  const exitedShield = await page.locator('.canvas-heading').evaluate(el => getComputedStyle(el, '::before').content);
+  assert(exitedShield === 'none', 'Inactive mobile heading must have no generated shield');
+  assert((await snapshot()).writes === prev, 'Closing reading mode must not write the document');
   // Deterministic 20/100/500 neighbor matrix uses the real NodusApp on the fixed 4173 port.
   // Session data here is an isolated fixture, never a genuine signed-in user or shared room.
   await page.locator('.language-button').click(); // restore Persian before the scene matrix
