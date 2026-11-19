@@ -257,9 +257,24 @@ try {
   const next = page.getByRole('button', { name: 'همسایه‌های بعدی' });
   await next.click();
   await delay(250);
-  const secondCaption = await page.locator('.reading-pages > span').innerText();
+  const liveRange = page.locator('.reading-pages > span[role="status"][aria-live="polite"][aria-atomic="true"]');
+  assert(await liveRange.count() === 1, 'Only the changing neighbor range must be an atomic polite live status');
+  assert(await page.locator('.reading-pages [role="status"] button').count() === 0,
+    'Interactive neighbor controls must remain outside the screen-reader status');
+  const secondCaption = await liveRange.innerText();
   assert(/11–20/.test(secondCaption), 'Pager must expose the inclusive range after next: '+secondCaption);
   assert((await snapshot()).writes === prev, 'Changing the reading page must not write the document');
+  await next.focus();
+  await page.keyboard.press('Enter');
+  const keyboardForwardCaption = await liveRange.innerText();
+  assert(/21–30/.test(keyboardForwardCaption), 'Keyboard Enter must advance the announced neighbor range: ' + keyboardForwardCaption);
+  assert(await next.evaluate(el => document.activeElement === el), 'Keyboard paging must retain focus on the next button');
+  const previous = page.getByRole('button', { name: 'همسایه‌های قبلی' });
+  await previous.focus();
+  await page.keyboard.press('Enter');
+  assert(/11–20/.test(await liveRange.innerText()), 'Keyboard Enter must return to the previous announced range');
+  assert(await previous.evaluate(el => document.activeElement === el), 'Keyboard reverse paging must retain focus');
+  assert((await snapshot()).writes === prev, 'Keyboard paging must not write the graph or disturb Undo');
   await page.locator('.language-button').click();
   const englishCaption = await page.locator('.reading-pages > span').innerText();
   assert(/11–20 of \d+ neighbors/.test(englishCaption), 'English reading page must give its exact range: '+englishCaption);
@@ -394,7 +409,7 @@ try {
     autoFlipEvidence.push({ width, ...auto });
   }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
-  console.log(JSON.stringify({ result: 'PASS', scenarios: 13, fixture: 'real NodusApp with synthetic session-storage API',
+  console.log(JSON.stringify({ result: 'PASS', scenarios: 14, fixture: 'real NodusApp with synthetic session-storage API',
     host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 15, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
