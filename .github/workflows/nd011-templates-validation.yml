@@ -37,3 +37,32 @@ jobs:
         run: ./node_modules/.bin/tsc --noEmit
       - name: Build production bundle without deployment
         run: npm run build
+
+  browser-fixture:
+    name: Real Nodus UI Chromium on 4173 (synthetic data only)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out exact branch
+        uses: actions/checkout@v4
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install temporary browser runner
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+      - name: Install isolated Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run NodusApp UI fixture on reserved port
+        run: node tests/browser/nd011-template-browser-smoke.mjs
+      - name: Retain real browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nd011-nd013-browser
+          path: artifacts/nd011-browser/*.png
+          if-no-files-found: ignore
+          retention-days: 14
