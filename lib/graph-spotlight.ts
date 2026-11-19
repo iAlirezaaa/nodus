@@ -18,7 +18,7 @@ export function graphSpotlight(
   const focus = focusId ? byId.get(focusId) : undefined;
   if (!focus) return null;
   const neighbors = new Set<string>();
-  const add = (id: string) => { if (id !== focusId && byId.has(id)) neighbors.add(id); };
+  const add = (id: string) => { const candidate = byId.get(id); if (id !== focusId && candidate?.boardId === focus.boardId) neighbors.add(id); };
   for (const edge of edges) {
     if (edge.boardId !== focus.boardId) continue;
     if (edge.sourceId === focusId) add(edge.targetId);
