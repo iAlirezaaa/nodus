@@ -131,6 +131,20 @@ try {
     assert(layout.headerShieldVisible, 'Mobile reading heading must shield title without intercepting pointer events: ' + JSON.stringify(layout));
     assert(!layout.titleActionsOverlap && !layout.pagerLayoutOverlap && !layout.pagerMagnetOverlap && !layout.pagerOutside && !layout.pagerTapTargetsSmall && !layout.pagerTapTargetsOutside && !layout.pagerCountClipped && !layout.documentOverflows,
       'Mobile reading controls collide or overflow at ' + width + 'px: ' + JSON.stringify(layout));
+    // Readable captions whose node centers are on-screen must remain inside the
+    // mobile viewport. Offscreen nodes are intentionally not shifted into view.
+    const captions = await page.evaluate(() => {
+      const nodes = [...document.querySelectorAll('[data-canvas][data-spotlight="true"] [data-node][data-spotlight-member="true"]')];
+      return nodes.flatMap(node => {
+        const caption = node.querySelector('.neuron-caption');
+        if (!caption || !node.querySelector('.neuron-label')) return [];
+        const rect = node.getBoundingClientRect(), bounds = caption.getBoundingClientRect();
+        const center = rect.left + rect.width / 2;
+        return center < 0 || center > innerWidth ? [] : [{ left: bounds.left, right: bounds.right, center }];
+      });
+    });
+    assert(captions.every(caption => caption.left >= 8 && caption.right <= width - 8),
+      'Readable captions may not clip at viewport edges (' + width + 'px): ' + JSON.stringify(captions));
     await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-' + width + '.png' });
   }
   await page.setViewportSize({ width: 390, height: 844 });

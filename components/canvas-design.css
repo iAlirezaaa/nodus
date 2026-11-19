@@ -155,3 +155,14 @@
 /* ND-013: keep the pre-existing magnetic launcher outside new template/reading controls. */
 .magnet-launch { top: 148px; inset-inline-end: 20px; }
 @media (max-width: 650px) { .magnet-launch { top: 132px; inset-inline-end: 20px; } }
+
+/* ND-013: keep an active reading caption in the mobile viewport without moving its node. */
+@media (max-width: 650px) {
+  .canvas[data-spotlight='true'] .node-neuron .neuron-caption {
+    transform: translateX(calc(-50% + var(--neuron-caption-shift, 0px))) scale(var(--label-scale));
+  }
+  .canvas[data-spotlight='true'] .node-neuron[data-spotlight-member='true'] h3.neuron-label {
+    max-width: var(--reading-caption-max-width, 235px) !important;
+    overflow-wrap: anywhere;
+  }
+}
