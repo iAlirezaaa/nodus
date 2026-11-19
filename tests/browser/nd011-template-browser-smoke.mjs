@@ -99,9 +99,22 @@ try {
   await page.locator('.breadcrumbs').getByRole('button', { name: 'یک ایده، چند مسیر' }).click();
   await page.locator('[data-node="clarity-root"]').waitFor({ timeout: 10000 });
   const beforeMotionPrefsWrites = (await snapshot()).writes;
+  // Begin a real Fit/Zoom viewport transition while motion is enabled,
+  // then revoke motion permission mid-flight (no stale class/timer).
+  await page.getByRole('button', { name: 'بزرگ‌نمایی' }).click();
+  await page.locator('.canvas-world.is-animating').waitFor({ timeout: 4000 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' && !document.querySelector('[data-node].is-entering'));
-  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Reduced motion must not save graph data');
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' &&
+    !document.querySelector('[data-node].is-entering') && !document.querySelector('.canvas-world.is-animating'));
+  // A second animated command issued while reduced-motion is active must
+  // still change viewport immediately, but never add a transition class.
+  const zoomBeforeReduced = await page.locator('.zoom-value').innerText();
+  await page.getByRole('button', { name: 'بزرگ‌نمایی' }).click();
+  assert(await page.locator('.canvas-world.is-animating').count() === 0,
+    'Reduced motion must not start a viewport animation after Zoom');
+  assert(await page.locator('.zoom-value').innerText() !== zoomBeforeReduced,
+    'Zoom must remain usable when motion is disabled');
+  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Reduced motion and viewport zoom must not save graph data');
   await page.screenshot({ path: artifacts + '/new-nodes-motion-reduced-fa-desktop.png' });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on');
@@ -120,7 +133,12 @@ try {
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' &&
     !document.querySelector('[data-node].is-entering') && !document.querySelector('.node-hover-preview'), null,
     { polling: 100, timeout: 8000 });
-  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Hidden document must not save graph data');
+  // A programmatic Fit action represents a view command delivered while
+  // hidden; the browser suspends RAF, so do not depend on RAF-based polling.
+  await page.evaluate(() => document.querySelector('.zoom-controls [aria-label="نمایش تمام بوم"]')?.click());
+  await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'off' &&
+    !document.querySelector('.canvas-world.is-animating'), null, { polling: 100, timeout: 8000 });
+  assert((await snapshot()).writes === beforeMotionPrefsWrites, 'Hidden document and Fit must not save graph data');
   await page.evaluate(() => {
     delete document.hidden;
     delete document.visibilityState;

@@ -351,17 +351,20 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     if (animationTimer.current) { clearTimeout(animationTimer.current); animationTimer.current = null; }
     setAnimating(false);
   }, []);
+  // A system motion change or background tab must retire an in-flight
+  // viewport transition immediately, not after a throttled timer resumes.
+  useEffect(() => { if (!motionAllowed) stopAnimation(); }, [motionAllowed, stopAnimation]);
   const setView = useCallback((next: Viewport, animate = false, immediate = false) => {
     if (!Number.isFinite(next.x) || !Number.isFinite(next.y) || !Number.isFinite(next.zoom) || next.zoom <= 0) return;
     viewRef.current = next; views.current[boardRef.current] = next; pendingView.current = next;
     if (presenceClient.current) reportPresence(presenceClient.current);
-    if (animate) {
+    if (animate && motionAllowed) {
       if (animationTimer.current) clearTimeout(animationTimer.current);
       setAnimating(true);
       animationTimer.current = setTimeout(() => { setAnimating(false); animationTimer.current = null; }, 350);
     } else stopAnimation();
     if (animate || immediate) flushImmediately(); else scheduleFrame();
-  }, [flushImmediately, scheduleFrame, stopAnimation, reportPresence]);
+  }, [flushImmediately, scheduleFrame, stopAnimation, reportPresence, motionAllowed]);
   const updateMoving = useCallback((next: MovingNode, immediate = false) => {
     movingRef.current = next; movingDirty.current = true;
     if (immediate) flushImmediately(); else scheduleFrame();
