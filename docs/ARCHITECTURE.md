@@ -411,3 +411,12 @@ The responsive navigation drawer is UI state, not graph data. `NodusApp` registe
 ### Mobile bottom-edge readable-neuron label placement (ND-013 branch-only, 2026-11-19)
 
 `shouldPlaceReadingCaptionAbove` in `lib/graph-caption-placement.ts` uses viewport, projected neuron center/core radius and estimated scaled caption height to select the above-core side only for spotlight members with on-screen centers on mobile (≤650px). `Canvas` passes a view-only `captionAbove` flag through `NodeCard`, and `NeuronNode` exposes it as `data-caption-side`. `components/canvas-design.css` keeps the existing X-axis clamp while anchoring the caption above with bottom transform origin, only when spotlight reading is active. No canonical graph position, board, edge, storage, selection identity or collaboration revision changes. Pure Node tests cover the selection logic, while a browser fixture checks the CSS placement. An automatically triggered bottom-edge scene with active editing still needs independent UI integration confirmation before Verified; no new per-frame write or animation loop was added. See `docs/ND-011-ND-013-RESPONSIVE-QA.md` and [exact CI 44496600031](https://github.com/iAlirezaaa/nodus/actions/runs/44496600031). The original Site remains unchanged.
+
+
+## Described zones and per-node presentation (ND-026)
+
+`Board.zones?` is additive version-1 graph metadata: each Zone has an ID, title, description, color and unique member node IDs from the same board. Zone membership does not alter parent/child structure, edges or node identity; overlap is allowed. `lib/zones.ts` owns validated mutations and cleanup. Snapshot/recovery remaps membership, node deletion prunes stale members, and deleting a Zone leaves graph content intact.
+
+`GraphNode.presentation?` selects `neuron` or `card`; an absent value inherits the canvas design. `lib/zone-geometry.ts` resolves presentation and derives Zone rectangles from current projections without document writes. All node bounds, fitting and hit-related projections use the resolved presentation.
+
+`ZonePanel` edits a local draft with explicit Save, unsaved-close protection and native form keyboard handling. `lib/zone-editor.ts` compares the opening snapshot inside the workspace update to reject a stale editor. Shared rooms treat zones as one guarded atomic board field; server validation checks all members and rejects the complete stale commit. Existing document/asset ownership and DB/BUCKET bindings are unchanged. See [ND-026 acceptance and current evidence](ND-026-NEURAL-ZONES.md).

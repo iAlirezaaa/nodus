@@ -1,5 +1,17 @@
 # Nodus development log
 
+## 2026-11-19 22:48 UTC — ND-026 verified: described Zones and mixed neuron/cards
+
+**State:** In progress → Verified on `feat/nd-026-neural-zones`; publication still pending. Application commit `4bf71c6abe6d1c62b37196e749df8f75be8be2f9`, tree `4dde1e5b8ddb9323b608764e5f7ae1e379d80de2`. Reviewed prior template/dense-network fixes were integrated at `7d988fe`, preserving the prior branch and omitting the new CI workflow. No schedule or automation was changed.
+
+**Visible controls:** Board toolbar → Zones; zone heading → editor; multi-selection → Create zone from selection; node quick settings/context menu → Default / Neuron / Card. Zones have editable titles, descriptions, colors and members. Removing a Zone keeps nodes/edges. Per-node presentation preserves the same idea and all its links. Optional version-1 metadata uses existing durable storage, with guarded shared updates and stale-editor checks; no database migration or owner-data rewrite.
+
+**Fresh gates:** 261/261 native Node tests, TypeScript, production build and independent review PASS. Actual browser UI at `http://127.0.0.1:4173/`: FA/EN desktop, 320/390 px viewports, Persian/ZWNJ text, Enter/Tab, save/reload, unsaved draft protection, presentation round-trip, select/drag/pan, Undo, dark/light views and image/file attachment cards. No per-frame graph writes observed during motion; the fixture counter also stayed unchanged during pan and view controls. [Full acceptance and screenshots](ND-026-NEURAL-ZONES.md).
+
+**Evidence limits:** Browser data and two SQLite session identities are synthetic. Physical IME composition, physical touch and two authenticated production accounts were not exercised. The actual background-tab attempt did not produce a hidden document; reduced/hidden guards were separately checked through DEV simulations and must not be reported as OS/browser background evidence. No thousand-node performance claim.
+
+**Next:** publish the matching verified archive after fresh lease/head checks, preserve the existing owner-only Site audience and D1/R2 bindings, record exact deployment/version, synchronize the two source trees, then mark this slice Released. Far-zoom zone-heading readability, automatic clustering/bundling, zone collapse and advanced media browsing remain future slices.
+
 ## 2026-11-19 22:24 UTC — ND-026 pre-edit scope
 
 Owner explicitly requested implementation and publication of the approved neural/card/zone design. The current run obtained guarded ownership via control commit `c72320943d43b42ee8cd268bd4ef48eb359fa3e0`, preserving the previous run and feature branch. Branch `feat/nd-026-neural-zones` starts from current main `26fafac05c320ed5db30a0ee908dd816714acdd9`. Original Site source `eb8a9ad1f470447bf15634efbaa47531924901c5` and main have the same tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`; Site version 12 and custom owner-only audience were read successfully.

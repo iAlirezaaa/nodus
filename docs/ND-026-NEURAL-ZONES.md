@@ -36,6 +36,70 @@ Large nonlinear maps need understandable groups without duplicating shared ideas
 
 Automatic semantic clustering, edge bundling, zone collapse, cross-board references and full media library are separate future slices. Existing attachment nodes remain usable in cards. No claim of thousand-node performance without measurement.
 
+Far-zoom Zone heading readability remains a follow-up within ND-026: headers currently scale with the canvas. This usable slice supports opening a Zone and zooming into its details; it does not claim that every Zone title stays readable at a distant whole-map overview.
+
 ## Status
 
-In progress. No new deployment yet. Verification and release evidence will be appended here and in the roadmap/development log.
+**Verified — 2026-11-19 22:42 UTC. Not Released yet.** The implementation and the checks below are complete on `feat/nd-026-neural-zones`. Final release commit/tree and deployment identification will be recorded by the publishing run after the corresponding guarded actions. No ND-026 production activation is claimed by this entry.
+
+## Implemented controls and data behavior
+
+- **Board toolbar → Zones:** create a group from the current selection, or choose its members in the editor. A Zone stores its title, description and color; its boundary follows the projected member bounds without moving or duplicating the underlying ideas.
+- **Zone heading on the canvas:** open the corresponding editor. Titles are limited to two rendered lines; the full title and description remain available in the editor. Empty existing Zones can still be renamed, described or deleted.
+- **Selected node → quick settings → Thought display:** choose Default, Neuron or Card. Default inherits the current canvas design. Equivalent choices are available in the node context menu. The node retains its identity, position, content, attachments and connections.
+- **Group selection toolbar → Create zone from selection:** open an editor initialized with the selected nodes. Show on canvas selects a Zone's members without changing graph data.
+- Optional `Board.zones` and `GraphNode.presentation` fields preserve the version-1 document format. Zone membership is validated against the same board. Deleting a Zone retains its content; deleting nodes cleans stale memberships. Snapshot and import/recovery paths preserve and remap valid metadata.
+- Zone editors compare their opening snapshot inside the workspace transaction. Shared Zone arrays use the existing atomic guarded protocol. Unsaved drafts are protected on close; an unchanged save does not offer an Undo for an unrelated previous edit.
+
+The reviewed prior template/dense-reading/viewport work was integrated at `7d988fe`. Its earlier feature branch remains preserved. This integration adds no new CI workflow, schedule or other automation.
+
+## Verification of this run
+
+The browser checks below used the real Nodus UI at the required `http://127.0.0.1:4173/`, with synthetic fixture data. Browser interaction and screenshots are actual UI evidence; the fixture is not a real production login and does not use owner data.
+
+| Check | Observed result |
+| --- | --- |
+| Persian Zone creation | Entered a Persian title, description and two members. The fixture recorded **0 writes before Save**. Explicit Save produced **1 write**; the Zone and its metadata survived reload. |
+| Unsaved close protection | Attempting to close an edited Zone opened the warning. Keep editing retained the draft for the subsequent explicit Save. |
+| Description Enter/Tab and mobile layout | Description line breaks and native Tab navigation worked at 320 px and 390 px. No horizontal overflow was observed; the sampled narrow panel measured width/clientWidth/scrollWidth of 280/280/280 px. |
+| Zone Undo | Save followed by Ctrl+Z preserved the node and edge arrays byte-for-byte. Zone metadata remained part of the normal history operation. |
+| English/LTR | Inspected the English editor at 390 px with LTR layout. |
+| Show on canvas and group controls | Show on canvas selected three members, and the Create zone from selection toolbar action was available. |
+| Mixed node presentation | Default → Card → Neuron → Default returned the entire document to its original serialized contents. Edges and Zones were unchanged during the presentation checks. |
+| Persian thought flow | F2 editing accepted Persian text containing a ZWNJ. Tab created a child; Enter then Escape left exactly one added child. Two Undo actions restored the graph. |
+| Native drag | Dragging the Book node changed only its x/y position and produced one document write. Undo restored the whole graph. |
+| Pan | Panning changed the viewport without writing the document. |
+| Gentle magnetic motion | The view was observed running while the fixture write counter stayed at 9. Pause and restore produced no document writes. |
+| Automated logic/server tests | **261/261 native Node tests passed** in this run. This is the current count, not the historical 205-test result. |
+| TypeScript and production build | Project TypeScript checking and the production build passed. |
+
+### Motion and authentication evidence boundaries
+
+- The actual background-tab attempt returned `document.hidden === false`; **actual hidden-tab behavior was not verified by that attempt**.
+- Separate DEV fixture simulations of reduced motion and hidden visibility produced `data-motion="off"`, zero hover previews and an unchanged write counter of 9. These are simulated conditions, not evidence that a real media preference or a genuinely hidden browser tab was exercised.
+- Physical IME composition and hardware touch were not exercised. Persian/ZWNJ text entry and keyboard Enter/Tab behavior were exercised as described above.
+- Two genuine authenticated production accounts were not used. SQLite tests with two synthetic identities cover guarded merge/conflict, access revocation, account isolation and stale member deletion in both operation orders. Conflicts reject the whole commit rather than accepting unrelated edits from the same stale request.
+- Zones introduce no animation loop or per-frame document persistence. No thousand-node performance result is claimed.
+
+### Independent review
+
+The combined implementation passed independent code review. Four concrete findings were fixed before verification: editing empty existing Zones, bounding long rendered Zone titles, avoiding an unrelated Undo after an unchanged save, and clearing the close warning after saving.
+
+The reviewer added and executed eight independent tests in `tests/zone-editor-geometry.test.ts`; all eight passed. They cover stale editor snapshots, retaining concurrent unrelated content, deletion scope, empty existing Zones, presentation inheritance and non-mutating Zone geometry. Domain coverage additionally verifies metadata reload, deletion cleanup, snapshot isolation, recovery ID remapping and shared atomicity.
+
+### Actual UI screenshots
+
+These captures show the application running with synthetic fixtures; they are not generated concept images or evidence of authenticated production sessions.
+
+- [Light Persian desktop: mixed dots/cards and described Zones](qa/nd026/neural-zones-light-fa-desktop.jpg)
+- [Persian desktop: neural dots, connected attachment cards and described Zones](qa/nd026/neural-zones-fa-desktop.jpg)
+- [Persian Zone editor at 320 px](qa/nd026/zones-editor-fa-320.jpg)
+- [English Zone editor at 390 px](qa/nd026/zones-editor-en-390.jpg)
+
+## Release checkpoint and next step
+
+- Feature branch: `feat/nd-026-neural-zones`.
+- Reviewed prior integration: `7d988fe`.
+- Verified application commit: `4bf71c6abe6d1c62b37196e749df8f75be8be2f9`; tree: `4dde1e5b8ddb9323b608764e5f7ae1e379d80de2`. Publication metadata is recorded separately from the application commit.
+- ND-026 deployment/version: pending; the scope baseline above remains Site version 12 until a new deployment is confirmed.
+- Next: recheck execution ownership and both remote heads, record the final source identity, publish the matching verified bundle to the existing Site, confirm the feature is active, reconcile GitHub/Sites content trees, and only then mark this slice Released. Preserve the existing Site audience and owner data throughout.
