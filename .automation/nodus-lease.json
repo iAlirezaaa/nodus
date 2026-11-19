@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": "nodus-owner-20261119T2222Z-neural-zones",
+  "owner_run_id": null,
   "acquired_at": "2026-11-19T22:22:42.931Z",
-  "heartbeat_at": "2026-11-19T22:57:40.494Z",
-  "expires_at": "2026-11-20T00:27:40.494Z",
+  "heartbeat_at": "2026-11-19T22:58:15.644Z",
+  "expires_at": null,
   "current_task_id": "ND-026",
   "feature_branch": "feat/nd-026-neural-zones",
   "checkpoint": {
@@ -495,15 +495,15 @@
       "review": "Independent approved; 4 findings fixed",
       "browser": "Actual NodusApp synthetic fixtures: Persian explicit save/reload/Undo and dirty-close protection; 320/390px forms no overflow; mixed display returns exact graph",
       "deployment": "NOT ATTEMPTED",
-      "next": "Complete gesture and presentation smoke, commit QA, guarded release to existing Site",
-      "status": "Released v13; GitHub/Sites source trees synchronized",
+      "next": "ND-026 far-zoom Zone heading readability and non-destructive collapse; preserve shared nodes/cycles",
+      "status": "COMPLETE — Released version 13",
       "independent_review": "Approved after four resolved findings",
       "expectedMain": "4a7fc65524c53cf8ad58762a3eab90c692c45c3a",
       "applicationCommit": "4bf71c6abe6d1c62b37196e749df8f75be8be2f9",
       "applicationTree": "4dde1e5b8ddb9323b608764e5f7ae1e379d80de2",
       "verifiedHead": "613f9a9769ec7cd95496062254eaf9c8299e1ad8",
       "verifiedTree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5",
-      "nextExternalStep": "Confirm owned preview stop; guarded lease release",
+      "nextExternalStep": "None; release and source synchronization complete",
       "currentMain": "4a7fc65524c53cf8ad58762a3eab90c692c45c3a",
       "githubPush": {
         "state": "Feature branch created successfully via GitHub API",
@@ -552,13 +552,20 @@
         "tree": "de5294e65cc6809d300e24e11417856d60bc6355",
         "treesEqual": true,
         "runtimeUnchanged": true
-      }
+      },
+      "completedAt": "2026-11-19T22:58:15.644Z",
+      "cleanup": {
+        "preview": "Stopped only this run's 4173 preview",
+        "browser": "Own tab reused for verified production URL and retained as deliverable",
+        "ownerData": "No production workspace or asset writes used for QA"
+      },
+      "lease": "Released with expected SHA and force:false"
     }
   },
-  "last_completed_run": "nodus-auto-20261119T2117Z-nd013-regression-11",
-  "updated_at": "2026-11-19T17:29:59.459Z",
-  "completed_at": "2026-11-19T17:29:59.459Z",
-  "last_completed_at": "2026-11-19T21:33:51.922Z",
+  "last_completed_run": "nodus-owner-20261119T2222Z-neural-zones",
+  "updated_at": "2026-11-19T22:58:15.644Z",
+  "completed_at": "2026-11-19T22:58:15.644Z",
+  "last_completed_at": "2026-11-19T22:58:15.644Z",
   "current_run": {
     "run_id": "nodus-auto-20261119T061212Z-nd013-continue",
     "branch": "feat/nd-011-templates-and-dense-graph",
@@ -566,7 +573,7 @@
     "status": "COMPLETED_BRANCH_ONLY",
     "finished_at": "2026-11-19T06:25:51.465Z"
   },
-  "status": "ND-013 In progress / feature branch only. Hidden-preview gate fixed & CI verified, original Site release Blocked",
+  "status": "idle",
   "current_run_id": null,
   "active_run_id": null,
   "last_activity": "Retired IndexedDB load guard, 3 red/green tests, 396/396 Node, TS/build and 19/19 Chromium; no original Site release",
