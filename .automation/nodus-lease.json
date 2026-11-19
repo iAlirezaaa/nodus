@@ -4,12 +4,12 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-owner-20261119T2222Z-neural-zones",
   "acquired_at": "2026-11-19T22:22:42.931Z",
-  "heartbeat_at": "2026-11-19T22:22:42.931Z",
-  "expires_at": "2026-11-19T23:52:42.931Z",
+  "heartbeat_at": "2026-11-19T22:28:44.743Z",
+  "expires_at": "2026-11-19T23:58:44.743Z",
   "current_task_id": "ND-026",
   "feature_branch": "feat/nd-026-neural-zones",
   "checkpoint": {
-    "phase": "Owner-authorized guarded handover for neural zones implementation and release",
+    "phase": "Implementing mixed neuron/card presentation and zones after independent prior branch review",
     "github_main": "26fafac05c320ed5db30a0ee908dd816714acdd9",
     "site_source": "eb8a9ad1f470447bf15634efbaa47531924901c5",
     "tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
@@ -245,7 +245,7 @@
     "current_test_result": "11/11 checked-in Node-style exact-source V8 tests (6 new search focus + 5 existing keyboard tests) PASS under Node facades; original search Escape hidden-focus defect reproduced RED; inline JS and CSP SHA256 pass; full native Node, TypeScript project and build NOT RUN",
     "site_current_version": null,
     "github_pages_tree": "1833868acf143be22bfb54efe46853b0e8dbde6d",
-    "site_audience": "custom; existing owner only, revision 1; unchanged",
+    "site_audience": "custom owner only; unchanged",
     "native_test": "Node22 isolated verbatim retryRecovery 5/5 PASS; checked-in native tests NOT RUN",
     "source_test": "23/23 committed source exact V8 synthetic scenario checks; red old stale availability true / patched false",
     "csp": "PASS independent SHA256 sha256-osFMNeFUe/xA9uldsCQ1+Ep3TvFSuARMleOgqgamPlA=",
@@ -474,7 +474,13 @@
     },
     "site_source_tree": "cf93a13f4c7da2530b9ff07efba74daf5b20a618",
     "current_task": "ND-026",
-    "target_branch": "feat/nd-026-neural-zones"
+    "target_branch": "feat/nd-026-neural-zones",
+    "scope_commits": [
+      "50c5300b056b761eb94da2bf7f700eafc26462a9",
+      "a6f734e"
+    ],
+    "browser_preview": "http://127.0.0.1:4173/",
+    "source_parity": "Sites eb8a9ad and GitHub main26fafac share tree cf93a13f4c7da2530b9ff07efba74daf5b20a618"
   },
   "last_completed_run": "nodus-auto-20261119T2117Z-nd013-regression-11",
   "updated_at": "2026-11-19T17:29:59.459Z",
