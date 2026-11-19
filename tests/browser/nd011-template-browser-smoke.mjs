@@ -264,20 +264,34 @@ try {
       if (Math.abs(difference) <= 10) break;
       const dy = Math.max(-180, Math.min(180, difference));
       // Middle-button pan deliberately works over a densely packed neuron: regular left drag would edit it.
+      // The visible canvas on mobile can be almost completely covered by nodes.
+      // Prefer the selected neuron's interactive core (middle button forces pan),
+      // then other cores and a systematic canvas scan; never pan a popup/button.
+      await page.mouse.move(1, 1);
       const origin = await page.evaluate(() => {
         const surface = document.querySelector('[data-canvas]');
+        if (!surface) return null;
         const bounds = surface.getBoundingClientRect();
-        const candidates = [[.92,.46],[.08,.46],[.92,.63],[.08,.63],[.50,.64]];
-        for (const [ax, ay] of candidates) {
-          const x = bounds.left + bounds.width * ax, y = bounds.top + bounds.height * ay;
+        const permitted = (x, y) => {
+          if (x < bounds.left + 3 || x > bounds.right - 3 || y < bounds.top + 3 || y > bounds.bottom - 3) return false;
           const hit = document.elementFromPoint(x, y);
-          if (hit && surface.contains(hit) && !hit.closest('button,a,input,[data-edge],.canvas-heading,.magnet-launch')) {
-            return { x, y };
+          return hit && surface.contains(hit) &&
+            !hit.closest('button,a,input,textarea,select,video,audio,[contenteditable="true"],[data-edge-bend],[data-node-preview]');
+        };
+        for (const core of surface.querySelectorAll('.node-neuron.selected .neuron-core, .node-neuron .neuron-core')) {
+          const box = core.getBoundingClientRect();
+          const x = box.left + box.width / 2, y = box.top + box.height / 2;
+          if (permitted(x, y)) return { x, y, kind: 'visible-neuron-core' };
+        }
+        for (let yi = 1; yi < 16; yi++) {
+          for (let xi = 1; xi < 16; xi++) {
+            const x = bounds.left + bounds.width * xi / 16, y = bounds.top + bounds.height * yi / 16;
+            if (permitted(x, y)) return { x, y, kind: 'canvas-surface' };
           }
         }
         return null;
       });
-      assert(origin !== null, 'Need a canvas pan origin outside interactive controls at ' + width + 'px');
+      assert(origin !== null, 'No browser-hit-tested canvas or neuron available for middle-button pan at ' + width + 'px');
       await page.mouse.move(origin.x, origin.y);
       await page.mouse.down({ button: 'middle' });
       await page.mouse.move(origin.x, origin.y + dy, { steps: 12 });
