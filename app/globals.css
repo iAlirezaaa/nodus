@@ -659,9 +659,34 @@ kbd { font: 10px/1.6 ui-monospace, SFMono-Regular, monospace; min-width: 23px; d
   .canvas-heading .canvas-reading-actions .arrange-button > span { display: none; }
 }
 @media (max-width: 650px) {
-  .canvas-heading .canvas-title-row h1 { max-width: min(170px, calc(100vw - 215px)); }
-  .canvas-heading .canvas-reading-actions { gap: 4px; }
-  .canvas-heading .reading-pages { top: 43px; min-width: 176px; }
+  /* Give the board name its own row instead of truncating it beside three controls. */
+  .canvas-heading { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: stretch; gap: 10px; }
+  .canvas-heading > div:first-child { min-width: 0; }
+  .canvas-heading .canvas-title-row h1 {
+    max-width: calc(100vw - 116px);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.35;
+  }
+  .canvas-heading .canvas-reading-actions { min-width: 0; width: 100%; gap: 5px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+  /* The pager participates in layout: it cannot float over the board title. */
+  .canvas-heading .reading-pages {
+    position: static;
+    order: 1;
+    flex: 1 1 178px;
+    min-width: 178px;
+    max-width: 100%;
+    min-height: 39px;
+    margin-inline-start: auto;
+    padding: 2px 4px;
+    box-shadow: var(--canvas-shadow);
+  }
+  .canvas-heading .reading-pages > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Keep the existing magnet launcher below even a two-line heading and wrapped pager. */
+  .magnet-launch { top: 250px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .canvas-heading .reading-pages *, .canvas-heading .canvas-reading-actions * { transition: none !important; }

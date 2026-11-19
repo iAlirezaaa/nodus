@@ -91,7 +91,39 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   // A navigation sidebar open at desktop width must not cover canvas controls after narrowing.
   await page.locator('.sidebar-scrim').waitFor({ state: 'detached', timeout: 5000 });
-  await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-390.png' });
+  // Header/pager regression: no dense-reading controls may cover the board name at 390 or 320px.
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    const layout = await page.evaluate(() => {
+      const rect = selector => {
+        const element = document.querySelector(selector);
+        if (!element) throw new Error('Missing reading control: ' + selector);
+        const b = element.getBoundingClientRect();
+        return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, height: b.height };
+      };
+      const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      const title = rect('.canvas-heading h1');
+      const actions = rect('.canvas-heading .canvas-reading-actions');
+      const pager = rect('.canvas-heading .reading-pages');
+      const magnetic = rect('.magnet-launch');
+      const layoutButton = rect('.canvas-reading-actions .arrange-button:last-child');
+      const titleElement = document.querySelector('.canvas-heading h1');
+      const lineHeight = Number.parseFloat(getComputedStyle(titleElement).lineHeight);
+      return { viewport: innerWidth, titleWhiteSpace: getComputedStyle(titleElement).whiteSpace,
+        titleLines: title.height / lineHeight, titleOutside: title.left < 0 || title.right > innerWidth,
+        titleActionsOverlap: overlaps(title, actions),
+        pagerLayoutOverlap: overlaps(pager, layoutButton),
+        pagerMagnetOverlap: overlaps(pager, magnetic),
+        pagerOutside: pager.left < 0 || pager.right > innerWidth,
+        documentOverflows: document.documentElement.scrollWidth > innerWidth };
+    });
+    assert(!layout.titleOutside && layout.titleWhiteSpace === 'normal' && layout.titleLines <= 2.2,
+      'Mobile title must remain legible within two lines: ' + JSON.stringify(layout));
+    assert(!layout.titleActionsOverlap && !layout.pagerLayoutOverlap && !layout.pagerMagnetOverlap && !layout.pagerOutside && !layout.documentOverflows,
+      'Mobile reading controls collide or overflow at ' + width + 'px: ' + JSON.stringify(layout));
+    await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-' + width + '.png' });
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
   // The drawer can still be opened intentionally at mobile width and dismissed normally.
   await page.getByRole('button', { name: 'بازکردن فهرست' }).click();
   assert(await page.locator('.sidebar-scrim').isVisible(), 'Mobile navigation must remain available by explicit action');
