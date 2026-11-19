@@ -9,6 +9,8 @@ export interface GraphSpotlight {
   page: number;
   pageCount: number;
   shown: number;
+  rangeStart: number;
+  rangeEnd: number;
 }
 export function graphSpotlight(
   nodes: readonly GraphNode[], edges: readonly GraphEdge[], focusId: string | null,
@@ -36,9 +38,11 @@ export function graphSpotlight(
   const pageCount = Math.max(1, Math.ceil(ordered.length / limit));
   const page = Math.min(pageCount - 1, Math.max(0, Number.isFinite(requestedPage) ? Math.floor(requestedPage) : 0));
   const displayed = ordered.slice(page * limit, (page + 1) * limit);
+  const rangeStart = displayed.length ? page * limit + 1 : 0;
+  const rangeEnd = page * limit + displayed.length;
   const nodeIds = new Set([focusId!, ...displayed]);
   const edgeIds = new Set(edges.filter(edge => edge.boardId === focus.boardId && edge.sourceId !== edge.targetId &&
     ((edge.sourceId === focusId && nodeIds.has(edge.targetId)) || (edge.targetId === focusId && nodeIds.has(edge.sourceId))))
     .map(edge => edge.id));
-  return { focusId: focusId!, nodeIds, edgeIds, neighborCount: ordered.length, page, pageCount, shown: displayed.length };
+  return { focusId: focusId!, nodeIds, edgeIds, neighborCount: ordered.length, page, pageCount, shown: displayed.length, rangeStart, rangeEnd };
 }

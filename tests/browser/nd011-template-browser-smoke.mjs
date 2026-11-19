@@ -136,15 +136,61 @@ try {
   const next = page.getByRole('button', { name: 'همسایه‌های بعدی' });
   await next.click();
   await delay(250);
+  const secondCaption = await page.locator('.reading-pages > span').innerText();
+  assert(/11–20/.test(secondCaption), 'Pager must expose the inclusive range after next: '+secondCaption);
   assert((await snapshot()).writes === prev, 'Changing the reading page must not write the document');
   await page.locator('.language-button').click();
+  const englishCaption = await page.locator('.reading-pages > span').innerText();
+  assert(/11–20 of \d+ neighbors/.test(englishCaption), 'English reading page must give its exact range: '+englishCaption);
   await page.screenshot({ path: artifacts + '/dense-reading-en-mobile-390.png' });
   const final = await snapshot();
   assert(final.document.nodes.length === denseStats.nodes, 'Reading mode must preserve every node');
   assert(final.writes === prev, 'Presentation and language toggles must not cause graph writes');
+  // Deterministic 20/100/500 neighbor matrix uses the real NodusApp on the fixed 4173 port.
+  // Session data here is an isolated fixture, never a genuine signed-in user or shared room.
+  await page.locator('.language-button').click(); // restore Persian before the scene matrix
+  const denseMatrix = [];
+  for (const count of [20, 500]) {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    const scene = await page.evaluate(({ key, count }) => {
+      const state = JSON.parse(sessionStorage.getItem(key));
+      const root = state.document.nodes.find(n => n.id === 'clarity-root');
+      state.document.nodes = state.document.nodes.filter(n => !n.id.startsWith('nd011-dense-'));
+      state.document.edges = state.document.edges.filter(e => !e.id.startsWith('nd011-dense-link-'));
+      for (let i = 0; i < count; i++) {
+        state.document.nodes.push({ ...root, id: 'nd011-dense-' + i, boardId: 'clarity-home',
+          childBoardId: null, task: undefined, annotations: undefined, title: 'Dense idea ' + i,
+          x: (i % 25) * 160 - 1800, y: Math.floor(i / 25) * 180 - 900 });
+        state.document.edges.push({ id: 'nd011-dense-link-' + i, boardId: 'clarity-home',
+          sourceId: 'clarity-root', targetId: 'nd011-dense-' + i, label: '' });
+      }
+      const adjacent = new Set(state.document.edges.filter(e => e.boardId === 'clarity-home' &&
+        (e.sourceId === 'clarity-root' || e.targetId === 'clarity-root'))
+        .map(e => e.sourceId === 'clarity-root' ? e.targetId : e.sourceId).filter(id => id !== 'clarity-root'));
+      state.revision++;
+      state.updatedAt = new Date().toISOString();
+      sessionStorage.setItem(key, JSON.stringify(state));
+      return { nodes: state.document.nodes.length, neighbors: adjacent.size, writes: state.writes };
+    }, { key: storageKey, count });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('[data-canvas]').waitFor({ timeout: 45000 });
+    await page.locator('.sidebar-search').click();
+    await page.locator('.search-box input').fill('پروژهٔ بعدی من');
+    await page.locator('.search-results button').first().click();
+    await page.getByRole('button', { name: 'نمای خوانای شبکه' }).click();
+    await page.locator('[data-canvas][data-spotlight="true"]').waitFor();
+    const caption = await page.locator('.reading-pages > span').innerText();
+    assert(caption.includes('1–10 از ' + scene.neighbors + ' همسایه'),
+      'Unexpected range for the '+count+'-neighbor graph: '+caption+' / '+JSON.stringify(scene));
+    assert((await snapshot()).writes === scene.writes, 'Read-only matrix must not cause document writes');
+    assert(await page.locator('[data-node][data-spotlight-member="true"]').count() >= 1,
+      'Focus must remain highlighted in the '+count+'-neighbor graph');
+    await page.screenshot({ path: artifacts + '/dense-reading-' + count + '-fa-desktop.png' });
+    denseMatrix.push({ requestedNeighbors: count, observedNeighbors: scene.neighbors, nodes: scene.nodes, caption });
+  }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
   console.log(JSON.stringify({ result: 'PASS', scenarios: 10, fixture: 'real NodusApp with synthetic session-storage API',
-    host: base, fixedDenseNodes: denseStats.nodes, mobile, screenshots: 5, lastWrites: final.writes }));
+    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, screenshots: 8, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
   console.error('ND-011/013 UI verification FAILED:', error, serverOutput);

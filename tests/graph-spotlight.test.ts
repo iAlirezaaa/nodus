@@ -22,6 +22,10 @@ for (const count of [20, 100, 500]) {
     assert.equal(first.neighborCount, count);
     assert.equal(first.pageCount, Math.ceil(count / 10));
     assert.equal(first.shown, 10);
+    assert.equal(first.rangeStart, 1);
+    assert.equal(first.rangeEnd, 10);
+    assert.equal(last.rangeStart, count - 9);
+    assert.equal(last.rangeEnd, count);
     assert.equal(first.nodeIds.size, 11);
     assert.equal(first.edgeIds.size, 10);
     assert.equal(last.page, first.pageCount - 1);
@@ -39,6 +43,12 @@ test('pagination reveals other neighbors without hiding or deleting real nodes',
   assert.equal(first.neighborCount, 37);
   assert.equal(second.neighborCount, 37);
   assert.equal(first.pageCount, 4);
+  assert.equal(second.rangeStart, 11);
+  assert.equal(second.rangeEnd, 20);
+  const fourth = graphSpotlight(nodes, edges, 'hub', 3, 10)!;
+  assert.equal(fourth.rangeStart, 31);
+  assert.equal(fourth.rangeEnd, 37);
+  assert.equal(fourth.shown, 7);
   assert.equal([...first.nodeIds].filter(id => id !== 'hub' && second.nodeIds.has(id)).length, 0);
   assert.equal(nodes.length, 38);
   assert.equal(edges.length, 37);
@@ -61,4 +71,17 @@ test('cycles, duplicate/reverse links, missing cross-board ids, and task parents
   assert.equal(spot.nodeIds.size, 3);
   assert.equal(spot.edgeIds.size, 2);
   assert.equal(graphSpotlight([hub,a,b], edges, 'missing'), null);
+});
+
+test('isolated node gives an explicit empty range without fake neighbor one', () => {
+  const hub = makeNode('home', 'note', 0, 0, { id: 'hub', title: 'ایدهٔ تنها' });
+  const spot = graphSpotlight([hub], [], 'hub', 999, 10)!;
+  assert.equal(spot.neighborCount, 0);
+  assert.equal(spot.shown, 0);
+  assert.equal(spot.rangeStart, 0);
+  assert.equal(spot.rangeEnd, 0);
+  assert.equal(spot.page, 0);
+  assert.equal(spot.pageCount, 1);
+  assert.deepEqual([...spot.nodeIds], ['hub']);
+  assert.equal(spot.edgeIds.size, 0);
 });
