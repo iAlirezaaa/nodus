@@ -153,7 +153,12 @@ try {
   const dragOrigin = (await snapshot()).document.nodes.find(node => node.id === 'clarity-root');
   const writesBeforeHiddenDrag = (await snapshot()).writes;
   const rootCore = page.locator('[data-node="clarity-root"] .neuron-core');
-  await rootCore.hover({ force: true });
+  // The prior explicit hover can open a preview overlay before pointerdown,
+  // turning a genuine node drag into a background pan. Start from a clear
+  // pointer/preview state and interact with the visible core directly.
+  await page.mouse.move(12, 12);
+  await page.waitForFunction(() => !document.querySelector('[data-node-preview]'),
+    null, { polling: 100, timeout: 6000 });
   const rootCoreBounds = await rootCore.boundingBox();
   assert(rootCoreBounds && rootCoreBounds.width > 0 && rootCoreBounds.height > 0,
     'Root neuron must be onscreen for the captured-pointer regression');
