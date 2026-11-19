@@ -118,6 +118,10 @@ try {
   await page.screenshot({ path: artifacts + '/new-nodes-motion-reduced-fa-desktop.png' });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on');
+  // Two preceding zoom commands may move the home thought outside the
+  // virtualized viewport. Fit first: the target must exist before hover.
+  await page.getByRole('button', { name: 'نمایش تمام بوم' }).click();
+  await page.locator('[data-node="clarity-root"] .neuron-core').waitFor({ timeout: 10000 });
   // Hover a real graph neuron before suspension: a preview remaining open when
   // the tab is hidden can obscure the graph after the user returns.
   await page.locator('[data-node="clarity-root"] .neuron-core').hover({ force: true });
