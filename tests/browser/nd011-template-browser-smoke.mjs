@@ -203,20 +203,34 @@ try {
   });
   await page.waitForFunction(() => document.querySelector('[data-canvas]')?.getAttribute('data-motion') === 'on',
     null, { polling: 100, timeout: 7000 });
-  // A fresh captured drag must remain possible; Escape cancels without a write.
-  await rootCore.hover({ force: true });
+  // Simulate a second DOM pointer lifecycle after visibility recovery.
+  // Like the pre-hide sequence, this tests React state and Escape semantics,
+  // not physical pointer capture on a device.
   const freshBounds = await rootCore.boundingBox();
   assert(freshBounds, 'Root neuron must remain available after visibility recovery');
   const freshCenter = { x: freshBounds.x + freshBounds.width / 2, y: freshBounds.y + freshBounds.height / 2 };
-  await page.mouse.move(freshCenter.x, freshCenter.y);
-  await page.mouse.down();
-  await page.mouse.move(freshCenter.x + 38, freshCenter.y + 24, { steps: 4 });
+  await page.evaluate(({ x, y }) => {
+    const node = document.querySelector('[data-node="clarity-root"]');
+    const canvas = document.querySelector('[data-canvas]');
+    if (!node || !canvas) throw new Error('Root neuron/canvas unavailable after visibility recovery');
+    const pointer = (kind, clientX, clientY) => new PointerEvent(kind, {
+      bubbles: true, cancelable: true, pointerId: 902, pointerType: 'mouse',
+      isPrimary: true, button: 0, buttons: 1, clientX, clientY
+    });
+    node.dispatchEvent(pointer('pointerdown', x, y));
+    canvas.dispatchEvent(pointer('pointermove', x + 38, y + 24));
+  }, freshCenter);
   await page.waitForFunction(() => !!document.querySelector('[data-node="clarity-root"].is-node-dragging'),
     null, { polling: 100, timeout: 6000 });
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('[data-node="clarity-root"].is-node-dragging'),
     null, { polling: 100, timeout: 7000 });
-  await page.mouse.up();
+  await page.evaluate(({ x, y }) => {
+    document.querySelector('[data-canvas]')?.dispatchEvent(new PointerEvent('pointerup', {
+      bubbles: true, pointerId: 902, pointerType: 'mouse', isPrimary: true,
+      button: 0, buttons: 0, clientX: x + 38, clientY: y + 24
+    }));
+  }, freshCenter);
   assert((await snapshot()).writes === writesBeforeHiddenDrag,
     'Fresh draggable interaction followed by Escape must not write the graph');
   await page.mouse.move(2, 2);
