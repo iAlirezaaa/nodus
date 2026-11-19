@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-hourly-20261119T231203Z-nd011",
   "acquired_at": "2026-11-19T23:12:03.608Z",
-  "heartbeat_at": "2026-11-19T23:12:03.608Z",
-  "expires_at": "2026-11-20T00:42:03.608Z",
+  "heartbeat_at": "2026-11-19T23:19:39.369Z",
+  "expires_at": "2026-11-20T00:49:39.369Z",
   "current_task_id": "ND-011/ND-013",
   "feature_branch": "feat/nd-011-templates-and-dense-graph",
   "checkpoint": {
@@ -563,7 +563,7 @@
     },
     "run_20261120": {
       "owner_run_id": "nodus-hourly-20261119T231203Z-nd011",
-      "status": "SCOPING",
+      "status": "CODE COMMITTED; native tests/TS/build PASS; browser CI IN PROGRESS",
       "main_head": "4a7fc65524c53cf8ad58762a3eab90c692c45c3a",
       "main_tree": "de5294e65cc6809d300e24e11417856d60bc6355",
       "feature_head": "25254e645ef7d50ceff91f84213e4d89df7da0d9",
@@ -572,11 +572,19 @@
       "site_head": "NOT RECHECKED (native Sites skill unavailable)",
       "branch": "feat/nd-011-templates-and-dense-graph",
       "slice": "Review active dense graph/template branch; repair a reproducible interaction/reading defect, run source-exact tests, remain branch-only until required verification",
-      "release": "NOT ATTEMPTED"
+      "release": "NOT ATTEMPTED",
+      "scope_commit": "537b216e367a90946cb174c52d01fe32804466ed",
+      "code_commit": "a5dd223d856cd30bc3302c6e2924346e2f743a41",
+      "code_tree": "094ce8be107cb14d0d11dcff70e28afe49a46f3c",
+      "ci_run": 44636397754,
+      "ci_native": "237/237 PASS",
+      "ci_typescript": "PASS",
+      "ci_build": "PASS",
+      "ci_browser": "IN PROGRESS"
     }
   },
   "last_completed_run": "nodus-owner-20261119T2222Z-neural-zones",
-  "updated_at": "2026-11-19T23:12:03.608Z",
+  "updated_at": "2026-11-19T23:19:39.369Z",
   "completed_at": "2026-11-19T22:58:15.644Z",
   "last_completed_at": "2026-11-19T22:58:15.644Z",
   "current_run": "nodus-hourly-20261119T231203Z-nd011",
