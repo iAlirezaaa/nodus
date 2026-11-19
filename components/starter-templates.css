@@ -27,3 +27,5 @@
 @media (prefers-reduced-motion: reduce) {
   .starter-template-panel *, .starter-template-panel *::before, .starter-template-panel *::after { transition: none !important; }
 }
+
+.starter-project-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }

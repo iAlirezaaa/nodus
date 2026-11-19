@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeNode } from '../lib/graph.ts';
+import { deleteNode, makeNode } from '../lib/graph.ts';
 import { insertStarterTemplate, STARTER_TEMPLATES, STARTER_TEMPLATE_IDS } from '../lib/starter-templates.ts';
 import { validateWorkspace } from '../lib/server/validation.ts';
 import type { Workspace } from '../lib/types.ts';
@@ -24,7 +24,9 @@ for (const templateId of STARTER_TEMPLATE_IDS) {
       assert.strictEqual(result.document.nodes[0].id, result.rootId);
       assert.strictEqual(result.document.nodes[0].title, definition.items[0].title[language]);
       assert.equal(new Set(result.document.nodes.map(node => node.id)).size, result.added);
-      assert.ok(result.document.nodes.every(node => node.boardId === 'home' && !node.asset && !node.childBoardId));
+      assert.ok(result.document.nodes.every(node => node.boardId === 'home' && !node.asset));
+      assert.equal(result.document.boards.length, templateId === 'production' ? 2 : 1);
+      assert.equal(result.document.nodes.filter(node => !!node.childBoardId).length, templateId === 'production' ? 1 : 0);
       assert.ok(result.document.edges.every(edge => edge.boardId === 'home' && edge.sourceId !== edge.targetId &&
         result.document.nodes.some(node => node.id === edge.sourceId) && result.document.nodes.some(node => node.id === edge.targetId)));
       validateWorkspace(result.document);
@@ -75,4 +77,55 @@ test('invalid target and node or edge limits make no mutation', () => {
   assert.strictEqual(insertStarterTemplate(atNodeLimit, 'home', 'tasks', 'fa').document, atNodeLimit);
   const atEdgeLimit = { ...doc, edges: Array(20000).fill({ id: 'mock', boardId: 'home', sourceId: 'x', targetId: 'y', label: '' }) };
   assert.strictEqual(insertStarterTemplate(atEdgeLimit, 'home', 'tasks', 'fa').document, atEdgeLimit);
+});
+
+test('production starter creates a genuine, reversible nested project while retaining its linked pipeline', () => {
+  const original = empty();
+  const existing = makeNode('home', 'note', 28, 60, { title: 'Saved idea' });
+  original.nodes.push(existing);
+  const first = insertStarterTemplate(original, 'home', 'production', 'fa');
+  assert.equal(first.added, 8);
+  assert.equal(first.document.nodes.length, 9);
+  assert.equal(first.document.edges.length, 7);
+  const root = first.document.nodes.find(node => node.id === first.rootId)!;
+  const inner = first.document.boards.find(board => board.id === root.childBoardId);
+  assert.equal(root.kind, 'project');
+  assert.ok(inner);
+  assert.equal(inner.parentNodeId, root.id);
+  assert.equal(inner.title, root.title);
+  assert.ok(inner.description.length > 0);
+  assert.ok(first.document.nodes.every(node => node.boardId === 'home'));
+  assert.strictEqual(first.document.nodes[0], existing);
+  assert.strictEqual(first.document.boards[0], original.boards[0]);
+  assert.equal(original.boards.length, 1);
+  assert.equal(original.nodes.length, 1);
+  validateWorkspace(first.document);
+
+  const second = insertStarterTemplate(first.document, 'home', 'production', 'en');
+  const secondRoot = second.document.nodes.find(node => node.id === second.rootId)!;
+  assert.notEqual(root.id, secondRoot.id);
+  assert.notEqual(root.childBoardId, secondRoot.childBoardId);
+  assert.equal(second.document.boards.length, 3);
+  validateWorkspace(second.document);
+  // Graph links are not ownership: deleting the project removes only its
+  // empty child board; the independently editable pipeline nodes survive.
+  const removed = deleteNode(first.document, root.id);
+  assert.equal(removed.boards.length, 1);
+  assert.equal(removed.nodes.length, 8);
+  assert.strictEqual(removed.nodes[0], existing);
+  validateWorkspace(removed);
+});
+
+test('production starter respects the 2000-board storage ceiling without editing the source', () => {
+  const full = empty();
+  for (let index = 1; index < 2000; index++) {
+    full.boards.push({ id: 'other-' + index, title: 'Other', description: '', parentNodeId: null,
+      createdAt: new Date().toISOString() });
+  }
+  const result = insertStarterTemplate(full, 'home', 'production', 'en');
+  assert.strictEqual(result.document, full);
+  assert.equal(result.added, 0);
+  assert.equal(result.rootId, null);
+  assert.equal(full.nodes.length, 0);
+  assert.equal(full.boards.length, 2000);
 });

@@ -1,5 +1,5 @@
 import { makeNode, uid } from './graph';
-import type { GraphEdge, GraphNode, Language, NodeColor, NodeKind, TaskStatus, Workspace } from './types';
+import type { Board, GraphEdge, GraphNode, Language, NodeColor, NodeKind, TaskStatus, Workspace } from './types';
 
 type Text = { fa: string; en: string };
 type Item = { title: Text; parent?: number; depth: number; row: number; color: NodeColor; kind?: NodeKind; status?: TaskStatus; note?: Text };
@@ -77,7 +77,11 @@ export function insertStarterTemplate(document: Workspace, boardId: string, id: 
   { document: Workspace; rootId: string | null; added: number } {
   const template: Definition | undefined = STARTER_TEMPLATES[id];
   if (!template || !document.boards.some(board => board.id === boardId)) return { document, rootId: null, added: 0 };
-  if (document.nodes.length + template.items.length > 5000 || document.edges.length + template.items.length - 1 > 20000)
+  // A project starter must have a real nested board, not merely a project-shaped icon.
+  const hasNestedProject = template.items[0]?.kind === 'project';
+  if (document.nodes.length + template.items.length > 5000 ||
+      document.edges.length + template.items.length - 1 > 20000 ||
+      (hasNestedProject && document.boards.length >= 2000))
     return { document, rootId: null, added: 0 };
   const existing = document.nodes.filter(node => node.boardId === boardId);
   const direction = language === 'fa' ? -1 : 1;
@@ -91,12 +95,22 @@ export function insertStarterTemplate(document: Workspace, boardId: string, id: 
     rootX + direction * item.depth * 350, rootY + item.row * 228, {
       title: item.title[language], text: item.note?.[language] ?? '', color: item.color,
     }));
+  // The pipeline stays visible on the current canvas; its root also owns an
+  // initially empty inner project for notes, references and further layers.
+  // Both sides of the containment relation are committed in the same Undo step.
+  const innerBoard: Board | null = hasNestedProject ? {
+    id: uid(), title: nodes[0].title, description: template.description[language],
+    parentNodeId: nodes[0].id, createdAt: nodes[0].createdAt,
+  } : null;
+  if (innerBoard) nodes[0].childBoardId = innerBoard.id;
   for (let i = 0; i < template.items.length; i++) {
     const item = template.items[i];
     if (item.status) nodes[i].task = { status: item.status, parentId: item.parent === undefined ? null : nodes[item.parent].id };
   }
   const edges: GraphEdge[] = template.items.flatMap((item, index) =>
     item.parent === undefined ? [] : [{ id: uid(), boardId, sourceId: nodes[item.parent].id, targetId: nodes[index].id, label: '' }]);
-  return { document: { ...document, nodes: [...document.nodes, ...nodes], edges: [...document.edges, ...edges] },
+  return { document: { ...document,
+      boards: innerBoard ? [...document.boards, innerBoard] : document.boards,
+      nodes: [...document.nodes, ...nodes], edges: [...document.edges, ...edges] },
     rootId: nodes[0].id, added: nodes.length };
 }

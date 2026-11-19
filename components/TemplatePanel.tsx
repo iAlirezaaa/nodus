@@ -33,6 +33,7 @@ export default function TemplatePanel({ language, canApply, onApply, onClose }: 
       <section className="starter-preview" aria-label={L('پیش‌نمایش ساختار', 'Structure preview')}>
         <header><Layers size={16} /><strong>{template.title[language]}</strong><span>{itemCount} {L('گره', 'nodes')} · {itemCount - 1} {L('ارتباط', 'links')}</span></header>
         <ul>{template.items.map((item, index) => <li key={index} style={{ marginInlineStart: (item.depth * 18) + 'px' }}><i style={{ background: 'var(--' + item.color + ')' }} aria-hidden="true" /> <span dir="auto">{item.title[language]}</span>{index === 0 && <small>{L('ریشه', 'root')}</small>}</li>)}</ul>
+        {selected === 'production' && <p className="starter-project-note">{L('ریشه یک پروژهٔ واقعی با بوم داخلی خالی است؛ هشت گره و هفت ارتباط روی همین بوم باقی می‌مانند.', 'The root is a real project with an empty inner board; all eight thoughts and seven links stay on this canvas.')}</p>}
       </section>
       <div className="dialog-footer">
         <button type="button" className="secondary-button" onClick={onClose}>{L('انصراف', 'Cancel')}</button>

@@ -39,12 +39,20 @@ try {
   await page.getByRole('button', { name: 'افزودن قالب آماده' }).click();
   await page.locator('[data-starter-template="production"]').click();
   assert((await page.locator('.starter-preview li').count()) === 8, 'Production template preview must show eight editable nodes');
+  assert(await page.locator('.starter-project-note').isVisible(), 'Production template preview must disclose the nested project');
   await page.screenshot({ path: artifacts + '/template-preview-fa-desktop.png', fullPage: false });
   await page.getByRole('button', { name: 'افزودن به همین بوم' }).click();
   await page.waitForFunction(({key, total}) => JSON.parse(sessionStorage.getItem(key) ?? 'null')?.document?.nodes?.length === total, {key: storageKey, total: initial.document.nodes.length + 8}, { timeout: 25000 });
   const afterInsert = await snapshot();
   assert(afterInsert.document.nodes.length === initial.document.nodes.length + 8, 'Template must append exactly eight nodes');
-  assert(afterInsert.document.nodes.some(n => n.title === 'پروژهٔ انیمیشن'), 'Production root must be editable and present');
+  const productionRoot = afterInsert.document.nodes.find(n => n.title === 'پروژهٔ انیمیشن');
+  assert(productionRoot?.kind === 'project' && productionRoot.childBoardId, 'Production root must be an actual nested project');
+  const innerProject = afterInsert.document.boards.find(b => b.id === productionRoot.childBoardId);
+  assert(innerProject?.parentNodeId === productionRoot.id && innerProject.title === productionRoot.title,
+    'The inner board must link back to its producing root with the correct title');
+  assert(!afterInsert.document.nodes.some(n => n.boardId === innerProject.id), 'The new inner project starts empty');
+  assert(afterInsert.document.nodes.filter(n => n.boardId === productionRoot.boardId).length >= 8,
+    'The full production pipeline must remain visible on the source board');
   await page.screenshot({ path: artifacts + '/template-applied-fa-desktop.png' });
   const undo = page.locator('.toast-undo');
   await undo.waitFor({ timeout: 7000 });
