@@ -70,7 +70,7 @@ Nodus باید فضای واقعی و ماندگاری برای فکرکردن �
 
 | شناسه | کار و نتیجهٔ مورد انتظار | معیار پذیرش | وضعیت / مسیر |
 | --- | --- | --- | --- |
-| ND-013 | خوانایی شبکه‌های متراکم | صحنه‌های ثابت ۲۰، ۱۰۰ و ۵۰۰ نود؛ عنوان فکر فعال همیشه خوانا؛ هم‌پوشانی برچسب‌ها و نشانگرها کمتر؛ اعداد اتصال/تسک قابل تشخیص؛ در حالت خلوت، نودها و نورها هویت فعلی را حفظ کنند. | In progress · `feat/nd-011-templates-and-dense-graph` · desktop→390px sidebar overlay regression fixed and 4173 Chromium fixture PASS; 20/100/500 + genuine user review pending; not Released |
+| ND-013 | خوانایی شبکه‌های متراکم | صحنه‌های ثابت ۲۰، ۱۰۰ و ۵۰۰ نود؛ عنوان فکر فعال همیشه خوانا؛ هم‌پوشانی برچسب‌ها و نشانگرها کمتر؛ اعداد اتصال/تسک قابل تشخیص؛ در حالت خلوت، نودها و نورها هویت فعلی را حفظ کنند. | **In progress** · `feat/nd-011-templates-and-dense-graph` · mobile 320/390px title/pager layout and complete neighbor count verified by exact-code Chromium fixture at 4173 (CI [44450769365](https://github.com/iAlirezaaa/nodus/actions/runs/44450769365), code `1abe0c3`, tree `1a17f2e`, 224/224 Node + TS/build PASS); original Site parity/audience, genuine accounts, independent review and 20/100/500-node matrix pending; **not Released** |
 | ND-014 | مرتب‌کردن پنجرهٔ محتوا و پیوست | عنوان/متن/فایل/نظر سلسله‌مراتب روشن داشته باشند؛ پیش‌نمایش رسانه بدون پوشاندن ویرایش؛ رفت‌وبرگشت بین نودها با حفظ پیش‌نویس؛ خطا و بارگذاری واضح؛ بدون جهش اندازه یا focus. | Queued · feat/nd-014-content-reading |
 | ND-015 | یکدستی اجزای بصری و حالت‌های رابط | فاصله‌ها، فونت، کنتراست، آیکون، hover/focus/disabled/error در پنل‌های موجود هماهنگ شوند؛ FA/EN و RTL/LTR بررسی؛ ابتدا اجزای پرتکرار، بدون بازنویسی همهٔ رابط در یک نوبت. | Queued · برش‌های کوچک design/nd-015-* |
 
