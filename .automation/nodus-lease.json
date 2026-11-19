@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-owner-20261119T2222Z-neural-zones",
   "acquired_at": "2026-11-19T22:22:42.931Z",
-  "heartbeat_at": "2026-11-19T22:49:33.281Z",
-  "expires_at": "2026-11-20T00:19:33.281Z",
+  "heartbeat_at": "2026-11-19T22:51:10.704Z",
+  "expires_at": "2026-11-20T00:21:10.704Z",
   "current_task_id": "ND-026",
   "feature_branch": "feat/nd-026-neural-zones",
   "checkpoint": {
@@ -503,12 +503,20 @@
       "applicationTree": "4dde1e5b8ddb9323b608764e5f7ae1e379d80de2",
       "verifiedHead": "613f9a9769ec7cd95496062254eaf9c8299e1ad8",
       "verifiedTree": "89a7402cc8a5965d60f90ebb74c30e87fffa12e5",
-      "nextExternalStep": "Create matching blobs/trees/commit chain; guarded new feature ref",
+      "nextExternalStep": "Create new feature branch at verified tree-equivalent API commit",
       "currentMain": "26fafac05c320ed5db30a0ee908dd816714acdd9",
       "githubPush": {
         "state": "native git failed before any remote write",
         "reason": "No Git HTTPS write credential; using authorized GitHub Git-data APIs"
-      }
+      },
+      "remoteCommitMap": {
+        "50c5300b056b761eb94da2bf7f700eafc26462a9": "bbeee3bdc2775339c51e495cba9badba2a97b98e",
+        "a6f734eebfd91e50cae1d52234eca6df5dca1c93": "859f7ce9771f38c28702376a3e8103c8b0bc48b8",
+        "7d988feff8fbc0a361b7ab2f40ecf07214a05d1b": "e12f0b8e733a25f93c546d17c3181319284b1579",
+        "4bf71c6abe6d1c62b37196e749df8f75be8be2f9": "8b275f3e10ebfc25bd428e68942e017e0599626c",
+        "613f9a9769ec7cd95496062254eaf9c8299e1ad8": "1c32d0f43a5a33d402825fd35c2cbdb4e9feb7d8"
+      },
+      "githubVerifiedHead": "1c32d0f43a5a33d402825fd35c2cbdb4e9feb7d8"
     }
   },
   "last_completed_run": "nodus-auto-20261119T2117Z-nd013-regression-11",
