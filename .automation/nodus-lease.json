@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-auto-20261119T0309Z-nd013-label-polish",
   "acquired_at": "2026-11-19T03:11:07.953Z",
-  "heartbeat_at": "2026-11-19T03:11:07.953Z",
-  "expires_at": "2026-11-19T04:41:07.953Z",
+  "heartbeat_at": "2026-11-19T03:18:35.113Z",
+  "expires_at": "2026-11-19T04:48:35.113Z",
   "current_task_id": "ND-011/ND-013",
   "feature_branch": "feat/nd-011-templates-and-dense-graph",
   "checkpoint": {
@@ -418,7 +418,12 @@
     "run_summary": "Source exact 3 RED at 44390533182; 396/396 native Node green, TS/build and 19/19 Chromium 4173 on 44390960045; final docs CI 44391704691 success; screenshots artifact 14468996091 generated not individually inspected; main/Site/owner unchanged",
     "browser_result": "19/19 real 4173 Chromium groups PASS",
     "browser_screenshot_artifact": "14478061839",
-    "control_before": "0e8047c6bdb759265db8aef2f8e8744700ad66a7"
+    "control_before": "0e8047c6bdb759265db8aef2f8e8744700ad66a7",
+    "last_code_commit": "d03127b7af8e112e1557beab9c04472489ff9c56",
+    "last_code_tree": "02600c099f2d64b5ed62793cbf488a56df1373d2",
+    "last_ci_id": 44450244122,
+    "last_ci_status": "Native 224/224 + TypeScript/build PASS; real Chromium on 4173 pending; source only on branch",
+    "last_site_sync": "NOT ATTEMPTED: source tree/audience unverified"
   },
   "last_completed_run": "nodus-auto-20261119T0213Z-nd011-resume",
   "updated_at": "2026-11-18T20:33:02.446Z",
