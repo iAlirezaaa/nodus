@@ -242,9 +242,65 @@ try {
     await page.screenshot({ path: artifacts + '/dense-reading-' + count + '-fa-desktop.png' });
     denseMatrix.push({ boardNodes: scene.boardNodes, documentNodes: scene.documentNodes, observedNeighbors: scene.neighbors, caption });
   }
+
+  // Genuine React auto-placement regression. Prior tests manually forced the
+  // attribute, proving CSS only; this pans a real selected neuron into the
+  // bottom gutter and checks the attribute set by Canvas itself.
+  const autoFlipEvidence = [];
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    const focusedNeuron = '[data-canvas][data-spotlight="true"] .node-neuron.selected[data-spotlight-member="true"]';
+    await page.locator(focusedNeuron).waitFor({ timeout: 10000 });
+    const beforeWrites = (await snapshot()).writes;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const geometry = await page.locator(focusedNeuron).evaluate(node => {
+        const surface = node.closest('[data-canvas]');
+        const core = node.querySelector('.neuron-core');
+        const bounds = core.getBoundingClientRect(), area = surface.getBoundingClientRect();
+        return { centerY: (bounds.top + bounds.bottom) / 2,
+          targetY: area.bottom - 62, area: { left: area.left, top: area.top, right: area.right, bottom: area.bottom } };
+      });
+      const difference = geometry.targetY - geometry.centerY;
+      if (Math.abs(difference) <= 10) break;
+      const dy = Math.max(-180, Math.min(180, difference));
+      const origin = await page.evaluate(() => {
+        const surface = document.querySelector('[data-canvas]');
+        const bounds = surface.getBoundingClientRect();
+        const candidates = [[.92,.46],[.08,.46],[.92,.63],[.08,.63],[.50,.64]];
+        for (const [ax, ay] of candidates) {
+          const x = bounds.left + bounds.width * ax, y = bounds.top + bounds.height * ay;
+          const hit = document.elementFromPoint(x, y);
+          if (hit && surface.contains(hit) && !hit.closest('[data-node],button,a,input,[data-edge],.canvas-heading,.magnet-launch')) {
+            return { x, y };
+          }
+        }
+        return null;
+      });
+      assert(origin !== null, 'Need an unobstructed canvas background pan origin at ' + width + 'px');
+      await page.mouse.move(origin.x, origin.y);
+      await page.mouse.down();
+      await page.mouse.move(origin.x, origin.y + dy, { steps: 12 });
+      await page.mouse.up();
+      await delay(120);
+    }
+    const auto = await page.locator(focusedNeuron).evaluate(node => {
+      const core = node.querySelector('.neuron-core').getBoundingClientRect();
+      const caption = node.querySelector('.neuron-caption').getBoundingClientRect();
+      const area = node.closest('[data-canvas]').getBoundingClientRect();
+      return { side: node.dataset.captionSide, centerY: (core.top + core.bottom)/2,
+        coreTop: core.top, captionTop: caption.top, captionBottom: caption.bottom,
+        areaTop: area.top, areaBottom: area.bottom };
+    });
+    assert(auto.side === 'above', 'React must auto-flip the bottom-edge mobile reading caption: ' + JSON.stringify({ width, auto }));
+    assert(auto.captionBottom <= auto.coreTop + 2 && auto.captionTop >= auto.areaTop + 6,
+      'Automatically flipped caption must fit above the core within the canvas: ' + JSON.stringify({ width, auto }));
+    assert((await snapshot()).writes === beforeWrites, 'Panning/auto-caption placement must not save the workspace');
+    await page.screenshot({ path: artifacts + '/dense-reading-auto-flip-fa-mobile-' + width + '.png' });
+    autoFlipEvidence.push({ width, ...auto });
+  }
   assert(errors.length === 0, 'Browser errors: ' + errors.join(' | '));
   console.log(JSON.stringify({ result: 'PASS', scenarios: 10, fixture: 'real NodusApp with synthetic session-storage API',
-    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, screenshots: 9, lastWrites: final.writes }));
+    host: base, fixedDenseNodes: denseStats.nodes, mobile, denseMatrix, autoFlipEvidence, screenshots: 11, lastWrites: final.writes }));
   await context.close();
 } catch (error) {
   console.error('ND-011/013 UI verification FAILED:', error, serverOutput);
