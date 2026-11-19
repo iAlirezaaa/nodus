@@ -183,3 +183,11 @@ Next concrete action:
 
 **Status:** ND-013 **In progress**, not Verified/Released. Hosted Site source HEAD/tree/audience/version unavailable (no authorized native Sites skill); two authenticated accounts with access/revocation and independent feature-level review pending. Release `NOT ATTEMPTED`, deployment/version ID `null`, GitHub main/Site/data unchanged. GitHub API still returns `public` despite intended `private`; no access change. **Next:** exercise a real automatically flipped lower-edge node at 320/390px and normal/hidden/reduced motion, then independent review, real-account access checks, native Sites tree/audience parity and guarded GitHub/Site publication only after all gates.
 
+
+## 2026-11-19 10:23 UTC — ND-013 automatic caption flip verification and safe placement (pre-edit scope)
+
+**Run:** `nodus-auto-20261119T1019Z-nd013-caption-integration`, guarded control lease `138ad39144d2ff3350d5ce3c78c9a1b9a012adba`. Active branch `feat/nd-011-templates-and-dense-graph` at `e5caab4004539f2e9807268b6ddd3b8265d32ef4` / tree `a99902533bb1b991a267af3207a8b632145fe3cb`. Main `26fafac05c320ed5db30a0ee908dd816714acdd9` / tree `cf93a13f4c7da2530b9ff07efba74daf5b20a618`. Hosted Site original head/tree/audience remain **UNVERIFIED** (current skills list empty); no Site/owner-data mutation or release.
+
+**Problem:** ND-013's bottom-edge caption side is implemented and pure helper tests pass, but the existing browser suite forcibly adds `data-caption-side=above` rather than observing React automatically flip a visible real neuron. Long captions can appear clipped or flip unexpectedly after a pan, despite green CSS checks.
+
+**This slice:** Reproduce the real trigger with a deterministic bottom-edge mobile graph view in the actual NodusApp Chromium fixture; refine the render-side decision if an actual defect is found. Check natural `data-caption-side`, actual caption/core bounding boxes, translation after scrolling/pan, FA/EN at 320/390px, non-document writes, with affected native tests and TypeScript/build. Browser must use fixed `127.0.0.1:4173`; if unavailable, gate remains Blocked and code remains branch-only. Do not claim two genuine authenticated users, real Site parity, or published version.
