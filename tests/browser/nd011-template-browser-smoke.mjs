@@ -263,6 +263,7 @@ try {
       const difference = geometry.targetY - geometry.centerY;
       if (Math.abs(difference) <= 10) break;
       const dy = Math.max(-180, Math.min(180, difference));
+      // Middle-button pan deliberately works over a densely packed neuron: regular left drag would edit it.
       const origin = await page.evaluate(() => {
         const surface = document.querySelector('[data-canvas]');
         const bounds = surface.getBoundingClientRect();
@@ -270,17 +271,17 @@ try {
         for (const [ax, ay] of candidates) {
           const x = bounds.left + bounds.width * ax, y = bounds.top + bounds.height * ay;
           const hit = document.elementFromPoint(x, y);
-          if (hit && surface.contains(hit) && !hit.closest('[data-node],button,a,input,[data-edge],.canvas-heading,.magnet-launch')) {
+          if (hit && surface.contains(hit) && !hit.closest('button,a,input,[data-edge],.canvas-heading,.magnet-launch')) {
             return { x, y };
           }
         }
         return null;
       });
-      assert(origin !== null, 'Need an unobstructed canvas background pan origin at ' + width + 'px');
+      assert(origin !== null, 'Need a canvas pan origin outside interactive controls at ' + width + 'px');
       await page.mouse.move(origin.x, origin.y);
-      await page.mouse.down();
+      await page.mouse.down({ button: 'middle' });
       await page.mouse.move(origin.x, origin.y + dy, { steps: 12 });
-      await page.mouse.up();
+      await page.mouse.up({ button: 'middle' });
       await delay(120);
     }
     const auto = await page.locator(focusedNeuron).evaluate(node => {
