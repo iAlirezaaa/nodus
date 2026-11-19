@@ -107,6 +107,7 @@ try {
       const pager = rect('.canvas-heading .reading-pages');
       const magnetic = rect('.magnet-launch');
       const layoutButton = rect('.canvas-reading-actions .arrange-button:last-child');
+      const pagerButtons = [rect('.canvas-heading .reading-pages button:first-child'), rect('.canvas-heading .reading-pages button:last-child')];
       const titleElement = document.querySelector('.canvas-heading h1');
       const lineHeight = Number.parseFloat(getComputedStyle(titleElement).lineHeight);
       return { viewport: innerWidth, titleWhiteSpace: getComputedStyle(titleElement).whiteSpace,
@@ -115,12 +116,14 @@ try {
         pagerLayoutOverlap: overlaps(pager, layoutButton),
         pagerMagnetOverlap: overlaps(pager, magnetic),
         pagerOutside: pager.left < 0 || pager.right > innerWidth,
+        pagerTapTargetsSmall: pagerButtons.some(button => button.right - button.left < 44 || button.height < 44),
+        pagerTapTargetsOutside: pagerButtons.some(button => button.left < 0 || button.right > innerWidth),
         pagerCountClipped: (() => { const label = document.querySelector('.reading-pages > span'); return label.scrollWidth > label.clientWidth + 1 || label.scrollHeight > label.clientHeight + 1; })(),
         documentOverflows: document.documentElement.scrollWidth > innerWidth };
     });
     assert(!layout.titleOutside && layout.titleWhiteSpace === 'normal' && layout.titleLines <= 2.2,
       'Mobile title must remain legible within two lines: ' + JSON.stringify(layout));
-    assert(!layout.titleActionsOverlap && !layout.pagerLayoutOverlap && !layout.pagerMagnetOverlap && !layout.pagerOutside && !layout.pagerCountClipped && !layout.documentOverflows,
+    assert(!layout.titleActionsOverlap && !layout.pagerLayoutOverlap && !layout.pagerMagnetOverlap && !layout.pagerOutside && !layout.pagerTapTargetsSmall && !layout.pagerTapTargetsOutside && !layout.pagerCountClipped && !layout.documentOverflows,
       'Mobile reading controls collide or overflow at ' + width + 'px: ' + JSON.stringify(layout));
     await page.screenshot({ path: artifacts + '/dense-reading-fa-mobile-' + width + '.png' });
   }
