@@ -22,7 +22,7 @@ test('distant LTR Zone title and hit target are readable with no input writes', 
   assert.ok(rect.left >= 12 && rect.left + rect.width <= visible.width - 12);
   assert.ok(rect.top >= 12 && rect.top <= visible.height - 88);
   assert.ok(rect.width >= 168 && rect.width <= 288);
-  assert.equal(rect.targetHeight, 44);
+  assert.ok(Math.abs(rect.targetHeight - 44) < 1e-8);
   assert.deepEqual(bounds, oldBounds);
   assert.deepEqual(visible, oldView);
 });
@@ -35,7 +35,7 @@ test('RTL Zone heading anchors from the right at 390px mobile size', () => {
   assert.ok(l.left >= 12 && l.left + l.width <= 378);
   assert.ok(r.left >= 12 && r.left + r.width <= 378);
   assert.ok(r.left <= l.left);
-  assert.equal(r.targetHeight, 44);
+  assert.ok(Math.abs(r.targetHeight - 44) < 1e-8);
 });
 
 test('partially visible tall Zone keeps header within mobile viewport', () => {
