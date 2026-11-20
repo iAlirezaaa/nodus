@@ -292,7 +292,8 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     zoneProjections.map(({ zone, box }) => ({ id: zone.id, bounds: box })),
     { x: view.x, y: view.y, zoom: view.zoom, width: size.width, height: size.height },
     language === 'fa',
-  ), [zoneProjections, view, size, language]);
+    new Set(zoneProjections.filter(({ zone }) => zone.nodeIds.some(id => selectedSet.has(id))).map(({ zone }) => zone.id)),
+  ), [zoneProjections, view, size, language, selectedSet]);
   const fitNodes = useMemo(() => {
     const projected = [...baseProjections.values()].map(node => projectionBounds(node, nodeUsesNeuron(node, neural)));
     if (!baseNodes.length) return projected;

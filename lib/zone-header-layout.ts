@@ -56,6 +56,7 @@ export function zoneOverviewHeaderPlacements(
   zones: readonly { id: string; bounds: ZoneHeaderBounds }[],
   viewport: ZoneHeaderViewport,
   rtl: boolean,
+  priorityZoneIds?: ReadonlySet<string>,
 ): Map<string, ZoneHeaderPlacement> {
   const result = new Map<string, ZoneHeaderPlacement>();
   const detail = zoneHeaderDetail(viewport.zoom);
@@ -69,7 +70,10 @@ export function zoneOverviewHeaderPlacements(
     return [{ id, bounds, placement,
       left: (bounds.x + placement.left) * viewport.zoom + viewport.x,
       top: (bounds.y + placement.top) * viewport.zoom + viewport.y }];
-  }).sort((a, b) => a.top - b.top || (rtl ? b.left - a.left : a.left - b.left) || a.id.localeCompare(b.id));
+  }).sort((a, b) =>
+    // Selected ideas should keep their Zone's direct edit affordance at dense zoom.
+    Number(Boolean(priorityZoneIds?.has(b.id))) - Number(Boolean(priorityZoneIds?.has(a.id))) ||
+    a.top - b.top || (rtl ? b.left - a.left : a.left - b.left) || a.id.localeCompare(b.id));
   const occupied: { left: number; top: number; right: number; bottom: number }[] = [];
   for (const item of proposals) {
     const right = item.left + item.placement.width;
