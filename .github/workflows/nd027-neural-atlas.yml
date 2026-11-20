@@ -1,0 +1,61 @@
+name: ND-027 neural atlas verification
+
+on:
+  push:
+    branches:
+      - feat/nd-027-neural-atlas-visuals
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nd027-neural-atlas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Full native tests, TypeScript and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Run checked-in Node tests
+        run: node --import ./tests/server-loader.mjs --test tests/*.test.ts tests/*.test.mjs
+      - name: TypeScript
+        run: ./node_modules/.bin/tsc --noEmit
+      - name: Production build (no deployment)
+        run: npm run build
+
+  atlas-browser:
+    name: NodusApp Chromium UI 4173 with synthetic fixtures
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Temporary browser test runner
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+      - name: Install isolated Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify actual Nodus interface on the fixed port
+        run: node tests/browser/nd027-atlas-browser-smoke.mjs
+      - name: Retain real screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nd027-atlas-browser
+          path: artifacts/nd027-browser/*.png
+          if-no-files-found: ignore
+          retention-days: 14
