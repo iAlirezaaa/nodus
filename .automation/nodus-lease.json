@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261120-atlas-visual-refresh-01",
   "acquired_at": "2026-11-20T09:07:09.005Z",
-  "heartbeat_at": "2026-11-20T09:27:26.578Z",
-  "expires_at": "2026-11-20T10:57:26.578Z",
+  "heartbeat_at": "2026-11-20T09:36:01.460Z",
+  "expires_at": "2026-11-20T11:06:01.460Z",
   "current_task_id": "ND-027",
   "feature_branch": "feat/nd-027-neural-atlas-visuals",
   "checkpoint": {
@@ -626,7 +626,7 @@
     "candidate_helper_sha": "4a84f1b444f782cbb681face4af1c088987fb8d5",
     "candidate_test_sha": "dc7f519bcef57af7bdc26be4e773b28bde8a526b",
     "nd027": {
-      "status": "In progress / browser regression failed",
+      "status": "In progress / visual QA dense label fix",
       "problem": "Current Nodus node shapes, zone labels and edge hierarchy are not yet visually coherent with the approved neural/XMind hybrid reference, especially for large maps.",
       "acceptance": "Preserve dot/card/zone data; improve legibility of curved connections, zone and node cues at zoom; maintain RTL/LTR and reduced motion; tests+TS+build+Chromium screenshot before release.",
       "slice": "A usable visual-language and large-map readability iteration, branch-only until QA",
@@ -642,6 +642,17 @@
         "run": 44710395407,
         "reason": "Native Node tests, TypeScript and build PASSED; Chromium 3 screenshots, dense synthetic seed after reload did not meet atlasDense flag.",
         "next": "Seed dense fixture using validated makeNode in isolated DEV fixture and rerun; no main/Site publication"
+      },
+      "ciVerified": {
+        "id": 44711450116,
+        "head": "3187c8facdd505b8eb3a1b41d4569ee07f20393f",
+        "native": "266/266 Node PASS",
+        "typescript": "PASS",
+        "build": "PASS",
+        "chromium": "4/4 PASS; 4 screenshots; no fixture writes",
+        "findings": [
+          "Visual screenshot of 115 nodes reveals label overlap; targeted dense label LOD remains"
+        ]
       }
     }
   },
