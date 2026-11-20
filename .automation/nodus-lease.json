@@ -4,8 +4,8 @@
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
   "owner_run_id": "nodus-20261120-atlas-visual-refresh-01",
   "acquired_at": "2026-11-20T09:07:09.005Z",
-  "heartbeat_at": "2026-11-20T09:07:09.005Z",
-  "expires_at": "2026-11-20T10:37:09.005Z",
+  "heartbeat_at": "2026-11-20T09:18:04.570Z",
+  "expires_at": "2026-11-20T10:48:04.570Z",
   "current_task_id": "ND-027",
   "feature_branch": "feat/nd-027-neural-atlas-visuals",
   "checkpoint": {
@@ -626,7 +626,7 @@
     "candidate_helper_sha": "4a84f1b444f782cbb681face4af1c088987fb8d5",
     "candidate_test_sha": "dc7f519bcef57af7bdc26be4e773b28bde8a526b",
     "nd027": {
-      "status": "Scoped",
+      "status": "In progress — code/test staged on feature branch",
       "problem": "Current Nodus node shapes, zone labels and edge hierarchy are not yet visually coherent with the approved neural/XMind hybrid reference, especially for large maps.",
       "acceptance": "Preserve dot/card/zone data; improve legibility of curved connections, zone and node cues at zoom; maintain RTL/LTR and reduced motion; tests+TS+build+Chromium screenshot before release.",
       "slice": "A usable visual-language and large-map readability iteration, branch-only until QA",
@@ -634,7 +634,10 @@
       "observedMain": "4a7fc65524c53cf8ad58762a3eab90c692c45c3a",
       "controlParent": "92487d2b2d9facb04fcf9964a461c96e5421881d",
       "sourceHead": "Site source not reverified in this run; no deployment planned",
-      "at": "2026-11-20T09:07:09.005Z"
+      "at": "2026-11-20T09:07:09.005Z",
+      "lastSourceCommit": "4f8d2288ccef403352c16dc831a74d33bd93231f",
+      "lastTestsCommit": "50819dbbf0a6eb57cbec96f191d8ee002a2809fe",
+      "pending": "Add Atlas CSS, check native tests/TypeScript/build/browser; no Site publication"
     }
   },
   "last_completed_run": "nodus-auto-20261120T0715Z-nd013",
