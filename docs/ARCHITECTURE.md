@@ -439,3 +439,8 @@ For projected Zone header positions, `zoneOverviewHeaderPlacement` uses a 128px 
 ### Dense Zone heading priority (ND-013 candidate, not deployed)
 
 On `feat/nd-013-zone-overview-headings`, sub-100% Zone headings use screen-space placements from `lib/zone-header-layout.ts`, with 44px minimum edit targets, safe viewport margins, and deterministic collision avoidance. The optional `priorityZoneIds` argument orders candidate headings of Zones containing currently selected board nodes first. `components/Canvas.tsx` derives that set from existing local selection; when an overlapping header is omitted, it does not hide a Zone or modify its membership, graph coordinates or persistence. At 100%+ zoom the existing full-size Zone headers remain unchanged. This is an unverified branch-only presentation change, not a released behavior until browser and build gates pass.
+
+
+### ND-013 branch candidate: selected-node screen-space avoidance (2026-11-20)
+
+`lib/zone-header-layout.ts` optionally receives screen-space rectangles for selected graph nodes alongside Zone header candidates. The header collision solver treats those boxes as presentation-only occupied areas, moving nearby headings or omitting them when no accessible placement fits. `components/Canvas.tsx` projects current selected-node rectangles from transient view/projection data via `useMemo`; graph nodes, Zone membership, IDs, canonical positions, history and persistence remain unchanged. This is on the `feat/nd-013-zone-overview-headings` branch only, not in main/Site; full React/CSS integration QA remains blocked. See `docs/ND-013-ZONE-OVERVIEW-QA.md`.
