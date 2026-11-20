@@ -61,6 +61,8 @@ Inline titles, inspector edits, duplication title changes, and project renaming 
 
 ## Canvas and layouts
 
+At sub-100% zoom the optional Zone headings are presentation-only: `zoneOverviewHeaderPlacements` projects their screen-space edit targets in a deterministic order, checks each against previously accepted visible headings with an 8px gutter, and uses a bounded vertical offset or suppresses an overcrowded label. Suppression never removes the Zone, nodes, connections or saved coordinates; the Zones editor remains the authoritative access path. This is currently a branch-only ND-013 candidate pending actual browser and release gates. At 100% or more, original Zone headers are unchanged. Viewport movement recalculates these pure projections without document persistence.
+
 ### Viewport isolation (ND-025, feature-branch candidate)
 
 Pan and zoom are private browser preferences, never graph document writes. Each Canvas receives an authenticated scope of `userId:room-or-personal:boardId`; both its in-memory viewport cache and `localStorage` preference use that identity. A shared copied board may retain the source board ID, so a board-only key is not safe across accounts or rooms. The former `nodus:view:<boardId>` entries are deliberately left untouched but never read or migrated because their owning account cannot be inferred; the user may need to readjust the view once after upgrade. All canonical graph positions, relationships and Undo are unchanged. An unauthenticated Canvas has only a transient in-memory view and does not persist it.
