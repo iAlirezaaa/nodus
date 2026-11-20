@@ -1,0 +1,38 @@
+/** Pure screen-space Zone heading layout; no graph or viewport persistence. */
+export interface ZoneHeaderBounds { x: number; y: number; width: number; height: number }
+export interface ZoneHeaderViewport { x: number; y: number; zoom: number; width: number; height: number }
+export interface ZoneHeaderPlacement { left: number; top: number; width: number; scale: number }
+
+const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(high, value));
+
+export function zoneOverviewHeaderPlacement(
+  bounds: ZoneHeaderBounds,
+  viewport: ZoneHeaderViewport,
+  rtl: boolean,
+): ZoneHeaderPlacement | null {
+  const values = [bounds.x, bounds.y, bounds.width, bounds.height, viewport.x, viewport.y,
+    viewport.width, viewport.height, viewport.zoom];
+  if (!values.every(Number.isFinite) || bounds.width <= 0 || bounds.height <= 0 ||
+      viewport.width < 144 || viewport.height < 120 || viewport.zoom <= 0) return null;
+
+  const { zoom } = viewport;
+  const left = bounds.x * zoom + viewport.x;
+  const right = (bounds.x + bounds.width) * zoom + viewport.x;
+  const top = bounds.y * zoom + viewport.y;
+  const bottom = (bounds.y + bounds.height) * zoom + viewport.y;
+  if (![left, right, top, bottom].every(Number.isFinite) ||
+      right <= 0 || left >= viewport.width || bottom <= 0 || top >= viewport.height) return null;
+
+  // Keep titles readable even when the group outline is narrower than a title.
+  const width = Math.min(viewport.width - 24, 288, Math.max(168, (bounds.width - 36) * zoom));
+  const preferredX = rtl ? right - 18 * zoom - width : left + 18 * zoom;
+  const screenX = clamp(preferredX, 12, viewport.width - width - 12);
+  // Reserve room for a two-line title and count (at most about 76 CSS pixels).
+  const screenY = clamp(top + 12 * zoom, 12, viewport.height - 88);
+  return {
+    left: (screenX - left) / zoom,
+    top: (screenY - top) / zoom,
+    width,
+    scale: 1 / zoom,
+  };
+}
