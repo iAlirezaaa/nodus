@@ -28,3 +28,7 @@ The existing Zone title/edit button previously scaled with the graph, leaving a 
 | Original Sites source/audience/tree | **UNKNOWN** in this run: the current authorized Sites skill is not installed. Native Site version 13 and owner-only policy were previously recorded; not newly verified. |
 
 **Next:** recover authorized Sites source/audience head/tree, a full verified checkout and port 4173 preview; exercise FA/EN desktop+390px browser with actual screenshots, keyboard, Undo, focus, and no graph saves on pan/zoom; independently review overlap and click targets in 20/100/500-node scenes; run full Node/TypeScript/build; then reconcile and guard main/Site release. Until then this is **branch-only, not Verified, not Released**.
+
+## 2026-11-20T03:17Z — continuation acceptance plan
+
+Medium-zoom Zone headers (65%–99.9%) still have sub-44-pixel hit targets; the next bounded branch slice extends the same inverse-scale layout below 100% while retaining the descriptive text in the intermediate zoom band. Exact code, tests and unavailable gates will be recorded below after implementation. Original Site v13 remains untouched.

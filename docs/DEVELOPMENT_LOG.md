@@ -1,3 +1,11 @@
+## 2026-11-20T03:17Z — ND-013 next slice pre-edit scope (run nodus-auto-20261120T0313Z-nd013-zone-qa)
+
+**Problem:** existing branch restores 44 CSS-pixel Zone edit targets only below zoom 0.65. At zoom 0.65–0.999 the unscaled 44-world-pixel header becomes 28.6–43.96 screen pixels, failing the 44px tap target needed on mid-zoom overviews. This is a continuation of the same unfinished branch, not a new feature.
+
+**Bounded slice:** make the existing pure Zone header layout apply for all 0 < zoom < 1 (without hiding the existing full description at 0.65–0.999), and preserve world-coordinate Zone geometry. Add boundary regressions at zoom 0.649/0.65/0.85/0.999/1.0, LTR/RTL and 390px, with a source/CSS guard. No data, auth, schema, save, animation timer or Site change.
+
+**Acceptance:** a >=44 CSS-pixel header target at every allowed positive zoom; the description remains visible at medium zoom; title and button retain their existing semantics; no graph writes, viewport preference changes or force push. Source base main `4a7fc65524c53cf8ad58762a3eab90c692c45c3a` / tree `de5294e65cc6809d300e24e11417856d60bc6355`; current feature head `bb015ebadc0415c91b77afe0a2d7950e5f0a1e13` / tree `01595bf1c4451686a1b976be08f4c181bc4b6c54`. No guaranteed Site parity: the current native Sites skill is unavailable. Full project suite, TypeScript/build, real 4173 desktop/mobile browser + screenshot remain release gates; if unavailable preserve branch and mark Blocked. No third-party messages, no audience changes.
+
 # Nodus development log
 
 ## 2026-11-20T02:35:20.565Z — ND-013 distant Zone heading: branch-only code and checks
