@@ -223,6 +223,8 @@ try {
   await page.waitForFunction(() => !!document.querySelector('[data-node="clarity-root"].is-node-dragging'),
     null, { polling: 100, timeout: 6000 });
   await page.keyboard.press('Escape');
+  assert(await page.locator('[data-node="clarity-root"]').evaluate(node => document.activeElement === node),
+    'Canceling a resumed node drag must not steal keyboard focus from the neuron');
   await page.waitForFunction(() => !document.querySelector('[data-node="clarity-root"].is-node-dragging'),
     null, { polling: 100, timeout: 7000 });
   await page.evaluate(({ x, y }) => {

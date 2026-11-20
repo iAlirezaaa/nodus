@@ -672,7 +672,15 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
       else if (node.kind === 'note' && propsRef.current.onEdit) propsRef.current.onEdit(node.id);
       else propsRef.current.onSelect(node.id);
     },
-    keyDown: (id, event) => { if (!keyboardMenu(event, 'node', id) && event.target === event.currentTarget) propsRef.current.onNodeKeyDown?.(id, event); },
+    // Escape must cancel a staged drag before the app's node-key dispatcher
+    // consumes the event. The window fallback cannot see stopped bubbling.
+    keyDown: (id, event) => {
+      if (event.key === 'Escape' && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229 &&
+        !event.ctrlKey && !event.metaKey && !event.altKey && gesture.current) {
+        event.preventDefault(); event.stopPropagation(); cancel(); return;
+      }
+      if (!keyboardMenu(event, 'node', id) && event.target === event.currentTarget) propsRef.current.onNodeKeyDown?.(id, event);
+    },
     focus: id => { setFocusedCard(id); if (!pointerFocus.current && !(propsRef.current.selectedIds?.length && propsRef.current.selectedIds.includes(id))) propsRef.current.onSelect(id); },
     hover: hoverNode,
     open: id => propsRef.current.onOpen(id),
@@ -687,7 +695,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     },
     commit: (id, title, action) => propsRef.current.onEditCommit?.(id, title, action),
     dirty: (id, dirty) => propsRef.current.onEditDirtyChange?.(id, dirty),
-  }), [contextMenu, keyboardMenu, hoverNode, clearHover]);
+  }), [contextMenu, keyboardMenu, hoverNode, clearHover, cancel]);
   const selectEdge = useCallback((id: string) => { if (Date.now() >= suppressClickUntil.current) propsRef.current.onSelectEdge(id); }, []);
   const edgeDispatch = useMemo<EdgeDispatch>(() => ({
     select: selectEdge,
