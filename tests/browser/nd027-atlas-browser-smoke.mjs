@@ -17,10 +17,19 @@ let browser;
 const pageErrors = [];
 async function verifyAtlas(context, label, options = {}) {
   const page = await context.newPage();
+  // Match the owner-approved light mockups without altering stored user settings.
+  // This preference exists only inside the isolated synthetic fixture session.
+  await page.addInitScript(() => {
+    if (location.pathname.includes('neural-zones-fixture')) {
+      sessionStorage.setItem('nodus:ui-fixture:neural-zones:preferences:nodus:theme', 'light');
+    }
+  });
   page.on('pageerror', error => pageErrors.push(label + ': ' + error.message));
   await page.goto(base + '/tests/browser/neural-zones-fixture.html' + (options.dense ? '?nd027-dense=1' : ''),
     { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.locator('[data-node="fixture-story"]').waitFor({ timeout: 45000 });
+  await page.waitForFunction(() => document.querySelector('.app-shell')?.getAttribute('data-theme') === 'light',
+    null, { timeout: 5000 });
   const read = () => page.evaluate(key => JSON.parse(sessionStorage.getItem(key)), storageKey);
   const first = await read();
   assert(first?.document?.boards?.[0]?.zones?.length === 2, label + ': expected two authentic fixture Zones');
