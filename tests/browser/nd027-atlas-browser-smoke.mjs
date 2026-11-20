@@ -18,7 +18,8 @@ const pageErrors = [];
 async function verifyAtlas(context, label, options = {}) {
   const page = await context.newPage();
   page.on('pageerror', error => pageErrors.push(label + ': ' + error.message));
-  await page.goto(base + '/tests/browser/neural-zones-fixture.html', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.goto(base + '/tests/browser/neural-zones-fixture.html' + (options.dense ? '?nd027-dense=1' : ''),
+    { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.locator('[data-node="fixture-story"]').waitFor({ timeout: 45000 });
   const read = () => page.evaluate(key => JSON.parse(sessionStorage.getItem(key)), storageKey);
   const first = await read();
@@ -28,17 +29,9 @@ async function verifyAtlas(context, label, options = {}) {
     await page.waitForFunction(() => document.querySelector('.app-shell')?.getAttribute('dir') === 'ltr');
   }
   if (options.dense) {
-    await page.evaluate(key => {
-      const state = JSON.parse(sessionStorage.getItem(key));
-      const source = state.document.nodes.find(node => node.id === 'fixture-story');
-      for (let i = 0; i < 105; i++) {
-        state.document.nodes.push({ ...source, id: 'atlas-synthetic-' + i, title: 'Atlas node ' + i,
-          x: (i % 15) * 55 - 320, y: Math.floor(i / 15) * 66 - 250, childBoardId: undefined, presentation: undefined });
-      }
-      sessionStorage.setItem(key, JSON.stringify(state));
-    }, storageKey);
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.locator('[data-node="fixture-story"]').waitFor();
+    const denseSnapshot = await read();
+    assert(denseSnapshot.document.nodes.length >= 100,
+      label + ': validated DEV fixture should contain at least 100 nodes; found ' + denseSnapshot.document.nodes.length);
   }
   for (let i = 0; i < 8; i++) {
     if (await page.locator('[data-canvas]').getAttribute('data-atlas-overview') === 'true') break;

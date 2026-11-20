@@ -126,6 +126,14 @@ function seed(): FixtureServer {
     ['decoupage', 'film'], ['decoupage', 'series'], ['decoupage', 'image'], ['film', 'image'], ['series', 'file'], ['book', 'character'], ['series', 'story'],
   ];
   document.edges = pairs.map(([source, target], index) => ({ id: `fixture-edge-${index}`, boardId: ROOT_BOARD, sourceId: `fixture-${source}`, targetId: `fixture-${target}`, label: '' }));
+  // ND-027: isolated DEV-only dense scene, generated with the real makeNode helper.
+  // Never changes the default fixture, production API, authentication or owner data.
+  if (new URLSearchParams(location.search).has('nd027-dense')) {
+    for (let index = 0; index < 105; index++) document.nodes.push(
+      node(`fixture-atlas-extra-${index}`, `Atlas thought ${index}`,
+        (index % 15) * 55 - 320, Math.floor(index / 15) * 66 - 250, 'gray')
+    );
+  }
   document = createZone(document, ROOT_BOARD, { title: 'آفرینش داستان', description: 'روایت، شخصیت و ایده‌هایی که به قالب‌های مختلف می‌رسند.', color: 'sage', nodeIds: ['fixture-book', 'fixture-character', 'fixture-teaser'] }, 'fixture-zone-ideas');
   document = createZone(document, ROOT_BOARD, { title: 'تولید تصویر', description: 'فیلم و سریال با مرجع تصویری و یادداشت‌های متصل؛ داستان و دکوپاژ بین مسیرها مشترک‌اند.', color: 'blue', nodeIds: ['fixture-film', 'fixture-series', 'fixture-image', 'fixture-file'] }, 'fixture-zone-production');
   validateWorkspace(document);

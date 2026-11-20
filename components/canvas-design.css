@@ -191,3 +191,11 @@
 .canvas[data-atlas-dense='true'] .connection:not(.selected):not(:hover):not(:focus-visible) .connection-line { opacity: .31; }
 .canvas[data-atlas-dense='true'] .connection:not(.selected):not(:hover):not(:focus-visible) .connection-flow { opacity: .12; }
 .canvas[data-atlas-dense='true'] .connection:not(.selected):not(:hover):not(:focus-visible) .connection-signal { opacity: .15; }
+
+/* Selected and keyboard-focused content cards keep their high-contrast outline. */
+[data-theme='light'] .canvas .thought-node:not(.node-neuron).selected,
+[data-theme='light'] .canvas .thought-node:not(.node-neuron).connecting,
+[data-theme='light'] .canvas .thought-node:not(.node-neuron):focus-visible {
+  border-color: var(--node-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--node-accent) 18%, transparent), 0 5px 19px #35305a0d;
+}
