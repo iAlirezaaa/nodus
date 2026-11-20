@@ -34,8 +34,11 @@ export function zoneOverviewHeaderPlacement(
   const width = Math.min(viewport.width - 24, 288, Math.max(168, (bounds.width - 36) * zoom));
   const preferredX = rtl ? right - 18 * zoom - width : left + 18 * zoom;
   const screenX = clamp(preferredX, 12, viewport.width - width - 12);
-  // Reserve room for a two-line title and count (at most about 76 CSS pixels).
-  const screenY = clamp(top + 12 * zoom, 12, viewport.height - 88);
+  // At compact zoom the visible two-line description adds ~45px to the title.
+  // Reserve 116px of header plus 12px bottom clearance; overview hides it.
+  const bottomReserve = zoneHeaderDetail(zoom) === 'compact' ? 128 : 88;
+  if (viewport.height < bottomReserve + 12) return null;
+  const screenY = clamp(top + 12 * zoom, 12, viewport.height - bottomReserve);
   return {
     left: (screenX - left) / zoom,
     top: (screenY - top) / zoom,
