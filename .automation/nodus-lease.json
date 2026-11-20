@@ -2,10 +2,10 @@
   "schema_version": 1,
   "project": "iAlirezaaa/nodus",
   "site_project_id": "appgprj_6af58606fb9c81918541f056a898c1a2",
-  "owner_run_id": "nodus-hourly-20261119T231203Z-nd011",
-  "acquired_at": "2026-11-19T23:12:03.608Z",
-  "heartbeat_at": "2026-11-19T23:30:13.566Z",
-  "expires_at": "2026-11-20T01:00:13.566Z",
+  "owner_run_id": "nodus-hourly-20261120T0112Z-nd011",
+  "acquired_at": "2026-11-20T01:12:32.598Z",
+  "heartbeat_at": "2026-11-20T01:12:32.598Z",
+  "expires_at": "2026-11-20T02:42:32.598Z",
   "current_task_id": "ND-011/ND-013",
   "feature_branch": "feat/nd-011-templates-and-dense-graph",
   "checkpoint": {
@@ -562,8 +562,8 @@
       "lease": "Released with expected SHA and force:false"
     },
     "run_20261120": {
-      "owner_run_id": "nodus-hourly-20261119T231203Z-nd011",
-      "status": "BROWSER GATE RED: 2 repeated runs fail old hidden-drag setup wait; code native 237/237, TS, build PASS",
+      "owner_run_id": "nodus-hourly-20261120T0112Z-nd011",
+      "status": "LEASE ACQUIRED; SCOPE ND-011/ND-013 browser fixture regression and site parity gate",
       "main_head": "4a7fc65524c53cf8ad58762a3eab90c692c45c3a",
       "main_tree": "de5294e65cc6809d300e24e11417856d60bc6355",
       "feature_head": "25254e645ef7d50ceff91f84213e4d89df7da0d9",
@@ -587,17 +587,20 @@
         44637559988
       ],
       "screenshot_artifact": 14583378075,
-      "screenshot_inspected": "FA real app desktop starter preview and applied screenshot inspected"
+      "screenshot_inspected": "FA real app desktop starter preview and applied screenshot inspected",
+      "observed_control_head": "7dcfc9166803b10b3787a7f95e46c7f822d2817a",
+      "site_head_tree": "UNVERIFIED: current Sites skill unavailable",
+      "next_action": "Inspect failing legacy hidden-drag browser setup, adjust regression fixture without weakening coverage, run CI, keep branch-only until UI/Sites gates."
     }
   },
   "last_completed_run": "nodus-owner-20261119T2222Z-neural-zones",
-  "updated_at": "2026-11-19T23:30:13.566Z",
+  "updated_at": "2026-11-20T01:12:32.598Z",
   "completed_at": "2026-11-19T22:58:15.644Z",
   "last_completed_at": "2026-11-19T22:58:15.644Z",
-  "current_run": "nodus-hourly-20261119T231203Z-nd011",
-  "status": "idle",
-  "current_run_id": "nodus-hourly-20261119T231203Z-nd011",
-  "active_run_id": "nodus-hourly-20261119T231203Z-nd011",
+  "current_run": "nodus-hourly-20261120T0112Z-nd011",
+  "status": "IN PROGRESS — verify feature branch browser regression; no release without Sites parity",
+  "current_run_id": "nodus-hourly-20261120T0112Z-nd011",
+  "active_run_id": "nodus-hourly-20261120T0112Z-nd011",
   "last_activity": "Retired IndexedDB load guard, 3 red/green tests, 396/396 Node, TS/build and 19/19 Chromium; no original Site release",
   "run_id": "nodus-auto-20261119T2117Z-nd013-regression-11"
 }
