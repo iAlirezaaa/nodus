@@ -199,3 +199,13 @@
   border-color: var(--node-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--node-accent) 18%, transparent), 0 5px 19px #35305a0d;
 }
+
+/* At large graph scales, isolated dot labels yield to the active clusters.
+ * Central hubs, projects, media, selected and focused nodes retain names.
+ * No node or edge position is persisted or recalculated by this rule.
+ */
+.canvas[data-atlas-dense='true'] .node-neuron[data-atlas-salient='false']:not(.selected):not(.connecting):not(.is-hovered):not(:focus-within) .neuron-caption {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}

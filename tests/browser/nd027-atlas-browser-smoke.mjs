@@ -68,6 +68,17 @@ async function verifyAtlas(context, label, options = {}) {
   }
   if (options.dense) assert(await page.locator('[data-canvas]').getAttribute('data-atlas-dense') === 'true',
     label + ': dense graph presentation flag missing');
+  if (options.dense) {
+    const labelLOD = await page.evaluate(() => {
+      const isolated = [...document.querySelectorAll('[data-node^="fixture-atlas-extra-"] .neuron-caption')];
+      const hidden = isolated.filter(el => getComputedStyle(el).visibility === 'hidden').length;
+      const central = document.querySelector('[data-node="fixture-story"] .neuron-caption');
+      return { total: isolated.length, hidden, centralVisible: central ? getComputedStyle(central).visibility !== 'hidden' : false };
+    });
+    assert(labelLOD.total >= 30 && labelLOD.hidden === labelLOD.total,
+      label + ': low-priority labels should not collide at atlas zoom: ' + JSON.stringify(labelLOD));
+    assert(labelLOD.centralVisible, label + ': the connected central Story hub must retain its label');
+  }
   const before = (await read()).writes;
   await page.screenshot({ path: artifacts + '/' + label + '.png', fullPage: false });
   await badge.first().click();
