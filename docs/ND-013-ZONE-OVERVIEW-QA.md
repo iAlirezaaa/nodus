@@ -32,3 +32,15 @@ The existing Zone title/edit button previously scaled with the graph, leaving a 
 ## 2026-11-20T03:17Z — continuation acceptance plan
 
 Medium-zoom Zone headers (65%–99.9%) still have sub-44-pixel hit targets; the next bounded branch slice extends the same inverse-scale layout below 100% while retaining the descriptive text in the intermediate zoom band. Exact code, tests and unavailable gates will be recorded below after implementation. Original Site v13 remains untouched.
+
+## 2026-11-20 03:20 UTC — medium-zoom follow-up result
+
+**Status: In progress / Blocked for release.** The same branch `feat/nd-013-zone-overview-headings` now includes the middle zoom band. Code [`738cca0`](https://github.com/iAlirezaaa/nodus/commit/738cca015a961f11a90221c94066d713099c3fae), tree `d8652525002261a3c9cc6c199b6c8fbc0776d125`. Existing controls remain Zone heading → edit. No release was attempted or implied.
+
+**Changed behavior:** below 65% = overview (header screen-sized, description hidden); 65% to less than 100% = compact (header screen-sized, description visible); 100% and above = full world-size header (at least 44px physically by zoom). The intermediate band previously had 44 × zoom = 28.6 to 43.96px target heights. CSS applies inverse scale to overview and compact only; the pure helper projects title position in both directions. No persistence, mutation, timer or animation frame writes added.
+
+**Fresh checks (only these):** Node 22.16.0 source-identical `node --experimental-strip-types --test tests/zone-header-layout.test.ts` **5/5 PASS** (one new test with zoom .15/.649/.65/.85/.999, RTL/LTR, 390px and default/invalid mode checks, plus four existing tests). Exact local `git hash-object` matches GitHub helper `02b1f887897f8bb74a024dae1a9c5e20f854705e` and test `b1625e54ed020fc65bc7cce7bb2ad17fbc9ddbe9`. Isolated TypeScript 5.8.3 `tsc --noEmit --strict --target es2022 --module esnext lib/zone-header-layout.ts` PASS. Reviewed the GitHub four-file diff for persistence separation; **not an independent review**.
+
+**Unverified/blocked:** complete project checked-in tests, project TypeScript, build, Chromium 4173 desktop/390px screenshots, actual CSS rendering/description overflow/overlap at viewport bottom, native IME/touch, keyboard focus/drag/pan/Undo/save/reload, reduced-motion and actual hidden-tab/write-counter measurements; two genuine authenticated production users and collaboration conflicts; native Sites head/tree/audience. No available native Sites skill; local git checkout cannot access github.com (DNS resolution failed) and full dependencies unavailable. No screenshot, live account or production code test is claimed. Site v13 and audience are only previous-history evidence, **not newly inspected**. GitHub reports public despite requested private status. No force updates or repo visibility changes.
+
+**Next precise gate:** restore permitted full checkout and native Sites access; run full tests/TS/build and actual 4173 responsive/pointer/keyboard screenshot QA, independently review bottom-clamp/collisions, then reconcile fresh main/Site trees and consider guarded release.

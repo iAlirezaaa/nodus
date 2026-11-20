@@ -1,3 +1,15 @@
+# Nodus development log
+
+## 2026-11-20 03:20 UTC — ND-013 medium-zoom Zone tap-target slice implemented (branch only)
+
+**State:** In progress, release Blocked; stable Site v13 not changed or re-verified. On existing `feat/nd-013-zone-overview-headings`, code commit [`738cca0`](https://github.com/iAlirezaaa/nodus/commit/738cca015a961f11a90221c94066d713099c3fae), tree `d8652525002261a3c9cc6c199b6c8fbc0776d125`. Starting branch head `bb015ebadc0415c91b77afe0a2d7950e5f0a1e13`, main `4a7fc65524c53cf8ad58762a3eab90c692c45c3a`. Pre-edit scope was committed as `22e661e97ad414373e4681b2e79c78997d03d7e9` before the code edit.
+
+**User-visible change:** existing Zone heading edit button retains a 44 screen-pixel minimum target at 65–99.9% canvas zoom (previously 28.6–43.96); its two-line description is retained in this band, while the distant <65% overview still hides descriptions for legibility. The edit action and existing data model do not change; no new persisted preference, write or animation loop. The code is not yet activated at the live URL.
+
+**Fresh exact-source gates:** `lib/zone-header-layout.ts` GitHub blob `02b1f887897f8bb74a024dae1a9c5e20f854705e` and `tests/zone-header-layout.test.ts` blob `b1625e54ed020fc65bc7cce7bb2ad17fbc9ddbe9` matched local `git hash-object` bytes. Native Node **5/5** PASS, including LTR/RTL, 390px, zoom threshold cases and invalid geometry. Isolated TypeScript `tsc --noEmit --strict --target es2022 --module esnext lib/zone-header-layout.ts` PASS with system 5.8.3. GitHub diff reviewed for scope. The full project test suite, project TypeScript 5.9.3, production build, Chrome at port 4173, actual screenshot and real login/conflict tests **were not run**; the earlier 261 tests are historical. Full checkout/dependencies and the current Sites source/audience skill are unavailable here; public GitHub visibility contradicts declared private goal and was not changed. [QA and next gates](ND-013-ZONE-OVERVIEW-QA.md).
+
+**Next:** real browser screenshot/keyboard/mobile validation and bottom-edge description overlap check, full suite/TypeScript/build, Site source/audience tree parity and independent review; only then guarded main/Site synchronization and deployment. No owner data, schedules or other projects touched.
+
 ## 2026-11-20T03:17Z — ND-013 next slice pre-edit scope (run nodus-auto-20261120T0313Z-nd013-zone-qa)
 
 **Problem:** existing branch restores 44 CSS-pixel Zone edit targets only below zoom 0.65. At zoom 0.65–0.999 the unscaled 44-world-pixel header becomes 28.6–43.96 screen pixels, failing the 44px tap target needed on mid-zoom overviews. This is a continuation of the same unfinished branch, not a new feature.
@@ -6,7 +18,6 @@
 
 **Acceptance:** a >=44 CSS-pixel header target at every allowed positive zoom; the description remains visible at medium zoom; title and button retain their existing semantics; no graph writes, viewport preference changes or force push. Source base main `4a7fc65524c53cf8ad58762a3eab90c692c45c3a` / tree `de5294e65cc6809d300e24e11417856d60bc6355`; current feature head `bb015ebadc0415c91b77afe0a2d7950e5f0a1e13` / tree `01595bf1c4451686a1b976be08f4c181bc4b6c54`. No guaranteed Site parity: the current native Sites skill is unavailable. Full project suite, TypeScript/build, real 4173 desktop/mobile browser + screenshot remain release gates; if unavailable preserve branch and mark Blocked. No third-party messages, no audience changes.
 
-# Nodus development log
 
 ## 2026-11-20T02:35:20.565Z — ND-013 distant Zone heading: branch-only code and checks
 
