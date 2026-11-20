@@ -1,5 +1,14 @@
 # Nodus development log
 
+## 2026-11-20 04:12 UTC — ND-013 Zone compact heading bottom-edge acceptance scope
+
+**Status:** In progress, branch only. Lease `nodus-auto-20261120T0411Z-nd013-zone-clamp` on the separate control branch; source branch `feat/nd-013-zone-overview-headings` at `467540e9ae36bcb592e39c4ff7e51ffd70d19c57`, tree `70753bf2bd0c358853e5189cf96596449440893e`; unchanged main `4a7fc65524c53cf8ad58762a3eab90c692c45c3a`. Current Site head/tree, audience and source parity cannot be inspected: authorized Sites skill unavailable. Release stays Blocked.
+
+**Problem / proposed bounded slice:** medium zoom (65–99.9%) allows a two-line Zone title *and* two-line description; its estimated 113px header can overflow the bottom of a 390px mobile viewport because placement reserves only 88px for the header. At overview zoom the description is hidden and the smaller reserve is sufficient. Preserve the existing Zone-heading edit control, private view-only projection, graph/persistence, Undo, pan and selection.
+
+**Acceptance:** demonstrate a reproducible pre-change failure at the compact bottom edge, project a compact header fully inside the viewport with at least 12px bottom clearance, retain overview and RTL/LTR x-clamping and invalid/invisible handling; add a focused regression test, run TypeScript, full suite/build/browser 4173 where available. Do not claim publication or screenshot without executing gates. QA and code follow on this branch; native Site v13 untouched.
+
+
 ## 2026-11-20 03:20 UTC — ND-013 medium-zoom Zone tap-target slice implemented (branch only)
 
 **State:** In progress, release Blocked; stable Site v13 not changed or re-verified. On existing `feat/nd-013-zone-overview-headings`, code commit [`738cca0`](https://github.com/iAlirezaaa/nodus/commit/738cca015a961f11a90221c94066d713099c3fae), tree `d8652525002261a3c9cc6c199b6c8fbc0776d125`. Starting branch head `bb015ebadc0415c91b77afe0a2d7950e5f0a1e13`, main `4a7fc65524c53cf8ad58762a3eab90c692c45c3a`. Pre-edit scope was committed as `22e661e97ad414373e4681b2e79c78997d03d7e9` before the code edit.
