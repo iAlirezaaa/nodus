@@ -10,6 +10,7 @@ import { nodeEnergy, type NodeEnergy } from '@/lib/node-energy';
 import { clampReadingCaptionShift, shouldPlaceReadingCaptionAbove } from '@/lib/graph-caption-placement';
 import { canvasViewportStorageKey } from '@/lib/canvas-viewport-storage';
 import { nodeUsesNeuron, zoneBounds } from '@/lib/zone-geometry';
+import { layoutZoneOverviewBadges } from '@/lib/zone-overview';
 import { mergeNodeSelection, nodesInSelection, selectionRectangle } from '@/lib/node-selection';
 import { DEFAULT_MAGNETIC_SETTINGS, type MagneticSettings } from '@/lib/magnetic-layout';
 import { useMagneticCanvas, type MagneticViewState } from '@/hooks/use-magnetic-canvas';
@@ -812,8 +813,14 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
   const maximumReadingLabelScale = Math.max(1, 1 / view.zoom);
   const readingCaptionMaxWidth = mobileReadingLabels
     ? Math.min(235, Math.max(32, (size.width - 24) / (view.zoom * maximumReadingLabelScale))) : 235;
+  // Screen-space badges stay readable at far zoom without changing Zone bounds or persistence.
+  const atlasOverview = view.zoom < .6 && zoneProjections.length > 0;
+  const atlasDense = view.zoom < .6 && nodes.length >= 90;
+  const atlasBadges = useMemo(() => atlasOverview ? layoutZoneOverviewBadges(zoneProjections,
+    { width: size.width, height: size.height, x: view.x, y: view.y, zoom: view.zoom }) : [],
+    [atlasOverview, zoneProjections, size.width, size.height, view.x, view.y, view.zoom]);
   const gridSize = 28 * (design.density === 'compact' ? .8 : design.density === 'spacious' ? 1.3 : 1);
-  return <div data-canvas data-spotlight={!!props.spotlightNodeIds} data-node-style={design.nodeStyle} data-density={design.density} data-readable-overview={nodes.length <= 24} data-selection-count={selectedSet.size} data-multi-select-mode={!!props.multiSelectMode} data-label-detail={view.zoom < .7 ? 'compact' : 'full'} data-motion={motionAllowed ? 'on' : 'off'} data-magnetic={magnetic.status} data-magnetic-view={magnetic.hasPositions ? 'on' : 'off'} data-magnetic-dirty={magnetic.dirty} tabIndex={0} className={`canvas ${tool === 'hand' || space ? 'hand-mode' : ''} ${marquee || props.multiSelectMode ? 'multi-select-mode' : ''} ${connectFrom ? 'connect-mode' : ''} ${dragOver ? 'is-dragover' : ''}`} ref={surface}
+  return <div data-canvas data-spotlight={!!props.spotlightNodeIds} data-node-style={design.nodeStyle} data-density={design.density} data-readable-overview={nodes.length <= 24} data-selection-count={selectedSet.size} data-multi-select-mode={!!props.multiSelectMode} data-label-detail={view.zoom < .7 ? 'compact' : 'full'} data-motion={motionAllowed ? 'on' : 'off'} data-atlas-overview={atlasOverview} data-atlas-dense={atlasDense} data-magnetic={magnetic.status} data-magnetic-view={magnetic.hasPositions ? 'on' : 'off'} data-magnetic-dirty={magnetic.dirty} tabIndex={0} className={`canvas ${tool === 'hand' || space ? 'hand-mode' : ''} ${marquee || props.multiSelectMode ? 'multi-select-mode' : ''} ${connectFrom ? 'connect-mode' : ''} ${dragOver ? 'is-dragover' : ''}`} ref={surface}
     onPointerDown={event => start(event)} onPointerMove={move} onPointerMoveCapture={event => { if (event.pointerType !== 'touch' || event.isPrimary) reportPresence({ x: event.clientX, y: event.clientY }); }} onPointerUp={end} onPointerCancel={cancel}
     onPointerLeave={() => reportPresence(null)}
     onLostPointerCapture={event => { if (pointers.current.has(event.pointerId)) cancel(); }}
@@ -852,6 +859,22 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
       {marquee && <div className="canvas-selection-marquee" data-selection-marquee aria-hidden="true" style={{ left: marquee.x, top: marquee.y, width: marquee.width, height: marquee.height }}><span>{selectedSet.size} {L('فکر', 'thoughts')}</span></div>}
       {boardPeers.filter(peer => peer.x !== null && peer.y !== null && Number.isFinite(peer.x) && Number.isFinite(peer.y) && peer.x * view.zoom + view.x > -50 && peer.x * view.zoom + view.x < size.width + 50 && peer.y * view.zoom + view.y > -50 && peer.y * view.zoom + view.y < size.height + 50).map(peer => <div key={peer.sessionId} className="remote-cursor" style={{ left: peer.x!, top: peer.y!, transform: `scale(${1 / view.zoom})`, '--peer-color': peerColor(peer.color) } as React.CSSProperties} aria-hidden="true"><svg viewBox="0 0 20 24" width="16" height="20"><path d="M2 2 L3 19 L8 14 L12 22 L16 20 L12 12 L19 11 Z" /></svg><span>{peer.name}</span></div>)}
     </div>
+    {atlasOverview && <div className="zone-atlas-layer" role="group" aria-label={L('زون‌های قابل مشاهده در نمای کلی', 'Visible zones in the atlas')}>
+      {atlasBadges.map(badge => <button type="button" key={badge.id} className="zone-atlas-badge" data-zone-overview={badge.id}
+        style={{ left: badge.left, top: badge.top, width: badge.width, '--zone-color': colors[badge.color] } as React.CSSProperties}
+        dir={language === 'fa' ? 'rtl' : 'ltr'} title={badge.description || badge.title}
+        aria-label={L(`بازکردن زون ${badge.title}؛ ${badge.count} گره`, `Open zone ${badge.title}; ${badge.count} nodes`)}
+        onPointerDown={event => event.stopPropagation()} onPointerUp={event => event.stopPropagation()}
+        onDoubleClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}
+        onClick={event => { event.stopPropagation(); propsRef.current.onEditZone?.(badge.id); }}>
+        <span className="zone-atlas-badge__dot" aria-hidden="true" />
+        <span className="zone-atlas-badge__name" dir="auto">{badge.title}</span>
+        <span className="zone-atlas-badge__count" dir="ltr">{new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en').format(badge.count)}</span>
+      </button>)}
+      {zoneProjections.length > atlasBadges.length && <span className="zone-atlas-overflow" aria-live="off">
+        +{new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en').format(zoneProjections.length - atlasBadges.length)} {L('زون دیگر در پنل زون‌ها', 'more zones in Zones panel')}
+      </span>}
+    </div>}
     {previewNode && <NodeHoverPreview key={previewNode.id} node={previewNode} growth={growthById.get(previewNode.id) ?? defaultNodeGrowth} language={language} dispatch={cardDispatch} canEdit={!!props.onEdit} canToggleTask={!!props.onToggleTask} taskDone={taskProgress.get(previewNode.id)?.done ?? 0} taskTotal={taskProgress.get(previewNode.id)?.total ?? 0} projectCount={previewNode.childBoardId ? childCount.get(previewNode.childBoardId) ?? 0 : 0} projectMiniature={previewNode.childBoardId ? projectMiniatures.get(previewNode.childBoardId) ?? EMPTY_MINIATURE : EMPTY_MINIATURE} style={{ left: previewX, top: previewY, width: previewWidth, maxHeight: previewHeight, '--node-accent': colors[previewNode.color] } as React.CSSProperties} />}
     {nodes.length === 0 && <div className="canvas-empty"><div className="empty-orbit"><span /><span /><Plus size={26} /></div><h2>{L('این‌جا جای فکر بعدی توست.', 'Room for your next thought.')}</h2><p>{L('Enter بزن و فکرت را بنویس، یا اولین فایل را این‌جا رها کن.', 'Press Enter to write your thought, or drop your first file here.')}</p><button className="primary-button" onClick={() => propsRef.current.onCreate((size.width / 2 - view.x) / view.zoom, (size.height / 2 - view.y) / view.zoom)}><Plus size={17} />{L('اولین ایده', 'First idea')}</button></div>}
     {dragOver && <div className="drop-overlay"><div><Plus size={35} /><h2>{L('رها کن تا بخشی از فکرهایت شود', 'Drop it into your thinking')}</h2><p>{L('تصویر، ویدیو، صدا، PDF یا هر فایل دیگر', 'Images, videos, audio, PDFs, and other files')}</p></div></div>}
