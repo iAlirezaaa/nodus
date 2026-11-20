@@ -1,5 +1,15 @@
 # Nodus development log
 
+## 2026-11-20T02:25:28.158Z — ND-013 / ND-026 Zone overview heading: pre-edit scope
+
+**Status: In progress; feature branch only.** Run `nodus-auto-20261120T0548-nd013-readability`, branch `feat/nd-013-zone-overview-headings` from main `4a7fc65524c53cf8ad58762a3eab90c692c45c3a`, tree `de5294e65cc6809d300e24e11417856d60bc6355`. The older ND-011/013 working branches diverged from version 13 and are preserved; this small remaining ND-013 readability slice must start from the current released Zone-capable main rather than overwrite either history. Existing Site v13 unchanged; its current source tree/audience have not been independently re-read in this environment.
+
+**Problem:** Zone headings are inside the zoomed canvas world and their 44px click target shrinks to ~6.6 physical pixels at overview zoom 0.15, making Zone names/actions effectively unreadable or untappable in dense maps. The existing Zone editor remains the control; no new persistent setting.
+
+**Acceptance:** In overview zoom, a Zone header remains at least 44px tall on screen, has a readable title and is clamped to the visible viewport while its zone intersects it; both FA RTL and EN LTR work at desktop/390px. Detailed zoom preserves current world-scaled layout. Pan/zoom must not change saved node positions, Zone membership, graph revisions or Undo; no timers or per-frame document writes. Deterministic positioning tests and TypeScript/build plus real Nodus browser at fixed 4173 and screenshots are required before Verified/merge/release; inability to perform them is Blocked, not a pass.
+
+**Slice:** Pure viewport layout helper for overview Zone header, zero-storage Canvas wiring and CSS; test distant/partial visibility, RTL/LTR, 390px and invalid bounds. No schema, authentication, collaboration or file changes. Next: guarded code commit, verification, independent visual review, Sites tree/audience parity; Site deployment only if the gates pass.
+
 ## 2026-11-19 22:53 UTC — ND-026 Released: version 13 active
 
 **Outcome:** Verified → Released for the first described-Zone/mixed-node slice. The native deployment `appgdep_6aff7ddf3a108191b253f83068e76424` succeeded at `2026-11-19T22:53:37.976127+00:00`. Existing [Nodus](https://nodus-hades.ialirezaaa.chatgpt.site/) now serves version **13**, saved version `appgprj_6af58606fb9c81918541f056a898c1a2~appgver_251bc3cc8bb481918c0bdf748e7d9c82`. Current custom owner-only audience, DB and BUCKET stayed unchanged. No owner-data migration, schedule change or third-party message occurred.
