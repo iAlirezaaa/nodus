@@ -1,5 +1,14 @@
 # Nodus development log
 
+## 2026-11-20T01:14:16.598Z — ND-013 recovered-visibility Escape cancellation (pre-edit scope)
+
+**Problem:** Current CI [44638771162](https://github.com/iAlirezaaa/nodus/actions/runs/44638771162) passes 237 native Node tests, TypeScript and production build, but its real NodusApp Chromium synthetic-session smoke on reserved 4173 fails at line 226: after hidden-tab cancellation and resumed new node drag, pressing Escape leaves `is-node-dragging` active for 7 seconds. This is a verified keyboard/gesture regression, not a screenshot-only discrepancy.
+
+**Acceptance:** Escape while dragging cancels the staged node gesture and any pointer capture without saving graph coordinates, and a delayed pointerup stays harmless. After restoring visibility, a fresh drag can be cancelled. Preserve ordinary selected-node Escape behavior, text input/IME, keyboard Enter/Tab, pan and RTL/LTR. Repeat current Node suite, TypeScript, build, actual Chromium test/screenshots at `http://127.0.0.1:4173/`; two genuine accounts and original Sites parity are separate release gates.
+
+**Slice and boundaries:** Continue `feat/nd-011-templates-and-dense-graph` from `aa60e2eac6535d24845d4423cdcb35dfc8e21f45`, tree `cf02415efdf2e9527f115d23d315e0a5b6f174ec`; `main` observed `4a7fc65524c53cf8ad58762a3eab90c692c45c3a`, tree `de5294e65cc6809d300e24e11417856d60bc6355`. Review keyboard/canvas cancellation and make the smallest safe source/test correction. No persistence schema, collaboration backend or Site mutation. Current Site source tree and audience remain unverified because no native Sites skill is available. Keep branch-only, not Released, until required gates pass.
+
+
 This log records actual development and publication outcomes. Future runs read the newest entry together with [the roadmap](ROADMAP.md) and [the development loop](DEVELOPMENT_LOOP.md). Historical tests are not a claim that those checks ran again in a later documentation-only change.
 
 ## 2026-11-12 — ND-000: establish the continuous-development plan
