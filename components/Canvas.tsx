@@ -10,7 +10,7 @@ import { nodeEnergy, type NodeEnergy } from '@/lib/node-energy';
 import { clampReadingCaptionShift, shouldPlaceReadingCaptionAbove } from '@/lib/graph-caption-placement';
 import { canvasViewportStorageKey } from '@/lib/canvas-viewport-storage';
 import { nodeUsesNeuron, zoneBounds } from '@/lib/zone-geometry';
-import { zoneOverviewHeaderPlacement } from '@/lib/zone-header-layout';
+import { zoneHeaderDetail, zoneOverviewHeaderPlacement } from '@/lib/zone-header-layout';
 import { mergeNodeSelection, nodesInSelection, selectionRectangle } from '@/lib/node-selection';
 import { DEFAULT_MAGNETIC_SETTINGS, type MagneticSettings } from '@/lib/magnetic-layout';
 import { useMagneticCanvas, type MagneticViewState } from '@/hooks/use-magnetic-canvas';
@@ -830,8 +830,9 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     <div className={`canvas-world ${animating ? 'is-animating' : ''}`} style={{ transform: `translate3d(${view.x}px,${view.y}px,0) scale(${view.zoom})` }}>
       {guides.filter(guide => guide.x * view.zoom + view.x < size.width + 200 && (guide.x + guide.width) * view.zoom + view.x > -200 && guide.y * view.zoom + view.y < size.height + 200 && (guide.y + guide.height) * view.zoom + view.y > -200).map(guide => <div key={guide.id} className={`layout-guide layout-guide-${guide.kind}`} style={{ left: guide.x, top: guide.y, width: guide.width, height: guide.height, '--guide-color': colors[guide.color ?? design.accent] } as React.CSSProperties} aria-hidden="true"><span className="layout-guide-title">{guide.title}<small>{guide.subtitle}</small></span></div>)}
       {zoneProjections.filter(({ box }) => box.x * view.zoom + view.x < size.width + 200 && (box.x + box.width) * view.zoom + view.x > -200 && box.y * view.zoom + view.y < size.height + 200 && (box.y + box.height) * view.zoom + view.y > -200).map(({ zone, box }) => {
-        const heading = view.zoom < .65 ? zoneOverviewHeaderPlacement(box, { x: view.x, y: view.y, zoom: view.zoom, width: size.width, height: size.height }, language === 'fa') : null;
-        return <div key={zone.id} className="graph-zone" data-zone={zone.id} data-color={zone.color} data-detail={view.zoom < .65 ? 'overview' : 'full'} data-selected={zone.nodeIds.some(id => selectedSet.has(id))} style={{ left: box.x, top: box.y, width: box.width, height: box.height }} dir={language === 'fa' ? 'rtl' : 'ltr'}>
+        const detail = zoneHeaderDetail(view.zoom);
+         const heading = detail !== 'full' ? zoneOverviewHeaderPlacement(box, { x: view.x, y: view.y, zoom: view.zoom, width: size.width, height: size.height }, language === 'fa') : null;
+        return <div key={zone.id} className="graph-zone" data-zone={zone.id} data-color={zone.color} data-detail={detail} data-selected={zone.nodeIds.some(id => selectedSet.has(id))} style={{ left: box.x, top: box.y, width: box.width, height: box.height }} dir={language === 'fa' ? 'rtl' : 'ltr'}>
         <button type="button" className="graph-zone__header" style={heading ? { '--zone-header-left': `${heading.left}px`, '--zone-header-top': `${heading.top}px`, '--zone-header-width': `${heading.width}px`, '--zone-header-scale': heading.scale } as React.CSSProperties : undefined} onPointerDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()} onContextMenu={event => { event.preventDefault(); event.stopPropagation(); }} onKeyDown={event => event.stopPropagation()} onClick={() => propsRef.current.onEditZone?.(zone.id)} aria-label={L(`ویرایش Zone: ${zone.title}`, `Edit zone: ${zone.title}`)}>
           <span className="graph-zone__title"><Layers size={15} aria-hidden="true" /><span className="graph-zone__name" dir="auto" title={zone.title}>{zone.title}</span><span className="graph-zone__count">{new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en').format(zone.nodeIds.length)}</span></span>
           {zone.description && <span className="graph-zone__description" dir="auto">{zone.description}</span>}

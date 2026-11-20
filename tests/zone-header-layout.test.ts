@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { zoneOverviewHeaderPlacement } from '../lib/zone-header-layout.ts';
+import { zoneHeaderDetail, zoneOverviewHeaderPlacement } from '../lib/zone-header-layout.ts';
 
 const bounds = { x: -300, y: -180, width: 680, height: 540 };
 const visible = { x: 320, y: 190, width: 1280, height: 800, zoom: .15 };
@@ -60,4 +60,25 @@ test('invalid or fully invisible Zone never creates floating header', () => {
   assert.equal(zoneOverviewHeaderPlacement(bounds, { ...visible, zoom: 0 }, true), null);
   assert.equal(zoneOverviewHeaderPlacement(bounds, { ...visible, x: Infinity }, true), null);
   assert.equal(zoneOverviewHeaderPlacement(bounds, { ...visible, width: 90 }, true), null);
+});
+
+test('medium zoom remains descriptive while every sub-100% edit target is 44 screen pixels', () => {
+  const mobile = { ...visible, width: 390, height: 844 };
+  for (const zoom of [.15, .649, .65, .85, .999]) {
+    const mode = zoneHeaderDetail(zoom);
+    assert.equal(mode, zoom < .65 ? 'overview' : 'compact');
+    for (const rtl of [false, true]) {
+      const viewport = { ...mobile, zoom };
+      const p = zoneOverviewHeaderPlacement(bounds, viewport, rtl);
+      assert.ok(p, `Zone is visible at zoom ${zoom}`);
+      const screenHeight = 44 * p.scale * zoom;
+      assert.ok(Math.abs(screenHeight - 44) < 1e-8, `44px target at ${zoom}`);
+      const screenLeft = (bounds.x + p.left) * zoom + viewport.x;
+      assert.ok(screenLeft >= 12 - 1e-8 && screenLeft + p.width <= viewport.width - 12 + 1e-8);
+    }
+  }
+  assert.equal(zoneHeaderDetail(1), 'full');
+  assert.equal(zoneHeaderDetail(1.2), 'full');
+  assert.equal(zoneHeaderDetail(0), 'full');
+  assert.equal(zoneHeaderDetail(NaN), 'full');
 });

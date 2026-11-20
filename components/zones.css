@@ -82,7 +82,8 @@
 .graph-zone__description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; font-size: 13px; line-height: 1.7; color: var(--muted); overflow-wrap: anywhere; white-space: pre-wrap; }
 .graph-zone__count { font-size: 12px; font-weight: 400; color: var(--muted); margin-inline-start: 5px; white-space: nowrap; }
 /* Readable click targets at distant zoom; graph geometry and storage untouched. */
-.graph-zone[data-detail='overview'] .graph-zone__header {
+.graph-zone[data-detail='overview'] .graph-zone__header,
+.graph-zone[data-detail='compact'] .graph-zone__header {
   inset-inline-start: auto;
   left: var(--zone-header-left, 18px);
   top: var(--zone-header-top, 12px);

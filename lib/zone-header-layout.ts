@@ -3,6 +3,13 @@ export interface ZoneHeaderBounds { x: number; y: number; width: number; height:
 export interface ZoneHeaderViewport { x: number; y: number; zoom: number; width: number; height: number }
 export interface ZoneHeaderPlacement { left: number; top: number; width: number; scale: number }
 
+/** Keep description at medium zoom, but enlarge the edit target until 100% zoom. */
+export type ZoneHeaderDetail = 'overview' | 'compact' | 'full';
+export function zoneHeaderDetail(zoom: number): ZoneHeaderDetail {
+  if (!Number.isFinite(zoom) || zoom <= 0) return 'full';
+  return zoom < .65 ? 'overview' : zoom < 1 ? 'compact' : 'full';
+}
+
 const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(high, value));
 
 export function zoneOverviewHeaderPlacement(
