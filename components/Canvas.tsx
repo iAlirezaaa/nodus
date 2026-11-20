@@ -288,12 +288,26 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     const bounds = new Map([...projections].map(([id, node]) => [id, projectionBounds(node, nodeUsesNeuron(node, neural))]));
     return zones.flatMap(zone => { const box = zoneBounds(zone, bounds); return box ? [{ zone, box }] : []; });
   }, [zones, projections, neural]);
+  // Node cards render above Zone overlays. Reserve selected cards' projected
+  // hit areas so a Zone's edit heading cannot be obscured by the active idea.
+  const selectedNodeRects = useMemo(() => [...selectedSet].flatMap(id => {
+    const node = projections.get(id);
+    if (!node) return [];
+    const bounds = projectionBounds(node, nodeUsesNeuron(node, neural));
+    return [{
+      left: bounds.x * view.zoom + view.x,
+      top: bounds.y * view.zoom + view.y,
+      right: (bounds.x + bounds.width) * view.zoom + view.x,
+      bottom: (bounds.y + bounds.height) * view.zoom + view.y,
+    }];
+  }), [selectedSet, projections, neural, view]);
   const zoneHeadingPlacements = useMemo(() => zoneOverviewHeaderPlacements(
     zoneProjections.map(({ zone, box }) => ({ id: zone.id, bounds: box })),
     { x: view.x, y: view.y, zoom: view.zoom, width: size.width, height: size.height },
     language === 'fa',
     new Set(zoneProjections.filter(({ zone }) => zone.nodeIds.some(id => selectedSet.has(id))).map(({ zone }) => zone.id)),
-  ), [zoneProjections, view, size, language, selectedSet]);
+    selectedNodeRects,
+  ), [zoneProjections, view, size, language, selectedSet, selectedNodeRects]);
   const fitNodes = useMemo(() => {
     const projected = [...baseProjections.values()].map(node => projectionBounds(node, nodeUsesNeuron(node, neural)));
     if (!baseNodes.length) return projected;

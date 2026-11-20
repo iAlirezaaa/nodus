@@ -2,6 +2,7 @@
 export interface ZoneHeaderBounds { x: number; y: number; width: number; height: number }
 export interface ZoneHeaderViewport { x: number; y: number; zoom: number; width: number; height: number }
 export interface ZoneHeaderPlacement { left: number; top: number; width: number; scale: number }
+export interface ZoneHeaderScreenRect { left: number; top: number; right: number; bottom: number }
 
 /** Keep description at medium zoom, but enlarge the edit target until 100% zoom. */
 export type ZoneHeaderDetail = 'overview' | 'compact' | 'full';
@@ -57,6 +58,7 @@ export function zoneOverviewHeaderPlacements(
   viewport: ZoneHeaderViewport,
   rtl: boolean,
   priorityZoneIds?: ReadonlySet<string>,
+  selectedNodeRects?: readonly ZoneHeaderScreenRect[],
 ): Map<string, ZoneHeaderPlacement> {
   const result = new Map<string, ZoneHeaderPlacement>();
   const detail = zoneHeaderDetail(viewport.zoom);
@@ -74,7 +76,12 @@ export function zoneOverviewHeaderPlacements(
     // Selected ideas should keep their Zone's direct edit affordance at dense zoom.
     Number(Boolean(priorityZoneIds?.has(b.id))) - Number(Boolean(priorityZoneIds?.has(a.id))) ||
     a.top - b.top || (rtl ? b.left - a.left : a.left - b.left) || a.id.localeCompare(b.id));
-  const occupied: { left: number; top: number; right: number; bottom: number }[] = [];
+  // A selected node sits above a Zone in the canvas stacking order. Avoid
+  // placing the edit target underneath that node; no graph geometry is changed.
+  const occupied: ZoneHeaderScreenRect[] = (selectedNodeRects ?? []).filter(rect =>
+    [rect.left, rect.top, rect.right, rect.bottom].every(Number.isFinite) &&
+    rect.right > rect.left && rect.bottom > rect.top &&
+    rect.right > 0 && rect.left < viewport.width && rect.bottom > 0 && rect.top < viewport.height);
   for (const item of proposals) {
     const right = item.left + item.placement.width;
     const overlappingX = occupied.filter(rect => item.left < rect.right + gutter && right + gutter > rect.left);
