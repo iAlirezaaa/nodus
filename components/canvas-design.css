@@ -176,3 +176,18 @@
     transform-origin: center bottom;
   }
 }
+
+/* ND-027 Neural Atlas: a quieter, more legible light dot/card language. */
+[data-theme='light'] .canvas .node-neuron .neuron-core {
+  background: color-mix(in srgb, var(--node-accent) 10%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--node-accent) 56%, transparent);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--node-accent) 13%, transparent);
+}
+[data-theme='light'] .canvas .node-neuron .neuron-core i { box-shadow: none; }
+[data-theme='light'] .canvas .thought-node:not(.node-neuron) {
+  border-color: color-mix(in srgb, var(--node-accent) 22%, var(--border));
+  box-shadow: 0 5px 19px #35305a0d;
+}
+.canvas[data-atlas-dense='true'] .connection:not(.selected):not(:hover):not(:focus-visible) .connection-line { opacity: .31; }
+.canvas[data-atlas-dense='true'] .connection:not(.selected):not(:hover):not(:focus-visible) .connection-flow { opacity: .12; }
+.canvas[data-atlas-dense='true'] .connection:not(.selected):not(:hover):not(:focus-visible) .connection-signal { opacity: .15; }

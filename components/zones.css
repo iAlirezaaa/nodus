@@ -106,3 +106,16 @@
 @media (prefers-reduced-motion: reduce) {
   .zones-panel button, .graph-zone, .graph-zone__header { transition: none; animation: none; }
 }
+
+/* ND-027: fixed-size far-zoom labels over the world-space Zone boundaries. */
+.canvas[data-atlas-overview='true'] .graph-zone__header { visibility: hidden; pointer-events: none; }
+.zone-atlas-layer { position: absolute; inset: 0; z-index: 7; pointer-events: none; overflow: hidden; }
+.zone-atlas-badge { position: absolute; display: flex; align-items: center; gap: 8px; height: 44px; min-width: 0; padding: 7px 11px; border: 1px solid color-mix(in srgb, var(--zone-color) 43%, var(--border)); border-radius: 14px; background: color-mix(in srgb, var(--zone-color) 10%, var(--surface-raised)); color: var(--foreground); box-shadow: 0 4px 17px #00000012; text-align: start; pointer-events: auto; touch-action: manipulation; }
+.zone-atlas-badge:hover { border-color: var(--zone-color); background: color-mix(in srgb, var(--zone-color) 14%, var(--surface-raised)); }
+.zone-atlas-badge:focus-visible { outline: 2px solid var(--zone-color); outline-offset: 3px; }
+.zone-atlas-badge__dot { flex: 0 0 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--zone-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--zone-color) 13%, transparent); }
+.zone-atlas-badge__name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 650; }
+.zone-atlas-badge__count { flex: 0 0 auto; min-width: 25px; padding: 2px 5px; text-align: center; border-radius: 7px; background: color-mix(in srgb, var(--zone-color) 17%, var(--surface)); color: var(--foreground); font-size: 11px; font-variant-numeric: tabular-nums; }
+.zone-atlas-overflow { position: absolute; inset-inline-end: 12px; bottom: 78px; max-width: min(240px, 70vw); padding: 5px 9px; border-radius: 8px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); color: var(--muted); border: 1px solid var(--border); font-size: 11px; line-height: 1.5; pointer-events: none; }
+@media (max-width: 650px) { .zone-atlas-overflow { bottom: 92px; } }
+@media (prefers-reduced-motion: reduce) { .zone-atlas-badge { transition: none; animation: none; } }
