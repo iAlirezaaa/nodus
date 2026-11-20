@@ -46,3 +46,43 @@ export function zoneOverviewHeaderPlacement(
     scale: 1 / zoom,
   };
 }
+
+/**
+ * Arrange independent Zone headings without covering another Zone's edit target.
+ * Dense clusters may omit a heading; the Zone remains available in the Zones panel.
+ * This returns presentation-only offsets, never changes graph or viewport data.
+ */
+export function zoneOverviewHeaderPlacements(
+  zones: readonly { id: string; bounds: ZoneHeaderBounds }[],
+  viewport: ZoneHeaderViewport,
+  rtl: boolean,
+): Map<string, ZoneHeaderPlacement> {
+  const result = new Map<string, ZoneHeaderPlacement>();
+  const detail = zoneHeaderDetail(viewport.zoom);
+  if (detail === 'full') return result;
+  const height = detail === 'compact' ? 116 : 72; // CSS two-line bounds, with a small font-metric allowance.
+  const gutter = 8;
+  const maxY = viewport.height - height - 12;
+  const proposals = zones.flatMap(({ id, bounds }) => {
+    const placement = zoneOverviewHeaderPlacement(bounds, viewport, rtl);
+    if (!placement) return [];
+    return [{ id, bounds, placement,
+      left: (bounds.x + placement.left) * viewport.zoom + viewport.x,
+      top: (bounds.y + placement.top) * viewport.zoom + viewport.y }];
+  }).sort((a, b) => a.top - b.top || (rtl ? b.left - a.left : a.left - b.left) || a.id.localeCompare(b.id));
+  const occupied: { left: number; top: number; right: number; bottom: number }[] = [];
+  for (const item of proposals) {
+    const right = item.left + item.placement.width;
+    const overlappingX = occupied.filter(rect => item.left < rect.right + gutter && right + gutter > rect.left);
+    const options = [item.top];
+    for (const rect of overlappingX) options.push(rect.bottom + gutter, rect.top - height - gutter);
+    options.sort((a, b) => Math.abs(a - item.top) - Math.abs(b - item.top) || a - b);
+    const y = options.find(candidate => candidate >= 12 && candidate <= maxY + 1e-8 &&
+      Math.abs(candidate - item.top) <= height + 16 && overlappingX.every(rect =>
+        candidate >= rect.bottom + gutter || candidate + height + gutter <= rect.top));
+    if (y === undefined) continue;
+    occupied.push({ left: item.left, top: y, right, bottom: y + height });
+    result.set(item.id, y === item.top ? item.placement : { ...item.placement, top: (y - (item.bounds.y * viewport.zoom + viewport.y)) / viewport.zoom });
+  }
+  return result;
+}

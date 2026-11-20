@@ -10,7 +10,7 @@ import { nodeEnergy, type NodeEnergy } from '@/lib/node-energy';
 import { clampReadingCaptionShift, shouldPlaceReadingCaptionAbove } from '@/lib/graph-caption-placement';
 import { canvasViewportStorageKey } from '@/lib/canvas-viewport-storage';
 import { nodeUsesNeuron, zoneBounds } from '@/lib/zone-geometry';
-import { zoneHeaderDetail, zoneOverviewHeaderPlacement } from '@/lib/zone-header-layout';
+import { zoneHeaderDetail, zoneOverviewHeaderPlacements } from '@/lib/zone-header-layout';
 import { mergeNodeSelection, nodesInSelection, selectionRectangle } from '@/lib/node-selection';
 import { DEFAULT_MAGNETIC_SETTINGS, type MagneticSettings } from '@/lib/magnetic-layout';
 import { useMagneticCanvas, type MagneticViewState } from '@/hooks/use-magnetic-canvas';
@@ -288,6 +288,11 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
     const bounds = new Map([...projections].map(([id, node]) => [id, projectionBounds(node, nodeUsesNeuron(node, neural))]));
     return zones.flatMap(zone => { const box = zoneBounds(zone, bounds); return box ? [{ zone, box }] : []; });
   }, [zones, projections, neural]);
+  const zoneHeadingPlacements = useMemo(() => zoneOverviewHeaderPlacements(
+    zoneProjections.map(({ zone, box }) => ({ id: zone.id, bounds: box })),
+    { x: view.x, y: view.y, zoom: view.zoom, width: size.width, height: size.height },
+    language === 'fa',
+  ), [zoneProjections, view, size, language]);
   const fitNodes = useMemo(() => {
     const projected = [...baseProjections.values()].map(node => projectionBounds(node, nodeUsesNeuron(node, neural)));
     if (!baseNodes.length) return projected;
@@ -831,12 +836,12 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(props, ref) {
       {guides.filter(guide => guide.x * view.zoom + view.x < size.width + 200 && (guide.x + guide.width) * view.zoom + view.x > -200 && guide.y * view.zoom + view.y < size.height + 200 && (guide.y + guide.height) * view.zoom + view.y > -200).map(guide => <div key={guide.id} className={`layout-guide layout-guide-${guide.kind}`} style={{ left: guide.x, top: guide.y, width: guide.width, height: guide.height, '--guide-color': colors[guide.color ?? design.accent] } as React.CSSProperties} aria-hidden="true"><span className="layout-guide-title">{guide.title}<small>{guide.subtitle}</small></span></div>)}
       {zoneProjections.filter(({ box }) => box.x * view.zoom + view.x < size.width + 200 && (box.x + box.width) * view.zoom + view.x > -200 && box.y * view.zoom + view.y < size.height + 200 && (box.y + box.height) * view.zoom + view.y > -200).map(({ zone, box }) => {
         const detail = zoneHeaderDetail(view.zoom);
-        const heading = detail !== 'full' ? zoneOverviewHeaderPlacement(box, { x: view.x, y: view.y, zoom: view.zoom, width: size.width, height: size.height }, language === 'fa') : null;
+        const heading = zoneHeadingPlacements.get(zone.id);
         return <div key={zone.id} className="graph-zone" data-zone={zone.id} data-color={zone.color} data-detail={detail} data-selected={zone.nodeIds.some(id => selectedSet.has(id))} style={{ left: box.x, top: box.y, width: box.width, height: box.height }} dir={language === 'fa' ? 'rtl' : 'ltr'}>
-        <button type="button" className="graph-zone__header" style={heading ? { '--zone-header-left': `${heading.left}px`, '--zone-header-top': `${heading.top}px`, '--zone-header-width': `${heading.width}px`, '--zone-header-scale': heading.scale } as React.CSSProperties : undefined} onPointerDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()} onContextMenu={event => { event.preventDefault(); event.stopPropagation(); }} onKeyDown={event => event.stopPropagation()} onClick={() => propsRef.current.onEditZone?.(zone.id)} aria-label={L(`ویرایش Zone: ${zone.title}`, `Edit zone: ${zone.title}`)}>
+        {(detail === 'full' || heading) && <button type="button" className="graph-zone__header" style={heading ? { '--zone-header-left': `${heading.left}px`, '--zone-header-top': `${heading.top}px`, '--zone-header-width': `${heading.width}px`, '--zone-header-scale': heading.scale } as React.CSSProperties : undefined} onPointerDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()} onContextMenu={event => { event.preventDefault(); event.stopPropagation(); }} onKeyDown={event => event.stopPropagation()} onClick={() => propsRef.current.onEditZone?.(zone.id)} aria-label={L(`ویرایش Zone: ${zone.title}`, `Edit zone: ${zone.title}`)}>
           <span className="graph-zone__title"><Layers size={15} aria-hidden="true" /><span className="graph-zone__name" dir="auto" title={zone.title}>{zone.title}</span><span className="graph-zone__count">{new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en').format(zone.nodeIds.length)}</span></span>
           {zone.description && <span className="graph-zone__description" dir="auto">{zone.description}</span>}
-        </button>
+        </button>}
       </div>;
       })}
       <svg className="connections" aria-label={L('ارتباط‌ها', 'Connections')}>{visibleEdges.map(drawing => <Connection key={drawing.edge.id} drawing={drawing} selected={props.selectedEdgeId === drawing.edge.id} dispatch={edgeDispatch} language={language} signal={signalIds.has(drawing.edge.id) && (props.spotlightEdgeIds?.has(drawing.edge.id) ?? true)} spotlighted={props.spotlightEdgeIds?.has(drawing.edge.id) ?? true} energy={energyById.get((growthById.get(drawing.source.id)?.mass ?? 0) >= (growthById.get(drawing.target.id)?.mass ?? 0) ? drawing.source.id : drawing.target.id)!} handleScale={props.selectedEdgeId === drawing.edge.id ? 1 / view.zoom : 1} canBend={!!props.onEdgeBend} canDelete={!!props.onDeleteEdge} showLabel={design.connectionLabels} />)}</svg>
