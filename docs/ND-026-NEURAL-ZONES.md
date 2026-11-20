@@ -110,3 +110,8 @@ These captures show the application running with synthetic fixtures; they are no
 - The live URL opened at the existing ChatGPT sign-in gate. Production sign-in was not performed, and owner content was not used for testing. Publication confirmation is the native successful deployment of the exact tested source; the screenshots above remain synthetic UI evidence.
 - This post-publication documentation is synchronized to both source repositories without a second functional release. The control-branch checkpoint records final documentation heads/tree and guarded lease cleanup.
 - Next: improve Zone heading readability at far zoom and add non-destructive collapsed-zone navigation for large maps, preserving shared nodes and cycles. Automatic clustering/bundling and a media library remain unimplemented future slices. ND-024 remains untouched on its separate unfinished branch.
+
+
+## Distant overview heading follow-up (not released — 2026-11-20T02:35:20.565Z)
+
+The next ND-013/ND-026 usability slice is on [`feat/nd-013-zone-overview-headings`](https://github.com/iAlirezaaa/nodus/tree/feat/nd-013-zone-overview-headings): readable/touchable Zone titles at distant zoom. It is **not** part of the already published v13 and is not Verified. Pure 4/4 Node tests and isolated helper TypeScript passed; full app build/browser screenshot/Sites parity still blocked. [Current candidate QA](ND-013-ZONE-OVERVIEW-QA.md). Existing published v13 controls and user data remain unchanged.

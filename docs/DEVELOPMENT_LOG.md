@@ -1,5 +1,15 @@
 # Nodus development log
 
+## 2026-11-20T02:35:20.565Z — ND-013 distant Zone heading: branch-only code and checks
+
+**Status:** In progress, Site release **Blocked**, not Verified/Released. Existing v13 remains active and owner data untouched. Branch `feat/nd-013-zone-overview-headings`, source code/test correction commit [`8094def08bf9ab7e537e5e27f5ab490f0ccb275f`](https://github.com/iAlirezaaa/nodus/commit/8094def08bf9ab7e537e5e27f5ab490f0ccb275f), tree `ff3e0359a29dd547660b8c1f4aba151d648ccef7`; original main `4a7fc65524c53cf8ad58762a3eab90c692c45c3a`. Prior divergent ND-011/013 branches retained.
+
+**Improvement implemented:** the existing Zone header/edit button no longer collapses to an unreadable 6.6px target when its world layer is zoomed to 0.15. A pure viewport placement helper, per-render CSS vars and inverse zoom keep a 44px screen-sized title/edit target with 12px margins; RTL/LTR and 390px geometry handled. No persistent state/animation loop or Zone/node/edge writes were added. [Detailed candidate and acceptance record](ND-013-ZONE-OVERVIEW-QA.md).
+
+**Actual verification:** initial exact-code native Node targeted tests 3/4 due to strict floating-point equality; repaired test tolerance and reran **4/4 PASS**; helper-only TypeScript 5.8.3 `--strict --noEmit` PASS. Byte parity verified by `git hash-object`. **NOT RUN:** full repository tests, pinned TypeScript, production build, real UI screenshot/browser at fixed 4173, physical touch/IME, actual motion/hidden tab, two genuine auth accounts, independently verified current Site source/audience. No screenshot, deployment ID, release version or new Site save was generated. Published v13 deployment reference remains historical, not a new release.
+
+**Next:** obtain full checkout/runtime and authorized Sites skill, run full/build/real browser QA and independent review before guarded merge/publish. Preserve this candidate on its branch if gates remain unavailable; schedule/automations unchanged.
+
 ## 2026-11-20T02:25:28.158Z — ND-013 / ND-026 Zone overview heading: pre-edit scope
 
 **Status: In progress; feature branch only.** Run `nodus-auto-20261120T0548-nd013-readability`, branch `feat/nd-013-zone-overview-headings` from main `4a7fc65524c53cf8ad58762a3eab90c692c45c3a`, tree `de5294e65cc6809d300e24e11417856d60bc6355`. The older ND-011/013 working branches diverged from version 13 and are preserved; this small remaining ND-013 readability slice must start from the current released Zone-capable main rather than overwrite either history. Existing Site v13 unchanged; its current source tree/audience have not been independently re-read in this environment.
